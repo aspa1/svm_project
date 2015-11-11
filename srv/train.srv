@@ -1,0 +1,4 @@
+sensor_msgs/Image positive_sample
+sensor_msgs/Image negative_sample
+---
+bool success
