@@ -3,11 +3,11 @@
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "image_receiver_client");
-  if (argc != 3)
-  {
-    ROS_INFO("usage: receive_images_from_two_folders Positives Negatives");
-    return 1;
-  }
+  //~ if (argc != 3)
+  //~ {
+    //~ ROS_INFO("usage: receive_images_from_two_folders Positives Negatives");
+    //~ return 1;
+  //~ }
 
   ros::NodeHandle nh;
   ros::ServiceClient client = nh.serviceClient<svm_project::images>("image_receiver");

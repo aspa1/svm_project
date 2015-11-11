@@ -127,22 +127,24 @@ include_directories(include)
 
 ## Declare a C++ executable
 add_executable(main src/main.cpp src/image_processing.cpp)
+ target_link_libraries(main
+   ${catkin_LIBRARIES}
+)
+
 
 add_executable(client src/img_folder_handler.cpp src/image_processing.cpp)
-
+target_link_libraries(client 
+   ${catkin_LIBRARIES}
+)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(svm_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(main
-   ${catkin_LIBRARIES}
-)
 
-target_link_libraries(client opencv_core opencv_imgproc openv_video opencv_imgcodecs
-   ${catkin_LIBRARIES}
-)
+
+
 
 #############
 ## Install ##
