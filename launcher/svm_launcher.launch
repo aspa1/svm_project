@@ -1,0 +1,9 @@
+<launch>
+	
+	
+	<node type="server" pkg="svm_project" name="server" output="screen" />
+	
+	<node pkg="svm_project" type="client" name="client" output="screen"/>	
+	
+
+</launch>

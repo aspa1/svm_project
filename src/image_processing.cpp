@@ -27,6 +27,7 @@ bool image_callback ( 	svm_project::images::Request  &req,
 			ROS_INFO_STREAM("Name:" << itr->path().filename()); // display filename only
 		}
 	}
+	return true;
 
 
 //~ 

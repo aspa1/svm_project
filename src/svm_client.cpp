@@ -16,12 +16,17 @@ int main(int argc, char **argv)
   srv.request.negatives = ("/samples/negatives");
   if (client.call(srv))
   {
-	  srv.response.success=true;
-	  ROS_INFO("Success: %d", srv.response.success);
+	  if(client.waitForExistence())
+		{
+		  srv.response.success=true;
+		  ROS_INFO("Success: %d", srv.response.success);
+		}
+		
   }
   else
   {
     ROS_ERROR("Failed to call service image_receiver");
+    srv.response.success= false;
     return 1;
   }
 
