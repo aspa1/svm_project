@@ -104,7 +104,14 @@ find_package(catkin REQUIRED
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES svm
-#  CATKIN_DEPENDS other_catkin_pkg
+CATKIN_DEPENDS 
+	roscpp
+	rospy
+	roslib
+	std_msgs
+	message_generation
+	cv_bridge
+	opencv2
 #  DEPENDS system_lib
 )
 
