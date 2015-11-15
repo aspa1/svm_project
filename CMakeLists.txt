@@ -7,6 +7,7 @@ project(svm_project)
 find_package(catkin REQUIRED
 	roscpp
 	rospy
+	roslib
 	std_msgs
 	message_generation
 	cv_bridge
@@ -126,16 +127,22 @@ include_directories(include)
 # add_dependencies(svm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(main src/main.cpp src/image_processing.cpp)
- target_link_libraries(main
+add_executable(server src/svm_server.cpp src/image_processing.cpp)
+ target_link_libraries(server
    ${catkin_LIBRARIES}
 )
+add_dependencies (server ${catkin_EXPORTED_TARGETS})
 
 
-add_executable(client src/img_folder_handler.cpp src/image_processing.cpp)
+add_executable(client src/svm_client.cpp src/image_processing.cpp)
 target_link_libraries(client 
    ${catkin_LIBRARIES}
 )
+add_dependencies (client ${catkin_EXPORTED_TARGETS})
+
+
+#add_executable(img_loader src/img_load.cpp)
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above

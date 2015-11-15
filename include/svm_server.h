@@ -1,5 +1,5 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef SVM_SERVER_H
+#define SVM_SERVER_H
 
 
 #include <opencv2/core/core.hpp>

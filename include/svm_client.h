@@ -1,5 +1,5 @@
-#ifndef IMAGE_FOLDER_HANDLING_H
-#define IMAGE_FOLDER_HANDLING_H
+#ifndef SVM_CLIENT_H
+#define SVM_CLIENT_H
 
 
 #include "image_processing.h"

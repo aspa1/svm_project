@@ -1,4 +1,4 @@
-#include "img_folder_handler.h"
+#include "svm_client.h"
 
 int main(int argc, char **argv)
 {
@@ -12,8 +12,8 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   ros::ServiceClient client = nh.serviceClient<svm_project::images>("image_receiver");
   svm_project::images srv;
-  srv.request.positives = ("../samples/positives");
-  srv.request.negatives = ("../samples/negatives");
+  srv.request.positives = ("/samples/positives");
+  srv.request.negatives = ("/samples/negatives");
   if (client.call(srv))
   {
 	  srv.response.success=true;

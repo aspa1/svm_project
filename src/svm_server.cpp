@@ -1,4 +1,4 @@
-#include "main.h"
+#include "svm_server.h"
 
 
 int main( int argc, char** argv )
@@ -14,6 +14,4 @@ int main( int argc, char** argv )
 	return 0;
 
 }
-    
-    //req.positive_image image;
-    //image = imread(../samples/positives, CV_LOAD_IMAGE_COLOR);
+
