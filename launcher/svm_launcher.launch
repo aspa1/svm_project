@@ -1,9 +1,9 @@
 <launch>
 	
 	
-	<node type="server" pkg="svm_project" name="server" output="screen" />
+	<node type="svm" pkg="svm_project" name="svm" output="screen" />
 	
-	<node pkg="svm_project" type="client" name="client" output="screen"/>	
+	<node pkg="svm_project" type="call_svm_server.py" name="call_svm_server" output="screen"/>	
 	
 
 </launch>

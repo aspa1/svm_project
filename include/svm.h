@@ -5,7 +5,7 @@
 #include <ros/package.h>
 #include "boost/filesystem.hpp"  
 #include "ros/ros.h"
-//~ #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 
 	
@@ -15,7 +15,7 @@ class SVM {
 		bool image_callback ( svm_project::trainSvmSrv::Request &req, svm_project::trainSvmSrv::Response &res );
 		ros::ServiceServer service;
 		ros::ServiceClient client;
-		svm_project::trainSvmSrv srv;
+		//svm_project::trainSvmSrv srv;
 		
 	public:
 		SVM();
