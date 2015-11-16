@@ -3,7 +3,7 @@
 SVM::SVM() {
 
 
-	client = n.serviceClient<svm_project::images>("image_receiver");
+	client = n.serviceClient<svm_project::trainSvmSrv>("image_receiver");
 	ROS_INFO("1");
 
 	service = n.advertiseService("image_receiver", &SVM::image_callback, this);
@@ -38,8 +38,8 @@ SVM::SVM() {
 
 
 
-bool SVM::image_callback ( 	svm_project::images::Request  &req,
-						svm_project::images::Response &res 	)
+bool SVM::image_callback ( 	svm_project::trainSvmSrv::Request  &req,
+						svm_project::trainSvmSrv::Response &res 	)
 {
 	ROS_INFO_STREAM("callback");
 	

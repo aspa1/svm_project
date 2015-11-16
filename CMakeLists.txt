@@ -56,7 +56,7 @@ find_package(catkin REQUIRED
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
-   images.srv
+   trainSvmSrv.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -151,7 +151,7 @@ add_executable(svm src/main.cpp src/svm.cpp)
  target_link_libraries(svm
    ${catkin_LIBRARIES}
 )
-#~ add_dependencies (server ${catkin_EXPORTED_TARGETS})
+add_dependencies (svm svm_project_gencpp ${catkin_EXPORTED_TARGETS})
 
 
 #add_executable(img_loader src/img_load.cpp)

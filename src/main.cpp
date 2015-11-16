@@ -1,4 +1,14 @@
-#include "main.h"
+#ifndef MAIN
+#define MAIN
+
+
+#include "svm.h"
+#include "ros/ros.h"
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <iostream>
+
+
 
 int main( int argc, char** argv )
 {
@@ -16,3 +26,5 @@ int main( int argc, char** argv )
 	return 0;
 
 }
+
+#endif

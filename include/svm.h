@@ -1,7 +1,7 @@
 #ifndef SVM_H
 #define SVM_H
 
-#include "svm_project/images.h"
+#include "svm_project/trainSvmSrv.h"
 #include <ros/package.h>
 #include "boost/filesystem.hpp"  
 #include "ros/ros.h"
@@ -12,10 +12,10 @@
 class SVM {		
 	private:	
 		ros::NodeHandle n;
-		bool image_callback ( svm_project::images::Request &req, svm_project::images::Response &res );
+		bool image_callback ( svm_project::trainSvmSrv::Request &req, svm_project::trainSvmSrv::Response &res );
 		ros::ServiceServer service;
 		ros::ServiceClient client;
-		svm_project::images srv;
+		svm_project::trainSvmSrv srv;
 		
 	public:
 		SVM();
