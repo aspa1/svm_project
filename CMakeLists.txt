@@ -134,18 +134,24 @@ include_directories(include)
 # add_dependencies(svm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(server src/svm_server.cpp src/image_processing.cpp)
- target_link_libraries(server
+#~ add_executable(server src/svm_server.cpp src/image_processing.cpp)
+ #~ target_link_libraries(server
+   #~ ${catkin_LIBRARIES}
+#~ )
+#~ add_dependencies (server ${catkin_EXPORTED_TARGETS})
+#~ 
+#~ 
+#~ add_executable(client src/svm_client.cpp src/image_processing.cpp)
+#~ target_link_libraries(client 
+   #~ ${catkin_LIBRARIES}
+#~ )
+#~ add_dependencies (client ${catkin_EXPORTED_TARGETS})
+
+add_executable(svm src/main.cpp src/svm.cpp)
+ target_link_libraries(svm
    ${catkin_LIBRARIES}
 )
-add_dependencies (server ${catkin_EXPORTED_TARGETS})
-
-
-add_executable(client src/svm_client.cpp src/image_processing.cpp)
-target_link_libraries(client 
-   ${catkin_LIBRARIES}
-)
-add_dependencies (client ${catkin_EXPORTED_TARGETS})
+#~ add_dependencies (server ${catkin_EXPORTED_TARGETS})
 
 
 #add_executable(img_loader src/img_load.cpp)
