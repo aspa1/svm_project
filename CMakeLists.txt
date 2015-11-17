@@ -11,6 +11,7 @@ find_package(catkin REQUIRED
 	std_msgs
 	message_generation
 	cv_bridge
+	resource_retriever
 )
 
 ## System dependencies are found with CMake's conventions
@@ -57,6 +58,7 @@ find_package(catkin REQUIRED
  add_service_files(
    FILES
    trainSvmSrv.srv
+   urlRetrieverSrv.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -112,6 +114,7 @@ CATKIN_DEPENDS
 	message_generation
 	cv_bridge
 	opencv2
+	resource_retriever
 #  DEPENDS system_lib
 )
 
@@ -147,7 +150,7 @@ include_directories(include)
 #~ )
 #~ add_dependencies (client ${catkin_EXPORTED_TARGETS})
 
-add_executable(svm src/main.cpp src/svm.cpp)
+add_executable(svm src/main.cpp src/svm.cpp src/urlRetriever.cpp)
  target_link_libraries(svm
    ${catkin_LIBRARIES}
 )

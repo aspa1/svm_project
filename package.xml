@@ -39,6 +39,8 @@
   <build_depend>rospy</build_depend>  
   <build_depend>roslib</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>resource_retriever</build_depend>
+
 
 
 
@@ -53,6 +55,8 @@
   <run_depend>rospy</run_depend>
   <run_depend>roslib</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>resource_retriever</run_depend>
+  
   
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
