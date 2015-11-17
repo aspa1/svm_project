@@ -2,13 +2,47 @@
 
 SVM::SVM() {
 
-	service = n.advertiseService("image_receiver", &SVM::image_callback, this);
+	service1 = nh.advertiseService("url_retriever", &SVM::url_callback, this);
+
+	ROS_INFO("Service ready to retrieve url");
+	
+	
+	service2 = n.advertiseService("image_receiver", &SVM::image_callback, this);
 
 	ROS_INFO("Service ready to receive images");
 
 
 }
 
+bool SVM::url_callback ( 	svm_project::urlRetrieverSrv::Request  &req,
+							svm_project::urlRetrieverSrv::Response &res 	)
+{
+
+	try
+	{
+		resource = r.get(req.url); 
+		res.success= true;
+	}
+	catch (resource_retriever::Exception& e)
+	  {
+		ROS_ERROR("Failed to retrieve file: %s", e.what());
+		res.success= false;
+		return 1;
+	  }
+
+	FILE* f = fopen("out.jpg", "w");
+	fwrite(resource.data.get(), resource.size, 1, f);
+	fclose(f);
+	  
+	ROS_INFO("Wrote data from url to out.jpg");
+	
+	//~ service2 = n.advertiseService("image_receiver", &SVM::image_callback, this);
+//~ 
+	//~ ROS_INFO("Service ready to receive images");
+	
+	return true;
+
+}	
 
 
 bool SVM::image_callback ( 	svm_project::trainSvmSrv::Request  &req,

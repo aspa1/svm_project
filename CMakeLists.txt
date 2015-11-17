@@ -150,7 +150,7 @@ include_directories(include)
 #~ )
 #~ add_dependencies (client ${catkin_EXPORTED_TARGETS})
 
-add_executable(svm src/main.cpp src/svm.cpp src/urlRetriever.cpp)
+add_executable(svm src/main.cpp src/svm.cpp)
  target_link_libraries(svm
    ${catkin_LIBRARIES}
 )
