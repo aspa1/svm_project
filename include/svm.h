@@ -20,8 +20,8 @@ class SVM {
 		bool url_callback ( svm_project::urlRetrieverSrv::Request &req, svm_project::urlRetrieverSrv::Response &res );
 		ros::ServiceServer service1;
 		ros::ServiceServer service2;
-		resource_retriever::Retriever r;
-		resource_retriever::MemoryResource resource;
+		//~ resource_retriever::Retriever r;
+		//~ resource_retriever::MemoryResource resource;
 				
 	public:
 		SVM();

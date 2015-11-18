@@ -17,28 +17,30 @@ SVM::SVM() {
 bool SVM::url_callback ( 	svm_project::urlRetrieverSrv::Request  &req,
 							svm_project::urlRetrieverSrv::Response &res 	)
 {
-
-	try
-	{
-		resource = r.get(req.url); 
-		res.success= true;
-	}
-	catch (resource_retriever::Exception& e)
-	  {
-		ROS_ERROR("Failed to retrieve file: %s", e.what());
-		res.success= false;
-		return 1;
-	  }
-
-	FILE* f = fopen("out.jpg", "w");
-	fwrite(resource.data.get(), resource.size, 1, f);
-	fclose(f);
-	  
-	ROS_INFO("Wrote data from url to out.jpg");
+	cv::Mat image;
+	std::string path = ros::package::getPath("svm_project");
 	
-	//~ service2 = n.advertiseService("image_receiver", &SVM::image_callback, this);
-//~ 
-	//~ ROS_INFO("Service ready to receive images");
+	//ROS_INFO_STREAM("Path:" << path);
+
+	if (boost::filesystem::is_directory(path))
+	{
+		std::string p = path + req.url;
+		image = cv::imread(p , CV_LOAD_IMAGE_COLOR);
+		res.success = true;
+		ROS_INFO_STREAM("Read image:" << p);
+		ROS_INFO_STREAM (image.rows);
+	}
+	else
+	{
+		ROS_ERROR("Failed to retrieve file");
+		res.success = false;
+		return 1;
+	}
+
+	//~ FILE* f = fopen("out.jpg", "w");
+	//~ fwrite(resource.data.get(), resource.size, 1, f);
+	//~ fclose(f);
+	  //~ 	
 	
 	return true;
 
@@ -50,9 +52,7 @@ bool SVM::image_callback ( 	svm_project::trainSvmSrv::Request  &req,
 {
 	
 	std::string path = ros::package::getPath("svm_project");
-	
-	//ROS_INFO_STREAM("Path:" << path);
-	
+		
 	std::string p = path + req.positives;
 	std::string n = path + req.negatives;
 	
