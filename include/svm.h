@@ -9,7 +9,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "resource_retriever/retriever.h"
 #include <ros/console.h>
-
+#include <sensor_msgs/Image.h>
 
 	
 class SVM {		

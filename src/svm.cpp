@@ -68,6 +68,10 @@ bool SVM::image_callback ( 	svm_project::trainSvmSrv::Request  &req,
 			std::string p_= p + "/" + p1;
 			ROS_INFO_STREAM("Full name:" << p_);
 			image = cv::imread(p_ , CV_LOAD_IMAGE_COLOR);
+			
+			//sensor_msgs::ImagePtr toImageMsg() const;
+			//image.toImageMsg(sensor_msgs::Image & ros_image) const;
+			 
 			ROS_INFO_STREAM (image.rows);
 			//cv::imshow( "Display window", image );
 			cv::waitKey(5);
