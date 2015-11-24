@@ -27,8 +27,8 @@ class SVM {
 		bool url_callback ( svm_project::urlRetrieverSrv::Request &req, svm_project::urlRetrieverSrv::Response &res );
 		void directory(std::string p, float labels[20], float trainingData[20][2], int counter);
 		std::string type2str(int type);
-		void getAllFilesFromDir (std::string dir, int* counter, float trainingData[20][2]);
-		void imgRead(std::string path, int *counter, float *red_percentage, float *bg_percentage);
+		void getAllFilesFromDir (std::string dir, int& counter, float trainingData[20][2]);
+		void imgRead(std::string path, int &counter, float &red_percentage, float &bg_percentage);
 
 };
 

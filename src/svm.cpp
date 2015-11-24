@@ -37,10 +37,8 @@ bool SVM::url_callback ( 	svm_project::urlRetrieverSrv::Request  &req,
 			}
 		}
 		if (flag==true) {
-			imgRead(path1, &counter, &red_percent, &bg_percent);
-			ROS_INFO_STREAM(path1);
-			
-			
+			imgRead(path1, counter, red_percent, bg_percent);
+		
 			newImage[0] = red_percent;
 			newImage[1] = bg_percent;
 			
@@ -82,8 +80,8 @@ bool SVM::image_callback ( 	svm_project::trainSvmSrv::Request  &req,
 	std::string p = svmPath + req.positives;
 	std::string n = svmPath + req.negatives;
 	
-	getAllFilesFromDir(p, &counter, trainingData);
-	getAllFilesFromDir(n, &counter, trainingData);
+	getAllFilesFromDir(p, counter, trainingData);
+	getAllFilesFromDir(n, counter, trainingData);
 	
  
 	for (int i=0; i<20; i++) {
@@ -114,7 +112,7 @@ bool SVM::image_callback ( 	svm_project::trainSvmSrv::Request  &req,
 	
 }
 
-void SVM::getAllFilesFromDir (std::string dir, int* counter, float trainingData[20][2]) {
+void SVM::getAllFilesFromDir (std::string dir, int& counter, float trainingData[20][2]) {
 	if (boost::filesystem::is_directory(dir))
 	{
 		float red_percent, bg_percent;
@@ -125,9 +123,10 @@ void SVM::getAllFilesFromDir (std::string dir, int* counter, float trainingData[
 			//ROS_INFO_STREAM("Image name:" << p1);
 			std::string path= dir + "/" + imgName;
 			//ROS_INFO_STREAM("Full name:" << p_);
-			imgRead(path, counter, &red_percent, &bg_percent);
-			trainingData[*counter][0] = red_percent;
-			trainingData[*counter][1] = bg_percent;
+			imgRead(path, counter, red_percent, bg_percent);
+			
+			trainingData[counter-1][0] = red_percent;
+			trainingData[counter-1][1] = bg_percent;
 		}
 	}
 	else {
@@ -136,7 +135,7 @@ void SVM::getAllFilesFromDir (std::string dir, int* counter, float trainingData[
 }
 	
 
-void SVM::imgRead(std::string path, int *counter, float *red_percentage, float *bg_percentage)
+void SVM::imgRead(std::string path, int &counter, float &red_percentage, float &bg_percentage)
 {	
 	cv::Mat image;	
 	int red_pixel_counter=0;
@@ -160,10 +159,10 @@ void SVM::imgRead(std::string path, int *counter, float *red_percentage, float *
 		}
 	}
 		
-	*red_percentage = float(red_pixel_counter) / float(image.rows*image.cols);
-	*bg_percentage = float(bg_pixel_counter) / float(image.rows*image.cols);
+	red_percentage = float(red_pixel_counter) / float(image.rows*image.cols);
+	bg_percentage = float(bg_pixel_counter) / float(image.rows*image.cols);
 				
-	*counter++;
+	counter++;
 			
 }	
 

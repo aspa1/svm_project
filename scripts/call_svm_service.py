@@ -7,7 +7,7 @@ import sys
 
 p = '/samples/positives' 				#positive_samples directory
 n = '/samples/negatives'				#negative_samples directory
-name='/test.png'						#name of the image to be tested 
+name='/out.jpg'						#name of the image to be tested 
 
 def call_image_receiver_server(p, n):
     rospy.wait_for_service('image_receiver')
