@@ -9,6 +9,8 @@ srv_gen/
 ROS_NOBUILD
 CATKIN_IGNORE
 bags/
+samples/
+
 
 *Action.msg
 *Feedback.msg
@@ -55,4 +57,7 @@ Thumbs.db
 .*.swp
 .*.swo
 *.log
+*.jpg
+*.png
+*.jpeg
 core

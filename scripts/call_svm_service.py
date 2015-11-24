@@ -5,9 +5,9 @@ import rospy
 import sys
 
 
-p = '/samples/positives' 	#positive_samples directory
-n = '/samples/negatives'	#negative_samples directory
-url='/test.png'				#url of the image to be tested
+p = '/samples/positives' 				#positive_samples directory
+n = '/samples/negatives'				#negative_samples directory
+name='/test.png'						#name of the image to be tested 
 
 def call_image_receiver_server(p, n):
     rospy.wait_for_service('image_receiver')
@@ -26,7 +26,7 @@ def call_url_retriever_server():
     rospy.wait_for_service('url_retriever')
     try:
         service_handle2 = rospy.ServiceProxy('url_retriever', urlRetrieverSrv)
-        resp2 = service_handle2(url)
+        resp2 = service_handle2(name)
         print "Url retriever service called"
         return resp2.success
     except rospy.ServiceException, e:

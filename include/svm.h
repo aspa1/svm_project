@@ -7,25 +7,28 @@
 #include "boost/filesystem.hpp"  
 #include "ros/ros.h"
 #include <opencv2/highgui/highgui.hpp>
-#include "resource_retriever/retriever.h"
+//~ #include "resource_retriever/retriever.h"
 #include <ros/console.h>
 #include <sensor_msgs/Image.h>
+#include <opencv/ml.h>
 
 	
 class SVM {		
 	private:	
 		ros::NodeHandle n;
 		ros::NodeHandle nh;		
-		bool image_callback ( svm_project::trainSvmSrv::Request &req, svm_project::trainSvmSrv::Response &res );
-		bool url_callback ( svm_project::urlRetrieverSrv::Request &req, svm_project::urlRetrieverSrv::Response &res );
 		ros::ServiceServer service1;
 		ros::ServiceServer service2;
-		//~ resource_retriever::Retriever r;
-		//~ resource_retriever::MemoryResource resource;
+		CvSVM SVM_;
 				
 	public:
 		SVM();
-		
+		bool image_callback ( svm_project::trainSvmSrv::Request &req, svm_project::trainSvmSrv::Response &res );
+		bool url_callback ( svm_project::urlRetrieverSrv::Request &req, svm_project::urlRetrieverSrv::Response &res );
+		void directory(std::string p, float labels[20], float trainingData[20][2], int counter);
+		std::string type2str(int type);
+		void getAllFilesFromDir (std::string dir, int* counter, float trainingData[20][2]);
+		void imgRead(std::string path, int *counter, float *red_percentage, float *bg_percentage);
 
 };
 

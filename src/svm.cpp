@@ -17,98 +17,176 @@ SVM::SVM() {
 bool SVM::url_callback ( 	svm_project::urlRetrieverSrv::Request  &req,
 							svm_project::urlRetrieverSrv::Response &res 	)
 {
-	cv::Mat image;
-	std::string path = ros::package::getPath("svm_project");
+	bool flag=false;
+	int counter = 0;
+	float red_percent, bg_percent, newImage[2];
 	
-	//ROS_INFO_STREAM("Path:" << path);
+	std::string svmPath = ros::package::getPath("svm_project");
+	
+	if (boost::filesystem::is_directory(svmPath)) {
+		
+		
+		std::string path1 = svmPath + req.url;
+		
+		for (boost::filesystem::directory_iterator itr(svmPath); itr!=boost::filesystem::directory_iterator(); ++itr) {
+			std::string imgName =(itr->path().filename()).string();
+			std::string path2= svmPath + "/" + imgName;
+			if (path1==path2) {
+				flag=true;
+				break;
+			}
+		}
+		if (flag==true) {
+			imgRead(path1, &counter, &red_percent, &bg_percent);
+			ROS_INFO_STREAM(path1);
+			
+			
+			newImage[0] = red_percent;
+			newImage[1] = bg_percent;
+			
+			cv::Mat newImageMat(1, 2, CV_32FC1, newImage);	
+			float response = SVM_.predict(newImageMat);
+			if (response == 1.0) {
+				ROS_INFO_STREAM("Image is red");
+			}
+			else
+			{
+				ROS_INFO_STREAM("Image is not red");
+			}
+			res.success = true;	
+		}
+		else {
+			ROS_ERROR("Wrong image name or path");
+		}
 
-	if (boost::filesystem::is_directory(path))
-	{
-		std::string p = path + req.url;
-		image = cv::imread(p , CV_LOAD_IMAGE_COLOR);
-		res.success = true;
-		ROS_INFO_STREAM("Read image:" << p);
-		ROS_INFO_STREAM (image.rows);
 	}
 	else
 	{
-		ROS_ERROR("Failed to retrieve file");
+		ROS_ERROR("Wrong directory");
 		res.success = false;
 		return 1;
 	}
 
-	//~ FILE* f = fopen("out.jpg", "w");
-	//~ fwrite(resource.data.get(), resource.size, 1, f);
-	//~ fclose(f);
-	  //~ 	
-	
 	return true;
 
 }	
 
 
 bool SVM::image_callback ( 	svm_project::trainSvmSrv::Request  &req,
-						svm_project::trainSvmSrv::Response &res 	)
+							svm_project::trainSvmSrv::Response &res 	)
 {
-	
-	std::string path = ros::package::getPath("svm_project");
+	int counter=0;
+	float trainingData[20][2], labels[20];
+	std::string svmPath = ros::package::getPath("svm_project");
 		
-	std::string p = path + req.positives;
-	std::string n = path + req.negatives;
+	std::string p = svmPath + req.positives;
+	std::string n = svmPath + req.negatives;
 	
-	if (boost::filesystem::is_directory(p))
-	{
-		cv::Mat image;
-		ROS_INFO_STREAM("Positives:");
-		for (boost::filesystem::directory_iterator itr(p); itr!=boost::filesystem::directory_iterator(); ++itr)
-		{
-			ROS_INFO_STREAM("Name:" << itr->path().filename()); // display filename only
-			std::string p1 =(itr->path().filename()).string();
-			//ROS_INFO_STREAM("Image name:" << p1);
-			std::string p_= p + "/" + p1;
-			ROS_INFO_STREAM("Full name:" << p_);
-			image = cv::imread(p_ , CV_LOAD_IMAGE_COLOR);
-			
-			//sensor_msgs::ImagePtr toImageMsg() const;
-			//image.toImageMsg(sensor_msgs::Image & ros_image) const;
-			 
-			ROS_INFO_STREAM (image.rows);
-			//cv::imshow( "Display window", image );
-			cv::waitKey(5);
+	getAllFilesFromDir(p, &counter, trainingData);
+	getAllFilesFromDir(n, &counter, trainingData);
+	
+ 
+	for (int i=0; i<20; i++) {
+		if (trainingData[i][0] > trainingData[i][1]) {
+			labels[i] = 1.0;
+		}
+		else {
+			labels[i] = -1.0;
 		}
 	}
+	cv::Mat labelsMat(20, 1, CV_32FC1, labels);	
 	
-	if (boost::filesystem::is_directory(n))
-	{
-		cv::Mat image;
-		ROS_INFO_STREAM("Negatives:");
-		for (boost::filesystem::directory_iterator itr(n); itr!=boost::filesystem::directory_iterator(); ++itr)
-		{
-			ROS_INFO_STREAM("Name:" << itr->path().filename()); // display filename only
-			std::string n1 =(itr->path().filename()).string();
-			//ROS_INFO_STREAM("Image name:" << n1);
-			std::string n_= n + "/" + n1;
-			ROS_INFO_STREAM("Full name:" << n_);
-			image = cv::imread(n_ , CV_LOAD_IMAGE_COLOR);
-			ROS_INFO_STREAM (image.rows);
-			//cv::imshow( "Display window", image );
-			cv::waitKey(5);
-		}
-	}
+	cv::Mat trainingDataMat(20, 2, CV_32FC1, trainingData);	
+	
+	//~ CvSVMParams params;
+	//~ params.svm_type    = CvSVM::C_SVC;
+	//~ params.kernel_type = CvSVM::LINEAR;
+	//~ params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
+	
+    //~ SVM_.train(trainingDataMat, labelsMat, cv::Mat(), cv::Mat(), params);
+    SVM_.train(trainingDataMat, labelsMat);
+    
 	res.success = true;
+	
+	
 	
 	return true;
 	
-
-
-//~ 
-		//~ cv::Mat image;
-		//~ image= cv::imread(path + "/samples/positives/1p.jpg", CV_LOAD_IMAGE_COLOR);
-		//~ ROS_INFO_STREAM (image.rows);
-		//~ cv::imshow( "Display window", image );
-		//~ cv::waitKey(5000);
-//~ 
-		//~ //ROS_INFO_STREAM("Name:" << req.positives << std::endl);
 }
+
+void SVM::getAllFilesFromDir (std::string dir, int* counter, float trainingData[20][2]) {
+	if (boost::filesystem::is_directory(dir))
+	{
+		float red_percent, bg_percent;
+		for (boost::filesystem::directory_iterator itr(dir); itr!=boost::filesystem::directory_iterator(); ++itr)
+		{
+			//ROS_INFO_STREAM("Name:" << itr->path().filename()); // display filename only
+			std::string imgName =(itr->path().filename()).string();
+			//ROS_INFO_STREAM("Image name:" << p1);
+			std::string path= dir + "/" + imgName;
+			//ROS_INFO_STREAM("Full name:" << p_);
+			imgRead(path, counter, &red_percent, &bg_percent);
+			trainingData[*counter][0] = red_percent;
+			trainingData[*counter][1] = bg_percent;
+		}
+	}
+	else {
+		ROS_INFO_STREAM ("Failed to retrieve file");
+	}
+}
+	
+
+void SVM::imgRead(std::string path, int *counter, float *red_percentage, float *bg_percentage)
+{	
+	cv::Mat image;	
+	int red_pixel_counter=0;
+	int bg_pixel_counter=0;
+	
+	image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
+
+				
+	for (int i=0; i<image.rows; i++) {
+		for (int j=0; j<image.cols; j++) {
+			int b = image.at<cv::Vec3b> (i,j)[0];
+			int g = image.at<cv::Vec3b> (i,j)[1];
+			int r = image.at<cv::Vec3b> (i,j)[2];
+			if (r > b && r > g) {
+				red_pixel_counter++;
+			}
+			else {
+				bg_pixel_counter++;
+
+			}
+		}
+	}
+		
+	*red_percentage = float(red_pixel_counter) / float(image.rows*image.cols);
+	*bg_percentage = float(bg_pixel_counter) / float(image.rows*image.cols);
+				
+	*counter++;
 			
-			
+}	
+
+std::string SVM::type2str(int type) {   //useful for debugging
+  std::string r;
+
+  uchar depth = type & CV_MAT_DEPTH_MASK;
+  uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+  switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+  }
+
+  r += "C";
+  r += (chans+'0');
+
+  return r;
+}
+				
