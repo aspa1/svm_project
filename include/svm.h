@@ -7,10 +7,10 @@
 #include "boost/filesystem.hpp"  
 #include "ros/ros.h"
 #include <opencv2/highgui/highgui.hpp>
-//~ #include "resource_retriever/retriever.h"
 #include <ros/console.h>
 #include <sensor_msgs/Image.h>
 #include <opencv/ml.h>
+#include <boost/filesystem.hpp>
 
 	
 class SVM {		
@@ -23,8 +23,9 @@ class SVM {
 				
 	public:
 		SVM();
-		bool image_callback ( svm_project::trainSvmSrv::Request &req, svm_project::trainSvmSrv::Response &res );
-		bool url_callback ( svm_project::urlRetrieverSrv::Request &req, svm_project::urlRetrieverSrv::Response &res );
+		bool FileExist( const std::string& imagePath );
+		bool svmTrain ( svm_project::trainSvmSrv::Request &req, svm_project::trainSvmSrv::Response &res );
+		bool svmPredict ( svm_project::urlRetrieverSrv::Request &req, svm_project::urlRetrieverSrv::Response &res );
 		void directory(std::string p, float labels[20], float trainingData[20][2], int counter);
 		std::string type2str(int type);
 		void getAllFilesFromDir (std::string dir, int& counter, float trainingData[20][2]);

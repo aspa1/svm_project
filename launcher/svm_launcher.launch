@@ -3,7 +3,6 @@
 	
 	<node type="svm" pkg="svm_project" name="svm" output="screen" />
 	
-	<node pkg="svm_project" type="call_svm_service.py" name="call_svm_service" output="screen" />
 	
 
 </launch>
