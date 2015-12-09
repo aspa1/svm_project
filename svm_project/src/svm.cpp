@@ -1,158 +1,179 @@
 #include "svm.h"
 
-SVM::SVM() {
-
-	service1 = nh.advertiseService("uri_retriever", &SVM::svmPredict, this);
-
+SVM::SVM() 
+{
+	_uri_retriever_service = _n.advertiseService("uri_retriever", &SVM::svmPredict, this);
 	ROS_INFO("Service ready to test an image from uri");
 	
-	
-	service2 = n.advertiseService("image_receiver", &SVM::svmTrain, this);
-
+	_image_receiver_service = _n.advertiseService("image_receiver", &SVM::svmTrain, this);
 	ROS_INFO("Service ready to receive images and train svm");
-
-
 }
 
-bool SVM::FileExist( const std::string& Name )
+bool SVM::fileExist( const std::string& name )
 {
-     return boost::filesystem::exists(Name);
+    return boost::filesystem::exists(name);
 }
 
-bool SVM::svmPredict ( 	svm_project::urlRetrieverSrv::Request  &req,
-						svm_project::urlRetrieverSrv::Response &res 	)
+bool SVM::svmPredict ( 	
+	svm_project::urlRetrieverSrv::Request  &req,
+	svm_project::urlRetrieverSrv::Response &res 	
+	)
 {
-	int counter = 0;
-	float red_percent, bg_percent, newImage[2];
-	if (FileExist(req.url)==true) {
-		imgRead(req.url, counter, red_percent, bg_percent);
-	
-		newImage[0] = red_percent;
-		newImage[1] = bg_percent;
+	if (fileExist(req.url) == true) 
+	{
+		std::vector<float> features = imgRead(req.url);
+		float *feature_vector = new float[features.size()];
+		for (unsigned int i = 0 ; i < features.size() ; i++)
+		{
+			feature_vector[i] = features[i];
+		}	
 		
-		cv::Mat newImageMat(1, 2, CV_32FC1, newImage);	
-		float response = SVM_.predict(newImageMat);
-		if (response == 1.0) {
+		cv::Mat new_image_mat(1, 2, CV_32FC1, feature_vector);	
+		float response = _svm.predict(new_image_mat);
+		if (response == 1.0) 
+		{
 			ROS_INFO_STREAM("Image is red");
 		}
 		else
 		{
 			ROS_INFO_STREAM("Image is not red");
 		}
+		delete [] feature_vector;
 		res.success = true;	
 	}
-	else {
+	else 
+	{
 		ROS_ERROR("Wrong image name or path");
 		res.success = false;
 		return 1;
 	}
-
 	return true;
-
 }	
 
 
-bool SVM::svmTrain ( 	svm_project::trainSvmSrv::Request  &req,
-						svm_project::trainSvmSrv::Response &res 	)
+bool SVM::svmTrain ( 	
+	svm_project::trainSvmSrv::Request  &req,
+	svm_project::trainSvmSrv::Response &res 	
+	)
 {
-	int counter=0;
-	float trainingData[20][2], labels[20];		
 	std::string p = req.positives;
 	std::string n = req.negatives;
 	
-	getAllFilesFromDir(p, counter, trainingData);
-	getAllFilesFromDir(n, counter, trainingData);
+	std::vector<std::vector<float> > positive_features = getAllFilesFromDir(p);
+	std::vector<std::vector<float> > negative_features = getAllFilesFromDir(n);
 	
- 
-	for (int i=0; i<20; i++) {
-		if (trainingData[i][0] > trainingData[i][1]) {
-			labels[i] = 1.0;
-		}
-		else {
-			labels[i] = -1.0;
-		}
+	if(positive_features.size() == 0)
+	{
+		return true;
 	}
-	cv::Mat labelsMat(20, 1, CV_32FC1, labels);	
 	
-	cv::Mat trainingDataMat(20, 2, CV_32FC1, trainingData);	
+	// Allocation of training data
+	float **training_data;
+	unsigned int data_size = positive_features.size() + negative_features.size();
+	training_data = new float*[data_size];
+	for (unsigned int i = 0 ; i < data_size ; i++)
+	{
+		training_data[i] = new float[positive_features[0].size()];
+	}
 	
-	//~ CvSVMParams params;
-	//~ params.svm_type    = CvSVM::C_SVC;
-	//~ params.kernel_type = CvSVM::LINEAR;
-	//~ params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
+	float * labels = new float[data_size];
 	
-    //~ SVM_.train(trainingDataMat, labelsMat, cv::Mat(), cv::Mat(), params);
-    SVM_.train(trainingDataMat, labelsMat);
+	for (unsigned int i = 0 ; i < positive_features.size() ; i++) 
+	{	
+		for (unsigned int j = 0 ; j < positive_features[i].size() ; j++)
+		{
+			training_data[i][j] = positive_features[i][j];
+		}
+		labels[i] = 1.0;
+	}
+	for (unsigned int i = 0 ; i < negative_features.size() ; i++) 
+	{	
+		for (unsigned int j = 0 ; j < negative_features[i].size() ; j++)
+		{
+			training_data[i][j] = negative_features[i][j];
+		}
+		labels[i] = -1.0;
+	}
+
+	cv::Mat labels_mat(20, 1, CV_32FC1, labels);	
+	cv::Mat training_data_mat(20, 2, CV_32FC1, training_data);	
+	
+    _svm.train(training_data_mat, labels_mat);
+    
+    for (unsigned int i = 0 ; i < data_size ; i++)
+    {
+		delete [] training_data[i];
+	}
+	delete [] training_data;
+	delete [] labels;
     
 	res.success = true;
-	
-	
-	
 	return true;
-	
 }
 
-void SVM::getAllFilesFromDir (std::string dir, int& counter, float trainingData[20][2]) {
-	if (FileExist(dir)==true)
+std::vector<std::vector<float> > SVM::getAllFilesFromDir (std::string dir) 
+{
+	std::vector<std::vector<float> > training_data;
+	if (fileExist(dir) == true)
 	{
-		float red_percent, bg_percent;
-		for (boost::filesystem::directory_iterator itr(dir); itr!=boost::filesystem::directory_iterator(); ++itr)
+		float red_percent = 0;
+		float bg_percent = 0;
+		for (boost::filesystem::directory_iterator itr(dir); itr != boost::filesystem::directory_iterator(); ++itr)
 		{
-			//ROS_INFO_STREAM("Name:" << itr->path().filename()); // display filename only
-			std::string imgName =(itr->path().filename()).string();
-			//ROS_INFO_STREAM("Image name:" << p1);
-			std::string path= dir + "/" + imgName;
-			//ROS_INFO_STREAM("Full name:" << p_);
-			imgRead(path, counter, red_percent, bg_percent);
-			
-			trainingData[counter-1][0] = red_percent;
-			trainingData[counter-1][1] = bg_percent;
+			std::string img_name = (itr->path().filename()).string();
+			std::string path= dir + "/" + img_name;
+			training_data.push_back(imgRead(path));
 		}
 	}
-	else {
+	else 
+	{
 		ROS_INFO_STREAM ("Wrong path..Failed to retrieve file");
 	}
+	return training_data;
 }
-	
 
-void SVM::imgRead(std::string path, int &counter, float &red_percentage, float &bg_percentage)
+std::vector<float> SVM::imgRead(std::string path)
 {	
 	cv::Mat image;	
-	int red_pixel_counter=0;
-	int bg_pixel_counter=0;
 	
 	image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
-
-				
-	for (int i=0; i<image.rows; i++) {
-		for (int j=0; j<image.cols; j++) {
+	
+	int red_pixel_counter = 0;
+	int bg_pixel_counter = 0;
+			
+	for (int i = 0 ; i < image.rows ; i++) 
+	{
+		for (int j = 0 ; j < image.cols ; j++) 
+		{
 			int b = image.at<cv::Vec3b> (i,j)[0];
 			int g = image.at<cv::Vec3b> (i,j)[1];
 			int r = image.at<cv::Vec3b> (i,j)[2];
-			if (r > b && r > g) {
+			if (r > b && r > g) 
+			{
 				red_pixel_counter++;
 			}
-			else {
+			else 
+			{
 				bg_pixel_counter++;
-
 			}
 		}
 	}
 		
-	red_percentage = float(red_pixel_counter) / float(image.rows*image.cols);
-	bg_percentage = float(bg_pixel_counter) / float(image.rows*image.cols);
-				
-	counter++;
-			
+	std::vector<float> ret;
+	ret.push_back( float(red_pixel_counter) / float(image.rows * image.cols) );
+	ret.push_back( float(bg_pixel_counter) / float(image.rows * image.cols) );
+	return ret;
 }	
 
-std::string SVM::type2str(int type) {   //useful for debugging
+std::string SVM::type2str(int type) 
+{   //useful for debugging
   std::string r;
 
   uchar depth = type & CV_MAT_DEPTH_MASK;
   uchar chans = 1 + (type >> CV_CN_SHIFT);
 
-  switch ( depth ) {
+  switch ( depth ) 
+  {
     case CV_8U:  r = "8U"; break;
     case CV_8S:  r = "8S"; break;
     case CV_16U: r = "16U"; break;
@@ -164,7 +185,7 @@ std::string SVM::type2str(int type) {   //useful for debugging
   }
 
   r += "C";
-  r += (chans+'0');
+  r += (chans + '0');
 
   return r;
 }

@@ -9,5 +9,5 @@
 	<include file="$(find stdr_gui)/launch/stdr_gui.launch"/>
 	
 	<node pkg="stdr_robot" type="robot_handler" name="$(anon robot_spawn)" args="add $(find localization_project)/robot.yaml 15 15 0" />
-
+	
 </launch>

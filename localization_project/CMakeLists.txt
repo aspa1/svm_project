@@ -8,7 +8,10 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  nav_msgs
+  sensor_msgs
 )
+find_package(PkgConfig)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -100,9 +103,14 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+	INCLUDE_DIRS include
 #  LIBRARIES particle_filter
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+CATKIN_DEPENDS 
+	roscpp
+	rospy
+	std_msgs
+	nav_msgs
+	sensor_msgs
 #  DEPENDS system_lib
 )
 
@@ -112,7 +120,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
@@ -128,7 +136,11 @@ include_directories(
 # add_dependencies(particle_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(particle_filter_node src/particle_filter_node.cpp)
+add_executable(localization src/robot_perception.cpp)
+target_link_libraries(localization
+   ${catkin_LIBRARIES}
+)
+add_dependencies(localization localization_project_gencpp ${catkin_EXPORTED_TARGETS})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above

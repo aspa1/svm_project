@@ -1,0 +1,3 @@
+map_topic: /map
+
+robot_laser_topic: /robot0/laser_1
