@@ -126,18 +126,19 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(particle_filter
-#   src/${PROJECT_NAME}/particle_filter.cpp
-# )
+add_library(robot_perception_lib
+   src/robot_perception.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(particle_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(robot_perception_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(localization src/robot_perception.cpp)
+add_executable(localization src/main.cpp)
 target_link_libraries(localization
+	robot_perception_lib
    ${catkin_LIBRARIES}
 )
 add_dependencies(localization localization_project_gencpp ${catkin_EXPORTED_TARGETS})

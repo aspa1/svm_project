@@ -14,14 +14,18 @@ class RobotPerception {
 		std::string _laser_topic_param;
 		ros::Subscriber _map_sub;
 		ros::Subscriber _laser_sub;
-		nav_msgs::OccupancyGrid _map;
-		std::vector <float> _laser_ranges;
+		unsigned int _map_width;
+		unsigned int _map_height;
+		int** _map_data; 
+		float* _laser_ranges;
 	
 	
 	public:
 		RobotPerception();
-		void mapCallback(nav_msgs::OccupancyGrid msg);
-		void laserRangesCallback(sensor_msgs::LaserScan msg);
+		void mapCallback(nav_msgs::OccupancyGrid occupancy_grid_msg);
+		void laserRangesCallback(sensor_msgs::LaserScan laser_scan_msg);
+		int** getMapData();
+		float* getLaserRanges();
 };
 
 #endif
