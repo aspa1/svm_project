@@ -37,12 +37,12 @@ void RobotPerception::mapCallback(nav_msgs::OccupancyGrid occupancy_grid_msg) //
 	{
 		for (unsigned int i = 0 ; i < _map_width ; i++)
 		{
-			_map_data[i][j] = (int)occupancy_grid_msg.data[_map_width*i + i];
+			_map_data[i][j] = (int)occupancy_grid_msg.data[_map_width*j + i];
 		}
-	}
+	}	
 	
 	//Memory deallocation
-	for (unsigned int i = 0 ; i < _map_width ; i++)
+	for (unsigned int i = 0 ; i < _map_width ; i++ )
     {
 		delete [] _map_data[i];
 	}

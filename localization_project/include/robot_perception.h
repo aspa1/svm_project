@@ -1,13 +1,13 @@
 #ifndef ROBOT_PERCEPTION_H
 #define ROBOT_PERCEPTION_H
 
-#include "nav_msgs/OccupancyGrid.h"
-#include "sensor_msgs/LaserScan.h"
 #include <ros/ros.h>
 #include <ros/package.h>
+#include <nav_msgs/OccupancyGrid.h>
+#include <sensor_msgs/LaserScan.h>
 
-
-class RobotPerception {
+class RobotPerception
+{
 	private:
 		ros::NodeHandle _n;
 		std::string _map_topic_param;
