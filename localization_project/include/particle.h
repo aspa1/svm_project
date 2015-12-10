@@ -1,17 +1,26 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
+#include <ros/ros.h>
+#include <ros/package.h>
+#include <cstdlib>
+#include <time.h>
+
+#define PI 3.14159265359
+
 class Particle
 {
 	private:
-		int x;
-		int y;
-		float theta;
-		float weight;
+		int _x;
+		int _y;
+		float _theta;
+		float _weight;
 	
 	public:
 		Particle();
-		void fitness();
+		Particle( unsigned int width, unsigned int height, int** data );
+		void setParticlePos( int new_x, int new_y, float new_theta );
+		void setParticleWeight();
 };
 
 #endif

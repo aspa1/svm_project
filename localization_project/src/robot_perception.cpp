@@ -2,13 +2,17 @@
 
 RobotPerception::RobotPerception () //Constructor
 {	
+	ROS_INFO_STREAM("RobotPerception Constructor");
 	//Fetching the map topic URI param
 	if(!_n.getParam("/map_topic", _map_topic_param))
 	{
 		ROS_ERROR("Map topic param does not exist");
 	}	
 	//Subscribing to the map topic
-	_map_sub = _n.subscribe(_map_topic_param, 5, &RobotPerception::mapCallback, this);
+	_map_sub = _n.subscribe(_map_topic_param, 5,
+		&RobotPerception::mapCallback, this);
+
+	ROS_INFO_STREAM ("_map_sub done");
 
 	//Fetching the laser topic URI param
 	if(!_n.getParam("/robot_laser_topic", _laser_topic_param))
@@ -16,14 +20,23 @@ RobotPerception::RobotPerception () //Constructor
 		ROS_ERROR("Laser topic param does not exist");
 	}	
 	//Subscribing to the laser topic
-	_laser_sub = _n.subscribe(_laser_topic_param, 5, &RobotPerception::laserRangesCallback, this);
+	_laser_sub = _n.subscribe(_laser_topic_param, 5,
+		&RobotPerception::laserRangesCallback, this);
+	ROS_INFO_STREAM ("_laser_sub done");
 }
 
-void RobotPerception::mapCallback(nav_msgs::OccupancyGrid occupancy_grid_msg) //Function to get the data from the map
-{
+//Function to get the data from the map
+void RobotPerception::mapCallback (
+	nav_msgs::OccupancyGrid occupancy_grid_msg)
+{	
+	ROS_INFO_STREAM("RobotPerception mapCallback");
+
 	//Getting the width & height of the map
 	_map_width = occupancy_grid_msg.info.width;	
 	_map_height = occupancy_grid_msg.info.height;
+	
+	ROS_INFO_STREAM ("RobotPerception_width ="<< " " << _map_width << " " << "RobotPerception_height ="<< " " << _map_height);
+
 	
 	//Memory allocation
 	_map_data = new int*[_map_width];
@@ -37,7 +50,8 @@ void RobotPerception::mapCallback(nav_msgs::OccupancyGrid occupancy_grid_msg) //
 	{
 		for (unsigned int i = 0 ; i < _map_width ; i++)
 		{
-			_map_data[i][j] = (int)occupancy_grid_msg.data[_map_width*j + i];
+			_map_data[i][j] =
+				(int)occupancy_grid_msg.data[_map_width*j + i];
 		}
 	}	
 	
@@ -49,7 +63,9 @@ void RobotPerception::mapCallback(nav_msgs::OccupancyGrid occupancy_grid_msg) //
 	delete [] _map_data;	
 }
 
-void RobotPerception::laserRangesCallback(sensor_msgs::LaserScan laser_scan_msg) //Function to get the laser's ranges
+//Function to get the laser's ranges
+void RobotPerception::laserRangesCallback(
+	sensor_msgs::LaserScan laser_scan_msg) 
 {
 	//Memory allocation
 	_laser_ranges = new float[laser_scan_msg.ranges.size()];
@@ -64,12 +80,24 @@ void RobotPerception::laserRangesCallback(sensor_msgs::LaserScan laser_scan_msg)
 	delete [] _laser_ranges;
 }
 
-int** RobotPerception::getMapData () //Function to get the private class member _map_data
+unsigned int RobotPerception::getMapWidth()
+{
+	return _map_width;
+}
+	
+unsigned int RobotPerception::getMapHeight()
+{
+	return _map_height;
+}
+
+//Function to get the private class member _map_data
+int** RobotPerception::getMapData () 
 {
 	return _map_data;
 }
 
-float* RobotPerception::getLaserRanges() //Function to get the private class member _laser_ranges
+//Function to get the private class member _laser_ranges
+float* RobotPerception::getLaserRanges() 
 {
 	return _laser_ranges;
 }
