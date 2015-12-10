@@ -24,6 +24,8 @@ class RobotPerception
 		RobotPerception();
 		void mapCallback(nav_msgs::OccupancyGrid occupancy_grid_msg);
 		void laserRangesCallback(sensor_msgs::LaserScan laser_scan_msg);
+		unsigned int getMapWidth();
+		unsigned int getMapHeight();
 		int** getMapData();
 		float* getLaserRanges();
 };
