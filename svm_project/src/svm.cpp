@@ -43,8 +43,19 @@ bool SVM::svmPredict (
 			feature_vector[i] = features[i];
 		}	
 		
-		cv::Mat new_image_mat(1, 2, CV_32FC1, feature_vector);	
+		ROS_INFO_STREAM("features:");
+		for (unsigned int i = 0 ; i < features.size() ; i++)
+		{
+			ROS_INFO_STREAM(feature_vector[i]);
+		}	
+		
+		cv::Mat new_image_mat(1, features.size(), CV_32FC1, 
+			feature_vector);	
+		
 		float response = _svm.predict(new_image_mat);
+		
+		ROS_INFO_STREAM("response:"<< response);
+		
 		if (response == 1.0) 
 		{
 			ROS_INFO_STREAM("Image is red");
@@ -78,8 +89,25 @@ bool SVM::svmTrain (
 	std::string p = req.positives;
 	std::string n = req.negatives;
 	
-	std::vector<std::vector<float> > positive_features = getData(p);
-	std::vector<std::vector<float> > negative_features = getData(n);
+	std::vector<std::vector<float> > positive_features;
+	positive_features = getData(p);
+	std::vector<std::vector<float> > negative_features;
+	negative_features = getData(n);
+	
+	for (unsigned int i = 0 ; i < positive_features.size() ; i++) 
+	{	
+		for (unsigned int j = 0 ; j < positive_features[i].size() ; j++)
+		{
+			ROS_INFO_STREAM(positive_features[i][j]);
+		}
+	}
+	for (unsigned int i = 0 ; i < positive_features.size() ; i++) 
+	{	
+		for (unsigned int j = 0 ; j < positive_features[i].size() ; j++)
+		{
+			ROS_INFO_STREAM(positive_features[i][j]);
+		}
+	}
 	
 	if(positive_features.size() == 0)
 	{
@@ -91,32 +119,73 @@ bool SVM::svmTrain (
 	
 	unsigned int data_size = positive_features.size() + negative_features.size();
 	training_data = new float*[data_size];
+	ROS_INFO_STREAM(data_size);
+	
 	for (unsigned int i = 0 ; i < data_size ; i++)
 	{
 		training_data[i] = new float[positive_features[0].size()];
 	}
 	
-	float * labels = new float[data_size];
+	float *labels = new float[data_size];
 	
+	ROS_INFO_STREAM("Training data positive:");
 	for (unsigned int i = 0 ; i < positive_features.size() ; i++) 
 	{	
 		for (unsigned int j = 0 ; j < positive_features[i].size() ; j++)
 		{
 			training_data[i][j] = positive_features[i][j];
 		}
-		labels[i] = 1.0;
 	}
-	for (unsigned int i = 0 ; i < negative_features.size() ; i++) 
+	//~ for (unsigned int i = 0 ; i< data_size ; i++)
+	//~ for (unsigned int i = 0 ; i < positive_features.size() ; i++) 
+	//~ {	
+		//~ for (unsigned int j = 0 ; j < positive_features[i].size() ; j++)
+		//~ {
+			//~ 
+			//~ ROS_INFO_STREAM(training_data[i][j]);
+			//~ 
+		//~ }
+	//~ }
+	ROS_INFO_STREAM("Training data negative:");
+	for (unsigned int i = positive_features.size() ; i< data_size ; i++)
 	{	
-		for (unsigned int j = 0 ; j < negative_features[i].size() ; j++)
+		for (unsigned int j = 0 ; j < negative_features[i-positive_features.size()].size() ; j++)
 		{
-			training_data[i][j] = negative_features[i][j];
+			training_data[i][j] = negative_features[i-positive_features.size()][j];
 		}
-		labels[i] = -1.0;
 	}
-
-	cv::Mat labels_mat(data_size, data_size, CV_32FC1, labels);	
-	cv::Mat training_data_mat(data_size, data_size, CV_32FC1, training_data);	
+	
+	//~ for (unsigned int i = positive_features.size() ; i< data_size ; i++)
+	//~ {	
+		//~ for (unsigned int j = 0 ; j < negative_features[i-positive_features.size()].size() ; j++)
+		//~ {
+			//~ 
+			//~ ROS_INFO_STREAM(training_data[i][j]);
+			//~ 
+		//~ }
+	//~ }
+	
+	for (unsigned int i = 0 ; i < positive_features.size() ; i++) 
+	{	
+		 labels[i] = 1.0;
+	}
+	for (unsigned int i = positive_features.size() ; i < data_size ; i++) 
+	{	
+		 labels[i] = -1.0;
+	}
+	
+	for (unsigned int i = 0 ; i< data_size ; i++)
+	{	
+		for (unsigned int j = 0 ; j < 2 ; j++)
+		{
+			
+			ROS_INFO_STREAM(training_data[i][j]);
+			
+		}
+		ROS_INFO_STREAM(labels[i]);
+	}
+	cv::Mat labels_mat(data_size,1, CV_32FC1, labels);	
+	cv::Mat training_data_mat(data_size, positive_features[0].size(), CV_32FC1, training_data);	
 	
     _svm.train(training_data_mat, labels_mat);
     
@@ -145,8 +214,8 @@ std::vector<std::vector<float> > SVM::getData (std::string dir)
 			std::string img_name = (itr->path().filename()).string();
 			std::string path= dir + "/" + img_name;
 			cv::Mat image = img.imgRead(path);
-			training_data.push_back(f.imgPixels(image)); //getImgPath()
-			//training_data.push_back(imgRead(path)); //getImgPath()
+			training_data.push_back(f.imgPixels(image));
+			//training_data.push_back(imgRead(path));
 		}
 	}
 	else 
