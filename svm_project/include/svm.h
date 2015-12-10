@@ -11,27 +11,34 @@
 #include <opencv/ml.h>
 #include <opencv2/highgui/highgui.hpp>
 
+#include "img_read.h" 
+#include "feature_extraction.h"
+
 #include <boost/filesystem.hpp>
 
 #include "svm_project/trainSvmSrv.h"
 #include "svm_project/urlRetrieverSrv.h"
 
+
+
+
 class SVM 
 {		
 	private:	
 		ros::NodeHandle _n;
+		bool fileExist( const std::string& imagePath );
 		ros::ServiceServer _uri_retriever_service;
 		ros::ServiceServer _image_receiver_service;
 		CvSVM _svm;
+		ImgRead img;
+		FeatureExtraction f;
 				
 	public:
 		SVM();
-		bool fileExist( const std::string& imagePath );
-		bool svmTrain( svm_project::trainSvmSrv::Request &req, svm_project::trainSvmSrv::Response &res );
+		bool svmTrain(svm_project::trainSvmSrv::Request &req,svm_project::trainSvmSrv::Response &res);
 		bool svmPredict( svm_project::urlRetrieverSrv::Request &req, svm_project::urlRetrieverSrv::Response &res );
-		std::string type2str(int type);
-		std::vector<std::vector<float> > getAllFilesFromDir(std::string dir);
-		std::vector<float> imgRead(std::string path);
+		std::vector<std::vector<float> > getData (std::string dir);
+		
 };
 
 
