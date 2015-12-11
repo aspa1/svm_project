@@ -2,16 +2,17 @@
 
 Particle::Particle() {}
 
-Particle::Particle( unsigned int width, unsigned int height, int** data) 
+Particle::Particle(
+	unsigned int width, unsigned int height, int** data, float* ranges) 
 {	
 	_x = std::rand() % ( width + 1 );
 	_y = std::rand() % ( height + 1 );
 	 
-	//~ while (data[_x][_y] == - 1)
-	//~ {
-		//~ _x = std::rand() % ( width + 1 );
-		//~ _y = std::rand() % ( height + 1 );
-	//~ }
+	while ( (data[_x][_y] == - 1) || (data[_x][_y] == 100) )
+	{
+		_x = std::rand() % ( width + 1 );
+		_y = std::rand() % ( height + 1 );
+	}
 	
 	_theta = static_cast <float> (rand()) / static_cast <float> 
 		(RAND_MAX/2*PI);
@@ -28,5 +29,5 @@ void Particle::setParticlePos(int new_x, int new_y, float new_theta)
 
 void Particle::setParticleWeight()
 {
-	
+	//~ particle_dist1 =  
 }

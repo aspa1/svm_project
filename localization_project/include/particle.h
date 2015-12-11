@@ -18,7 +18,7 @@ class Particle
 	
 	public:
 		Particle();
-		Particle( unsigned int width, unsigned int height, int** data );
+		Particle( unsigned int width, unsigned int height, int** data, float* ranges );
 		void setParticlePos( int new_x, int new_y, float new_theta );
 		void setParticleWeight();
 };

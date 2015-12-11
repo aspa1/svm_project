@@ -1,5 +1,0 @@
-<launch>
-
-	<rosparam file="$(find localization_project)/cfg/params.yaml" command="load" />
-
-</launch>
