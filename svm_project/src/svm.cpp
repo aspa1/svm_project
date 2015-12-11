@@ -39,8 +39,9 @@ bool SVM::svmPredict (
 	
 	if (fileExist(url) == true) 
 	{	
-		cv::Mat image = img.imgRead(url);
+		cv::Mat image = img.getImg(url);
 		std::vector<float> features = f.imgPixels(image);
+
 		float *feature_vector = new float[features.size()];
 		for (unsigned int i = 0 ; i < features.size() ; i++)
 		{
@@ -142,20 +143,7 @@ bool SVM::svmTrain (
 		{
 			training_data[i][j] = positive_features[i][j];
 		}
-	}
-	//~ for (unsigned int i = 0 ; i< data_size ; i++)
-	//~ for (unsigned int i = 0 ; i < positive_features.size() ; i++) 
-	//~ {	
-		//~ for (unsigned int j = 0 ; j < positive_features[i].size() ; j++)
-		//~ {
-			//~ 
-			//~ ROS_INFO_STREAM(training_data[i][j]);
-			//~ 
-		//~ }
-	//~ }
-	
-	
-      
+	}      
       
 	ROS_INFO_STREAM("Training data negative:");
 	for (unsigned int i = positive_features.size() ; i< data_size ; i++)
@@ -167,16 +155,6 @@ bool SVM::svmTrain (
 				positive_features.size()][j];
 		}
 	}
-	
-	//~ for (unsigned int i = positive_features.size() ; i< data_size ; i++)
-	//~ {	
-		//~ for (unsigned int j = 0 ; j < negative_features[i-positive_features.size()].size() ; j++)
-		//~ {
-			//~ 
-			//~ ROS_INFO_STREAM(training_data[i][j]);
-			//~ 
-		//~ }
-	//~ }
 	
 	for (unsigned int i = 0 ; i < positive_features.size() ; i++) 
 	{	
@@ -201,7 +179,6 @@ bool SVM::svmTrain (
 	cv::Mat training_data_mat(data_size, positive_features[0].size(), 
 		CV_32FC1);
 		
-		//cv::Mat training_data_mat(20, 2, CV_32FC1);
 	for (unsigned int i = 0 ; i < data_size ; i++)
 	{
 		for (unsigned int j = 0 ; j < positive_features[0].size() ; j++)
@@ -233,15 +210,11 @@ std::vector<std::vector<float> > SVM::getData (std::string dir)
 	std::vector<std::vector<float> > training_data;
 	if (fileExist(dir) == true)
 	{
-		for (boost::filesystem::directory_iterator itr(dir); itr != 
-			boost::filesystem::directory_iterator(); ++itr)
+		std::vector<cv::Mat> image = img.getImgFromDir(dir);
+		for (unsigned int i = 0 ; i < image.size() ; i++)
 		{
-			std::string img_name = (itr->path().filename()).string();
-			std::string path= dir + "/" + img_name;
-			cv::Mat image = img.imgRead(path);
-			training_data.push_back(f.imgPixels(image));
-			//training_data.push_back(imgRead(path));
-		}
+			training_data.push_back(f.imgPixels(image[i]));
+		}	
 	}
 	else 
 	{
@@ -250,38 +223,6 @@ std::vector<std::vector<float> > SVM::getData (std::string dir)
 	return training_data;
 }
 
-//~ std::vector<float> SVM::imgRead(std::string path)
-//~ {	
-	//~ cv::Mat image;	
-	//~ 
-	//~ image = ImgRead(path, CV_LOAD_IMAGE_COLOR);
-	//~ 
-	//~ int red_pixel_counter = 0;
-	//~ int bg_pixel_counter = 0;
-			//~ 
-	//~ for (int i = 0 ; i < image.rows ; i++) 
-	//~ {
-		//~ for (int j = 0 ; j < image.cols ; j++) 
-		//~ {
-			//~ int b = image.at<cv::Vec3b> (i,j)[0];
-			//~ int g = image.at<cv::Vec3b> (i,j)[1];
-			//~ int r = image.at<cv::Vec3b> (i,j)[2];
-			//~ if (r > b && r > g) 
-			//~ {
-				//~ red_pixel_counter++;
-			//~ }
-			//~ else 
-			//~ {
-				//~ bg_pixel_counter++;
-			//~ }
-		//~ }
-	//~ }
-		//~ 
-	//~ std::vector<float> ret;
-	//~ ret.push_back( float(red_pixel_counter) / float(image.rows * image.cols) );
-	//~ ret.push_back( float(bg_pixel_counter) / float(image.rows * image.cols) );
-	//~ return ret;
-//~ }	
 
 
 				

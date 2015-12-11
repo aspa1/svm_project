@@ -11,6 +11,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
 
+#include <boost/filesystem.hpp>
+
 
 class ImgRead
 {
@@ -19,8 +21,9 @@ class ImgRead
 
 	public:
 		ImgRead();
-		//~ bool fileExist( const std::string& imagePath );
-		cv::Mat imgRead(std::string path);
+		//std::vector<cv::Mat> imgRead(std::string path);
+		cv::Mat getImg(std::string path);
+		std::vector<cv::Mat> getImgFromDir(std::string dir);		
 		std::string type2str(int type);		
 		
 };

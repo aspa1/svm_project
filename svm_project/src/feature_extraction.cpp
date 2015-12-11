@@ -10,8 +10,8 @@ FeatureExtraction::FeatureExtraction()
  */
 std::vector<float> FeatureExtraction::imgPixels(cv::Mat img)
 {		
-	//~ std::vector<cv::Mat> image = img;
 	cv::Mat image = img;
+
 	int red_pixel_counter = 0;
 	int bg_pixel_counter = 0;
 	
@@ -19,7 +19,7 @@ std::vector<float> FeatureExtraction::imgPixels(cv::Mat img)
 	for (unsigned int i = 0 ; i < image.rows ; i++) 
 	{
 		for (unsigned int j = 0 ; j < image.cols ; j++) 
-		{
+		{	
 			int b = image.at<cv::Vec3b> (i,j)[0];
 			int g = image.at<cv::Vec3b> (i,j)[1];
 			int r = image.at<cv::Vec3b> (i,j)[2];
@@ -36,7 +36,7 @@ std::vector<float> FeatureExtraction::imgPixels(cv::Mat img)
 		
 	std::vector<float> pixels_percentage;
 	pixels_percentage.push_back( float(red_pixel_counter) / 
-		float(image.rows * image.cols) );
+		float(image.rows * image.cols ) );
 	pixels_percentage.push_back( float(bg_pixel_counter) / 
 		float(image.rows * image.cols) );
 	return pixels_percentage;

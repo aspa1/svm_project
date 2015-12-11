@@ -26,7 +26,6 @@ class SVM
 {		
 	private:	
 		ros::NodeHandle _n;
-		bool fileExist( const std::string& imagePath );
 		ros::ServiceServer _uri_retriever_service;
 		ros::ServiceServer _image_receiver_service;
 		CvSVM _svm;
@@ -39,6 +38,7 @@ class SVM
 			 svm_project::trainSvmSrv::Response &res);
 		bool svmPredict( svm_project::urlRetrieverSrv::Request &req, 
 			 svm_project::urlRetrieverSrv::Response &res );
+		bool fileExist( const std::string& imagePath );
 		std::vector<std::vector<float> > getData (std::string dir);
 		
 };

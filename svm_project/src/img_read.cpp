@@ -5,20 +5,44 @@ ImgRead::ImgRead()
 	
 }
 
-//~ bool ImgRead::fileExist( const std::string& name )
-//~ {
-    //~ return boost::filesystem::exists(name);
-//~ }
+/** 
+ * @brief Reads and return a vector of images from a dir 
+ */
+std::vector<cv::Mat> ImgRead::getImgFromDir(std::string dir)
+{
+	std::vector<cv::Mat> image;
+	for (boost::filesystem::directory_iterator itr(dir); itr != 
+			boost::filesystem::directory_iterator(); ++itr)
+		{
+			std::string img_name = (itr->path().filename()).string();
+			std::string path= dir + "/" + img_name;
+			image.push_back(cv::imread(path, CV_LOAD_IMAGE_COLOR));
+		}	
+	return image;	
+}
+
+cv::Mat ImgRead::getImg(std::string path)
+{	
+	cv::Mat image;	
+	image = cv::imread(path, CV_LOAD_IMAGE_COLOR);	
+		
+	return image;	
+}
 
 /** 
  * @brief Reads and return an image
  */
-cv::Mat ImgRead::imgRead(std::string path)
-{	
-	cv::Mat image;	
-	image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
-	return image;	
-}
+//~ std::vector<cv::Mat> ImgRead::imgRead(std::string path)
+//~ {	
+	//~ std::vector<cv::Mat> image;	
+	//~ for (unsigned int i = 0 ; i < image.size() ; i++)
+	//~ {
+		//~ image[i].push_back(cv::imread(path, CV_LOAD_IMAGE_COLOR));
+		//~ ROS_INFO_STREAM("hello");
+	//~ }	
+		//~ 
+	//~ return image;	
+//~ }
 
 /** 
  * @brief Finds the type of an image
