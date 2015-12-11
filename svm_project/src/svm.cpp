@@ -5,10 +5,12 @@
  */
 SVM::SVM() 
 {	
-	_uri_retriever_service = _n.advertiseService("uri_retriever", &SVM::svmPredict, this);
+	_uri_retriever_service = _n.advertiseService("uri_retriever", 
+		&SVM::svmPredict, this);
 	ROS_INFO("Service ready to test an image from uri");
 	
-	_image_receiver_service = _n.advertiseService("image_receiver", &SVM::svmTrain, this);
+	_image_receiver_service = _n.advertiseService("image_receiver", 
+		&SVM::svmTrain, this);
 	ROS_INFO("Service ready to receive images and train svm");
 }
 
@@ -22,8 +24,10 @@ bool SVM::fileExist( const std::string& name )
 
 /**
  * @brief Serves the uri service callback
- * @param req [svm_project::urlRetrieverSrv::Request&] The uri Retriever service request
- * @param res [svm_project::urlRetrieverSrv::Response&] The uri Retriever service response
+ * @param req [svm_project::urlRetrieverSrv::Request&] The uri Retriever
+ * 	 service request
+ * @param res [svm_project::urlRetrieverSrv::Response&] The uri 
+ * 	Retriever service response
  * @return bool - The success status of the call
  */
 bool SVM::svmPredict ( 	
@@ -78,8 +82,10 @@ bool SVM::svmPredict (
 
 /**
  * @brief Serves the image service callback
- * @param req [svm_project::trainSvmSrv::Request&] The image receiver service request
- * @param res [svm_project::trainSvmSrv::Response&] The image receiver service response
+ * @param req [svm_project::trainSvmSrv::Request&] The image receiver 
+ * 	service request
+ * @param res [svm_project::trainSvmSrv::Response&] The image receiver 
+ * service response
  * @return bool - The success status of the call
  */
 bool SVM::svmTrain ( 
@@ -117,7 +123,8 @@ bool SVM::svmTrain (
 	// Allocation of training data
 	float **training_data;
 	
-	unsigned int data_size = positive_features.size() + negative_features.size();
+	unsigned int data_size = positive_features.size() + 
+		negative_features.size();
 	training_data = new float*[data_size];
 	ROS_INFO_STREAM(data_size);
 	
@@ -146,12 +153,18 @@ bool SVM::svmTrain (
 			//~ 
 		//~ }
 	//~ }
+	
+	
+      
+      
 	ROS_INFO_STREAM("Training data negative:");
 	for (unsigned int i = positive_features.size() ; i< data_size ; i++)
 	{	
-		for (unsigned int j = 0 ; j < negative_features[i-positive_features.size()].size() ; j++)
+		for (unsigned int j = 0 ; j < negative_features[i-
+			positive_features.size()].size() ; j++)
 		{
-			training_data[i][j] = negative_features[i-positive_features.size()][j];
+			training_data[i][j] = negative_features[i-
+				positive_features.size()][j];
 		}
 	}
 	
@@ -185,9 +198,20 @@ bool SVM::svmTrain (
 		ROS_INFO_STREAM(labels[i]);
 	}
 	cv::Mat labels_mat(data_size,1, CV_32FC1, labels);	
-	cv::Mat training_data_mat(data_size, positive_features[0].size(), CV_32FC1, training_data);	
+	cv::Mat training_data_mat(data_size, positive_features[0].size(), 
+		CV_32FC1);
+		
+		//cv::Mat training_data_mat(20, 2, CV_32FC1);
+	for (unsigned int i = 0 ; i < data_size ; i++)
+	{
+		for (unsigned int j = 0 ; j < positive_features[0].size() ; j++)
+		{
+			training_data_mat.at<float>(i,j) = training_data[i][j];	
+		}
+	}
 	
     _svm.train(training_data_mat, labels_mat);
+    
     
     for (unsigned int i = 0 ; i < data_size ; i++)
     {
@@ -209,7 +233,8 @@ std::vector<std::vector<float> > SVM::getData (std::string dir)
 	std::vector<std::vector<float> > training_data;
 	if (fileExist(dir) == true)
 	{
-		for (boost::filesystem::directory_iterator itr(dir); itr != boost::filesystem::directory_iterator(); ++itr)
+		for (boost::filesystem::directory_iterator itr(dir); itr != 
+			boost::filesystem::directory_iterator(); ++itr)
 		{
 			std::string img_name = (itr->path().filename()).string();
 			std::string path= dir + "/" + img_name;

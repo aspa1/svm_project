@@ -35,7 +35,9 @@ std::vector<float> FeatureExtraction::imgPixels(cv::Mat img)
 	}
 		
 	std::vector<float> pixels_percentage;
-	pixels_percentage.push_back( float(red_pixel_counter) / float(image.rows * image.cols) );
-	pixels_percentage.push_back( float(bg_pixel_counter) / float(image.rows * image.cols) );
+	pixels_percentage.push_back( float(red_pixel_counter) / 
+		float(image.rows * image.cols) );
+	pixels_percentage.push_back( float(bg_pixel_counter) / 
+		float(image.rows * image.cols) );
 	return pixels_percentage;
 }	

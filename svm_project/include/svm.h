@@ -35,8 +35,10 @@ class SVM
 				
 	public:
 		SVM();
-		bool svmTrain(svm_project::trainSvmSrv::Request &req,svm_project::trainSvmSrv::Response &res);
-		bool svmPredict( svm_project::urlRetrieverSrv::Request &req, svm_project::urlRetrieverSrv::Response &res );
+		bool svmTrain(svm_project::trainSvmSrv::Request &req,
+			 svm_project::trainSvmSrv::Response &res);
+		bool svmPredict( svm_project::urlRetrieverSrv::Request &req, 
+			 svm_project::urlRetrieverSrv::Response &res );
 		std::vector<std::vector<float> > getData (std::string dir);
 		
 };
