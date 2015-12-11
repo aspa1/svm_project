@@ -27,6 +27,7 @@ class RobotPerception
 		unsigned int getMapWidth();
 		unsigned int getMapHeight();
 		int** getMapData();
+		int getMapCell (int i, int j );
 		float* getLaserRanges();
 };
 
