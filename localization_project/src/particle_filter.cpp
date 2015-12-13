@@ -13,13 +13,13 @@ bool ParticleFilter::particlesInitCallback (
 	localization_project::particleInitSrv::Response& res
 	)
 {
-	
 	if(!_n.getParam("/particles_number", particles_number))
 	{
 		ROS_ERROR("Particles number param does not exist");
 	}	
 	
-	ROS_INFO_STREAM ("ParticleFilter_width ="<< " " << robot_percept.getMapWidth() << " " << "ParticleFilter_height ="<< " " << robot_percept.getMapHeight());
+	ROS_INFO_STREAM ("Particles:");
+	ROS_INFO_STREAM ("ParticleFilter:map_width ="<< " " << robot_percept.getMapWidth() << " " << "ParticleFilter:map_height ="<< " " << robot_percept.getMapHeight());
 	
 	//~ for (unsigned int i = 0 ; i < robot_percept.getMapWidth() ; i++ )
 	//~ {
@@ -28,8 +28,6 @@ bool ParticleFilter::particlesInitCallback (
 			//~ ROS_INFO_STREAM (" i = " << " " << i << " " << "j = " << " " << j << " " <<" Map data = " << " " << robot_percept.getMapCell(i,j));
 		//~ }
 	//~ }
-	
-	
 	for (unsigned int i = 0 ; i < particles_number ; i++ )
 	{
 		Particle particle( robot_percept.getMapWidth(),
@@ -37,5 +35,7 @@ bool ParticleFilter::particlesInitCallback (
 			robot_percept.getLaserRanges());
 		_particles.push_back(particle);
 	}
+	ROS_INFO_STREAM(particles_number << " " << "particles initialized");
+	res.success=true;
 	return true;
 }

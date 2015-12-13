@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <cstdlib>
-#include <time.h>
+#include <math.h>
 
 #define PI 3.14159265359
 
@@ -18,7 +18,7 @@ class Particle
 	
 	public:
 		Particle();
-		Particle( unsigned int width, unsigned int height, int** data, float* ranges );
+		Particle( unsigned int width, unsigned int height, int** data, std::vector<float> ranges );
 		void setParticlePos( int new_x, int new_y, float new_theta );
 		void setParticleWeight();
 };

@@ -17,7 +17,7 @@ class RobotPerception
 		unsigned int _map_width;
 		unsigned int _map_height;
 		int** _map_data; 
-		float* _laser_ranges;
+		std::vector<float> _laser_ranges;
 	
 	
 	public:
@@ -27,8 +27,8 @@ class RobotPerception
 		unsigned int getMapWidth();
 		unsigned int getMapHeight();
 		int** getMapData();
-		int getMapCell (int i, int j );
-		float* getLaserRanges();
+		int getMapCell (int i, int j);
+		std::vector<float> getLaserRanges();
 };
 
 #endif

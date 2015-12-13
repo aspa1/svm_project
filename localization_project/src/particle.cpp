@@ -3,21 +3,21 @@
 Particle::Particle() {}
 
 Particle::Particle(
-	unsigned int width, unsigned int height, int** data, float* ranges) 
+	unsigned int width, unsigned int height, int** data, std::vector<float> ranges) 
 {	
-	_x = std::rand() % ( width + 1 );
-	_y = std::rand() % ( height + 1 );
+	_x = std::rand() % ( width );
+	_y = std::rand() % ( height );
 	 
 	while ( (data[_x][_y] == - 1) || (data[_x][_y] == 100) )
 	{
-		_x = std::rand() % ( width + 1 );
-		_y = std::rand() % ( height + 1 );
+		_x = std::rand() % ( width );
+		_y = std::rand() % ( height );
 	}
-	
+
+
 	_theta = static_cast <float> (rand()) / static_cast <float> 
 		(RAND_MAX/2*PI);
-	ROS_INFO_STREAM ("width = "<< " " << width << " " << "height = " << " " <<height);
-	ROS_INFO_STREAM ("x = "<< " " << _x << " " << "y = "<< _y << " " << " theta = " << " " << _theta);
+	//~ ROS_INFO_STREAM ("x = "<< " " << _x << " " << "y = "<< _y << " " << " theta = " << " " << _theta);
 }
 
 void Particle::setParticlePos(int new_x, int new_y, float new_theta) 
@@ -29,5 +29,5 @@ void Particle::setParticlePos(int new_x, int new_y, float new_theta)
 
 void Particle::setParticleWeight()
 {
-	//~ particle_dist1 =  
+	//degrees = rad * PI / 180.0;	
 }
