@@ -32,6 +32,7 @@ void RobotPerception::mapCallback (
 {		
 	_map_width = occupancy_grid_msg.info.width;	
 	_map_height = occupancy_grid_msg.info.height;
+	_map_resolution = occupancy_grid_msg.info.resolution; 
 	
 	ROS_INFO_STREAM ("RobotPerception:map_width ="<< " " << _map_width << 
 		" " << "RobotPerception:map_height ="<< " " << _map_height);
@@ -82,8 +83,12 @@ unsigned int RobotPerception::getMapHeight()
 	return _map_height;
 }
 
+float RobotPerception::getMapResolution()
+{
+	return _map_resolution;
+} 
+
 /**
-<<<<<<< HEAD
  * @brief Returns the occupancy state of a map cell
  * @param i [int] Coordinate x of the map data array 
  * @param j [int] Coordinate y of the map data array 

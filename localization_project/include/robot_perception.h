@@ -16,6 +16,7 @@ class RobotPerception
 		ros::Subscriber _laser_sub;
 		unsigned int _map_width;
 		unsigned int _map_height;
+		float _map_resolution;
 		int** _map_data; 
 		std::vector<float> _laser_ranges;
 	
@@ -26,6 +27,7 @@ class RobotPerception
 		void laserRangesCallback(sensor_msgs::LaserScan laser_scan_msg);
 		unsigned int getMapWidth();
 		unsigned int getMapHeight();
+		float getMapResolution();
 		int** getMapData();
 		int getMapCell (int i, int j);
 		std::vector<float> getLaserRanges();
