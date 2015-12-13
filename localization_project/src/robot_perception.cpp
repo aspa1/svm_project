@@ -83,12 +83,13 @@ unsigned int RobotPerception::getMapHeight()
 }
 
 /**
+<<<<<<< HEAD
  * @brief Returns the occupancy state of a map cell
  * @param i [int] Coordinate x of the map data array 
  * @param j [int] Coordinate y of the map data array 
  * @return int - Map cell occupancy state 
  */
-int RobotPerception::getMapCell(int i, int j) 
+int RobotPerception::getMapCell ( int i, int j ) 
 {
 	return _map_data[i][j];
 }

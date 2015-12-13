@@ -125,16 +125,30 @@ CATKIN_DEPENDS
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
 
 ## Declare a C++ library
-# add_library(svm
-#   src/${PROJECT_NAME}/svm.cpp
-# )
+
+add_library(svm_lib src/svm.cpp)
+target_link_libraries(svm_lib ${catkin_LIBRARIES})
+add_dependencies(svm_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_library(img_read_lib src/img_read.cpp)
+target_link_libraries(img_read_lib ${catkin_LIBRARIES})
+add_dependencies(img_read_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_library(feature_extraction_lib src/feature_extraction.cpp)
+target_link_libraries(feature_extraction_lib ${catkin_LIBRARIES})
+add_dependencies(feature_extraction_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+
+
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(svm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 #~ add_executable(server src/svm_server.cpp src/image_processing.cpp)
@@ -150,9 +164,12 @@ include_directories(include)
 #~ )
 #~ add_dependencies (client ${catkin_EXPORTED_TARGETS})
 
-add_executable(svm src/main.cpp src/svm.cpp)
+add_executable(svm src/main.cpp)
  target_link_libraries(svm
-   ${catkin_LIBRARIES}
+	svm_lib
+	img_read_lib
+	feature_extraction_lib
+   #~ ${catkin_LIBRARIES}
 )
 add_dependencies (svm svm_project_gencpp ${catkin_EXPORTED_TARGETS})
 

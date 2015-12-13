@@ -2,8 +2,8 @@
 
 Particle::Particle() {}
 
-Particle::Particle(
-	unsigned int width, unsigned int height, int** data, std::vector<float> ranges) 
+Particle::Particle(unsigned int width,
+	unsigned int height, int** data, std::vector<float> ranges) 
 {	
 	_x = std::rand() % ( width );
 	_y = std::rand() % ( height );
