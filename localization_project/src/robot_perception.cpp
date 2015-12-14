@@ -103,7 +103,7 @@ int RobotPerception::getMapCell ( int i, int j )
  * @brief Returns the map data
  * @return int** - Map occupancy data array
  */
-int** RobotPerception::getMapData ( ) 
+int** RobotPerception::getMapData () 
 {
 	return _map_data;
 }

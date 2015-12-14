@@ -19,7 +19,7 @@ bool ParticleFilter::particlesInitCallback (
 		ROS_ERROR("Particles number param does not exist");
 	}	
 	//~ ROS_INFO_STREAM ("Particles:");
-	ROS_INFO_STREAM ("ParticleFilter:map_width ="<< " " << robot_percept.getMapWidth() << " " << "ParticleFilter:map_height ="<< " " << robot_percept.getMapHeight());
+	//~ ROS_INFO_STREAM ("ParticleFilter:map_width ="<< " " << robot_percept.getMapWidth() << " " << "ParticleFilter:map_height ="<< " " << robot_percept.getMapHeight());
 
 	//~ for (unsigned int i = 0 ; i < robot_percept.getMapWidth() ; i++ )
 	//~ {
@@ -32,15 +32,14 @@ bool ParticleFilter::particlesInitCallback (
 	for (unsigned int i = 0 ; i < particles_number ; i++ )
 	{
 		Particle particle( robot_percept.getMapWidth(),
-			robot_percept.getMapHeight(), robot_percept.getMapData(),
-			robot_percept.getLaserRanges(), robot_percept.getMapResolution());
+			robot_percept.getMapHeight(), robot_percept.getMapData());
 		_particles.push_back(particle);
 		
 		//~ ROS_INFO_STREAM("Particle" << " " << i+1 << ":");
-		_particles[i].setParticleWeight();
+		_particles[i].setParticleWeight(robot_percept.getMapWidth(),
+			robot_percept.getMapHeight(), robot_percept.getMapData(), robot_percept.getMapResolution(), robot_percept.getLaserRanges());
 		
 	}
-	//~ _particles[0].setParticleWeight();
 	ROS_INFO_STREAM(particles_number << " " << "particles initialized");
 	res.success=true;
 	return true;
