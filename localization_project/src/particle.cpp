@@ -10,7 +10,7 @@ Particle::Particle(unsigned int width, unsigned int height, int** data)
 	_x = std::rand() % ( width );
 	_y = std::rand() % ( height );
 	 
-	while ( (data[_x][_y] == - 1) || (data[_x][_y] == 100) )
+	while ( (data[_x][_y] == - 1) || (data[_x][_y] > 50) )
 	{
 		_x = std::rand() % ( width );
 		_y = std::rand() % ( height );
@@ -25,14 +25,42 @@ Particle::Particle(unsigned int width, unsigned int height, int** data)
 	//~ _theta = 0;
 }
 
-void Particle::setParticlePos(int new_x, int new_y, float new_theta) 
+void Particle::setPose(int new_x, int new_y, float new_theta, unsigned int width, unsigned int height) 
 {
+	if (new_x >= width || new_y >= height || new_theta >= 2*PI )
+	{
+		ROS_ERROR ("Coordinates out of bound");
+		return;
+	}
+	if (new_x < 0 || new_y < 0 || new_theta < 0)
+	{
+		ROS_ERROR ("Coordinates cannot be negative");
+		return;
+	}
 	_x = new_x;
 	_y = new_y;
 	_theta = new_theta;
 }
 
-void Particle::particleRanges(float angle, unsigned int width, unsigned int height, int** data, float resolution)
+void Particle::move(ros::Duration dt, float linear, float angular)
+{
+	if (angular == 0)
+	{
+      _x += linear * dt.toSec() * cosf(_theta);
+      _y += linear * dt.toSec() * sinf(_theta);
+    }
+    else
+    {
+      _x += - linear / angular * sinf(_theta) + linear / angular * 
+        sinf(_theta + dt.toSec() * angular);
+      
+      _y -= - linear / angular * cosf(_theta) + linear / angular * 
+        cosf(_theta + dt.toSec() * angular);
+    }
+    _theta += angular * dt.toSec();
+}
+
+void Particle::sense(float angle, unsigned int width, unsigned int height, int** data, float resolution)
 {
 	int distance = 1 ;
 	float new_x = _x + distance * cos(angle);
@@ -62,10 +90,10 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height, int** 
 	std::vector<float> distances;
 	float sum = 0;
 	
-	particleRanges(PI + _theta, width, height, data, resolution);
-	particleRanges(3 * PI/2 + _theta, width, height, data, resolution);
-	particleRanges(_theta, width, height, data, resolution);
-	particleRanges(PI/2 + _theta, width, height, data, resolution);
+	sense(PI + _theta, width, height, data, resolution);
+	sense(3 * PI/2 + _theta, width, height, data, resolution);
+	sense(_theta, width, height, data, resolution);
+	sense(PI/2 + _theta, width, height, data, resolution);
 		
 	//~ ROS_INFO_STREAM("Particle_ranges_size" << " " <<_particle_ranges.size());
 	for ( unsigned int i = 0 ; i < _particle_ranges.size() ; i++ )
@@ -77,5 +105,20 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height, int** 
 	}
 	
 	_weight = 1/(sum + 1);
-	ROS_INFO_STREAM("Weight: " << " " << _weight);
+	//~ ROS_INFO_STREAM("Weight: " << " " << _weight);
+}
+
+int Particle::getX()
+{
+	return _x;
+}
+
+int Particle::getY() 
+{
+	return _y;
+}
+
+float Particle::getWeight()
+{
+	return _weight;
 }

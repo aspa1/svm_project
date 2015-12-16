@@ -20,9 +20,13 @@ class Particle
 	public:
 		Particle();
 		Particle( unsigned int width, unsigned int height, int** data );
-		void setParticlePos( int new_x, int new_y, float new_theta );
-		void particleRanges(float angle, unsigned int width, unsigned int height, int** data, float resolution);
+		void setPose( int new_x, int new_y, float new_theta, unsigned int width, unsigned int height );
+		void move(ros::Duration dt, float linear, float angular);
+		void sense(float angle, unsigned int width, unsigned int height, int** data, float resolution);
 		void setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges);
+		int getX();
+		int getY();
+		float getWeight();
 };
 
 #endif
