@@ -23,6 +23,7 @@ class ParticleFilter {
 		float _linear;
 		float _angular;
 		bool _particles_initialized;
+		ros::Timer timer;
 
 	
 	public:
@@ -32,7 +33,7 @@ class ParticleFilter {
 			localization_project::particleInitSrv::Response& res
 		);
 		void visualize(float resolution);
-		//~ void particlesCallback();
+		void particlesCallback(const ros::TimerEvent&);
 		void velocityCallback(geometry_msgs::Twist twist);
 		void resample();
 };
