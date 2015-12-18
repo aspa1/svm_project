@@ -25,39 +25,42 @@ Particle::Particle(unsigned int width, unsigned int height, int** data)
 	//~ _theta = 0;
 }
 
-void Particle::setPose(int new_x, int new_y, float new_theta, unsigned int width, unsigned int height) 
-{
-	if (new_x >= width || new_y >= height || new_theta >= 2*PI )
-	{
-		ROS_ERROR ("Coordinates out of bound");
-		return;
-	}
-	if (new_x < 0 || new_y < 0 || new_theta < 0)
-	{
-		ROS_ERROR ("Coordinates cannot be negative");
-		return;
-	}
-	_x = new_x;
-	_y = new_y;
-	_theta = new_theta;
-}
+//~ void Particle::setPose(int new_x, int new_y, float new_theta, unsigned int width, unsigned int height) 
+//~ {
+	//~ if (new_x >= width || new_y >= height || new_theta >= 2*PI )
+	//~ {
+		//~ ROS_ERROR ("Coordinates out of bound");
+		//~ return;
+	//~ }
+	//~ if (new_x < 0 || new_y < 0 || new_theta < 0)
+	//~ {
+		//~ ROS_ERROR ("Coordinates cannot be negative");
+		//~ return;
+	//~ }
+	//~ _x = new_x;
+	//~ _y = new_y;
+	//~ _theta = new_theta;
+//~ }
 
-void Particle::move(ros::Duration dt, float linear, float angular)
+void Particle::move(ros::Duration dt, float linear, float angular, float resolution)
 {
+	ROS_INFO_STREAM("x "<< _x << " y " << _y << " theta " << _theta);
 	if (angular == 0)
 	{
-      _x += linear * dt.toSec() * cosf(_theta);
-      _y += linear * dt.toSec() * sinf(_theta);
+      _x += (linear * dt.toSec() * cosf(_theta)) / resolution;
+      _y += (linear * dt.toSec() * sinf(_theta)) / resolution;
     }
     else
     {
-      _x += - linear / angular * sinf(_theta) + linear / angular * 
-        sinf(_theta + dt.toSec() * angular);
+      _x += (- linear / angular * sinf(_theta) + linear / angular * 
+        sinf(_theta + dt.toSec() * angular)) / resolution;
       
-      _y -= - linear / angular * cosf(_theta) + linear / angular * 
-        cosf(_theta + dt.toSec() * angular);
+      _y -= (- linear / angular * cosf(_theta) + linear / angular * 
+        cosf(_theta + dt.toSec() * angular)) / resolution;
     }
     _theta += angular * dt.toSec();
+    ROS_INFO_STREAM("new x "<< _x << "  new y " << _y << " new theta " << _theta);
+    ROS_INFO_STREAM ("dt" << " " << dt.toSec() << " " << "linear" << " " << linear << " " << "angular" << " " << angular);
 }
 
 void Particle::sense(float angle, unsigned int width, unsigned int height, int** data, float resolution)
@@ -67,7 +70,7 @@ void Particle::sense(float angle, unsigned int width, unsigned int height, int**
 	float new_y = _y + distance * sin(angle);
 	
 	//~ ROS_INFO_STREAM("new_x = " << " " << (int)(new_x) << " " << "new_y = " << " " << (int)(new_y));
-	while ( ((int)new_x <= width && (int)new_y <= height) && ((int)new_x > 0 && (int)new_y > 0))
+	while ( ((int)new_x < width && (int)new_y < height) && ((int)new_x >= 0 && (int)new_y >= 0))
 	{
 		//~ ROS_INFO_STREAM("new_x = " << " " << (int)(new_x) << " " << "new_y = " << " " << (int)(new_y));
 		if (data[(int)(new_x)][(int)(new_y)] > 50)

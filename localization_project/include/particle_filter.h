@@ -20,10 +20,15 @@ class ParticleFilter {
 		bool _visualization_enabled;
 		ros::Publisher _visualization_pub;
 		ros::Subscriber _velocity_sub;
-		float _linear;
-		float _angular;
+		ros::Time _current_time;
+		ros::Time _previous_time;
+		float _current_linear;
+		float _current_angular;
+		float _previous_linear;
+		float _previous_angular;
 		bool _particles_initialized;
 		ros::Timer timer;
+		bool _flag;
 
 	
 	public:
@@ -33,7 +38,7 @@ class ParticleFilter {
 			localization_project::particleInitSrv::Response& res
 		);
 		void visualize(float resolution);
-		void particlesCallback(const ros::TimerEvent&);
+		void particlesCallback(const ros::TimerEvent& event);
 		void velocityCallback(geometry_msgs::Twist twist);
 		void resample();
 };

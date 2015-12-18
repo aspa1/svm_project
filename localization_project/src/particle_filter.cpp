@@ -2,12 +2,16 @@
 
 ParticleFilter::ParticleFilter() 
 {
-	_linear = 0;
-	_angular = 0;
+	_previous_linear = 0;
+	_previous_angular = 0;
+	_current_angular = 0;
+	_current_linear = 0;
+	_previous_time = ros::Time::now();
+	_flag = false;
 	_particles_initialized = false;
 	
 	_particle_initialization_service = _n.advertiseService (
-		"particle_initialization",
+		"particles_initialization",
 		&ParticleFilter::particlesInit, this);
 	ROS_INFO("Service ready to initialize particles");
 	
@@ -18,9 +22,9 @@ ParticleFilter::ParticleFilter()
 	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
       "visualization_marker", 0);
             
-    _velocity_sub = _n.subscribe("/robot0/cmd_vel", 5, &ParticleFilter::velocityCallback, this);
+    _velocity_sub = _n.subscribe("/robot0/cmd_vel", 10, &ParticleFilter::velocityCallback, this);
     
-    timer = _n.createTimer(ros::Duration(5), &ParticleFilter::particlesCallback, this);
+    timer = _n.createTimer(ros::Duration(2), &ParticleFilter::particlesCallback, this);
 }
 
 bool ParticleFilter::particlesInit (
@@ -32,6 +36,7 @@ bool ParticleFilter::particlesInit (
 	{
 		ROS_ERROR("Particles number param does not exist");
 	}
+	ROS_INFO_STREAM ("Particles " << _particles_number);
 	for (unsigned int i = 0 ; i < _particles_number ; i++ )
 	{
 		Particle particle( robot_percept.getMapWidth(),
@@ -49,28 +54,53 @@ bool ParticleFilter::particlesInit (
 	return true;	
 }
 
-void ParticleFilter::particlesCallback(const ros::TimerEvent&)
+void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 {
-	ros::Time time;
 	ros::Duration dt;
-		
-	if (_particles_initialized)
+	//~ int counter = 0 ;
+	ROS_INFO_STREAM("AOUA");
+	if (_particles_initialized && ((_current_angular != 0) || (_current_linear != 0)))
 	{
-		dt = ros::Time::now() - time;
-		
-		for (unsigned int i = 0 ; i < _particles_number ; i++ )
+		if (_flag == false)
 		{
-			_particles[i].move(dt, _linear, _angular);
-			
-			_particles[i].setParticleWeight(robot_percept.getMapWidth(),
-				robot_percept.getMapHeight(), robot_percept.getMapData(),
-				robot_percept.getMapResolution(),
-				robot_percept.getLaserRanges());
-			ROS_INFO_STREAM("linear = " << " " << _linear << "angular = " << " " << _angular);
-
-			resample();
+			_previous_time = ros::Time::now();
+			_flag = true;
 		}
-	}	
+		else
+		{
+			ROS_INFO_STREAM ("Previous angular:" << " " << _previous_angular << " " << "current angular: " << _current_angular);
+			ROS_INFO_STREAM ("Previous linear:" << " " << _previous_linear << " " << "current linear: " << _current_linear);
+			_current_time = ros::Time::now();
+			//~ dt = ros::Time::now() - event.last_real;
+			dt = _current_time - _previous_time;
+			ROS_INFO_STREAM ("Dt:" << " " << dt);
+			//~ ROS_INFO_STREAM ("dt = " << " " << dt.toSec() << "linear = " << " " << _linear << "angular = " << " " << _angular);
+			for (unsigned int i = 0 ; i < _particles_number ; i++ )
+			{
+				_particles[i].move(dt, _current_linear, _current_angular, robot_percept.getMapResolution());
+			}
+			visualize(robot_percept.getMapResolution());
+			ROS_INFO_STREAM("AOUA2");
+			for (unsigned int i = 0 ; i < _particles_number ; i++ )
+			{
+				_particles[i].setParticleWeight(robot_percept.getMapWidth(),
+					robot_percept.getMapHeight(), robot_percept.getMapData(),
+					robot_percept.getMapResolution(),
+					robot_percept.getLaserRanges());
+				//~ ROS_INFO_STREAM("linear = " << " " << _linear << "angular = " << " " << _angular);
+			//~ counter++;
+			}
+			ROS_INFO_STREAM("PW + " << _particles[0].getWeight());
+			ROS_INFO_STREAM("AOUA3");
+			_previous_angular = _current_angular;
+			_previous_linear = _current_linear;
+			_previous_time = _current_time;
+			//~ ROS_INFO_STREAM("counter" << " " << counter);
+			resample();
+			ROS_INFO_STREAM("AOUA4");
+			visualize(robot_percept.getMapResolution());
+		}
+	}
 }
 	//~ ROS_INFO_STREAM ("Particles:");
 	//~ ROS_INFO_STREAM ("ParticleFilter:map_width ="<< " " << robot_percept.getMapWidth() << " " << "ParticleFilter:map_height ="<< " " << robot_percept.getMapHeight());
@@ -82,33 +112,6 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent&)
 			//~ ROS_INFO_STREAM (" i = " << " " << i << " " << "j = " << " " << j << " " <<" Map data = " << " " << robot_percept.getMapCell(i,j));
 		//~ }
 	//~ }
-	
-
-//~ void ParticleFilter::particlesCallback()
-//~ {	
-	//~ ros::Time time;
-	//~ ros::Duration dt;
-		//~ 
-	//~ while (_particles_initialized)
-	//~ {
-		//~ dt = ros::Time::now() - time;
-		//~ 
-		//~ for (unsigned int i = 0 ; i < _particles_number ; i++ )
-		//~ {
-			//~ _particles[i].move(dt, _linear, _angular);
-			//~ 
-			//~ _particles[i].setParticleWeight(robot_percept.getMapWidth(),
-				//~ robot_percept.getMapHeight(), robot_percept.getMapData(),
-				//~ robot_percept.getMapResolution(),
-				//~ robot_percept.getLaserRanges());
-			//~ ROS_INFO_STREAM("linear = " << " " << _linear << "angular = " << " " << _angular);
-//~ 
-			//~ resample();
-			//~ 
-//~ 
-		//~ }
-	//~ }
-//~ }
 
 void ParticleFilter::resample()
 {
@@ -132,7 +135,16 @@ void ParticleFilter::resample()
 		}
 		new_particles.push_back(_particles[index]);
 	}
+	ROS_INFO_STREAM("particles size = " << " " << _particles.size() << "new particles size = " << " " << new_particles.size());
 	_particles = new_particles;
+}
+
+void ParticleFilter::velocityCallback(geometry_msgs::Twist twist)
+{
+	ROS_INFO_STREAM("VelocityCallback");
+	_current_linear = twist.linear.x;
+	_current_angular = twist.angular.z;
+	// ROS_INFO_STREAM ( "angular = " << " " << _current_angular << " " << "linear=" << " " << _current_linear);
 }
 
 void ParticleFilter::visualize(float resolution)
@@ -162,10 +174,4 @@ void ParticleFilter::visualize(float resolution)
     }
 	
 	 _visualization_pub.publish(m);
-}
-
-void ParticleFilter::velocityCallback(geometry_msgs::Twist twist)
-{
-	_linear = twist.linear.x;
-	_angular = twist.angular.z;
 }

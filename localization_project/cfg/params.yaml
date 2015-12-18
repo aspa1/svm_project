@@ -2,6 +2,6 @@ map_topic: /map
 
 robot_laser_topic: /robot0/laser_1
 
-particles_number: 600
+particles_number: 1
 
 enable_visualization: true
