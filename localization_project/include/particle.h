@@ -21,7 +21,7 @@ class Particle
 		Particle();
 		Particle( unsigned int width, unsigned int height, int** data );
 		//~ void setPose( int new_x, int new_y, float new_theta, unsigned int width, unsigned int height );
-		void move(ros::Duration dt, float linear, float angular, float resolution);
+		void move(int dx, int dy, float dtheta, float resolution);
 		void sense(float angle, unsigned int width, unsigned int height, int** data, float resolution);
 		void setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges);
 		int getX();

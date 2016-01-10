@@ -27,8 +27,13 @@ class ParticleFilter {
 		float _previous_linear;
 		float _previous_angular;
 		bool _particles_initialized;
-		ros::Timer timer;
+		ros::Timer _timer;
 		bool _flag;
+		
+		ros::Duration _dt;
+		int _x;
+		int _y;
+		float _theta;
 
 	
 	public:

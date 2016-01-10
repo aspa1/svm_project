@@ -42,25 +42,16 @@ Particle::Particle(unsigned int width, unsigned int height, int** data)
 	//~ _theta = new_theta;
 //~ }
 
-void Particle::move(ros::Duration dt, float linear, float angular, float resolution)
+void Particle::move(int dx, int dy, float dtheta, float resolution)
 {
-	ROS_INFO_STREAM("x "<< _x << " y " << _y << " theta " << _theta);
-	if (angular == 0)
-	{
-      _x += (linear * dt.toSec() * cosf(_theta)) / resolution;
-      _y += (linear * dt.toSec() * sinf(_theta)) / resolution;
-    }
-    else
-    {
-      _x += (- linear / angular * sinf(_theta) + linear / angular * 
-        sinf(_theta + dt.toSec() * angular)) / resolution;
-      
-      _y -= (- linear / angular * cosf(_theta) + linear / angular * 
-        cosf(_theta + dt.toSec() * angular)) / resolution;
-    }
-    _theta += angular * dt.toSec();
+    ROS_INFO_STREAM("x1 = " << _x << " y1 = " << _y << " theta1 = " << _theta);
+    ROS_INFO_STREAM("dx = " << dx << " dy = " << dy << " dtheta = " << dtheta);
+    ROS_INFO_STREAM("int dx = " << (int)dx << " int dy = " << (int)dy << " dtheta = " << dtheta);
+    _x += dx;
+    _y += dy;
+    _theta += dtheta;
     ROS_INFO_STREAM("new x "<< _x << "  new y " << _y << " new theta " << _theta);
-    ROS_INFO_STREAM ("dt" << " " << dt.toSec() << " " << "linear" << " " << linear << " " << "angular" << " " << angular);
+    //~ ROS_INFO_STREAM ("dt" << " " << dt.toSec() << " " << "linear" << " " << linear << " " << "angular" << " " << angular);
 }
 
 void Particle::sense(float angle, unsigned int width, unsigned int height, int** data, float resolution)
