@@ -85,7 +85,8 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 		ROS_INFO_STREAM("PW + " << _particles[0].getWeight());
 		ROS_INFO_STREAM("AOUA3");
 		//~ ROS_INFO_STREAM("counter" << " " << counter);
-		resample();
+		if (_x != 0 || _y != 0 || _theta != 0)
+			resample();
 		ROS_INFO_STREAM("AOUA4");
 		visualize(robot_percept.getMapResolution());
 	}
@@ -119,7 +120,7 @@ void ParticleFilter::resample()
 		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 		{
 			beta += static_cast <float> (rand()) / static_cast <float> 
-			(RAND_MAX/ 2*max_weight);
+				(RAND_MAX/ 2*max_weight);
 			while (beta > _particles[index].getWeight())
 			{
 				beta -= _particles[index].getWeight();
