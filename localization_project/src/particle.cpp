@@ -44,13 +44,13 @@ Particle::Particle(unsigned int width, unsigned int height, int** data)
 
 void Particle::move(int dx, int dy, float dtheta, float resolution)
 {
-    ROS_INFO_STREAM("x1 = " << _x << " y1 = " << _y << " theta1 = " << _theta);
-    ROS_INFO_STREAM("dx = " << dx << " dy = " << dy << " dtheta = " << dtheta);
-    ROS_INFO_STREAM("int dx = " << (int)dx << " int dy = " << (int)dy << " dtheta = " << dtheta);
+    //~ ROS_INFO_STREAM("x1 = " << _x << " y1 = " << _y << " theta1 = " << _theta);
+    //~ ROS_INFO_STREAM("dx = " << dx << " dy = " << dy << " dtheta = " << dtheta);
+    //~ ROS_INFO_STREAM("int dx = " << (int)dx << " int dy = " << (int)dy << " dtheta = " << dtheta);
     _x += dx;
     _y += dy;
     _theta += dtheta;
-    ROS_INFO_STREAM("new x "<< _x << "  new y " << _y << " new theta " << _theta);
+    //ROS_INFO_STREAM("new x "<< _x << "  new y " << _y << " new theta " << _theta);
     //~ ROS_INFO_STREAM ("dt" << " " << dt.toSec() << " " << "linear" << " " << linear << " " << "angular" << " " << angular);
 }
 
