@@ -5,7 +5,7 @@ Particle::Particle()
 	
 }
 
-Particle::Particle(unsigned int width, unsigned int height, int** data) 
+Particle::Particle(unsigned int width, unsigned int height, int** data, std::vector<float> ranges) 
 {	
 	_x = std::rand() % ( width );
 	_y = std::rand() % ( height );
@@ -18,6 +18,8 @@ Particle::Particle(unsigned int width, unsigned int height, int** data)
 
 	_theta = static_cast <float> (rand()) / static_cast <float> 
 		(RAND_MAX/2*PI);
+		
+	_particle_ranges = new float[ranges.size()];	
 	//~ ROS_INFO_STREAM ("Initial x = "<< " " << _x << " " << "y = "<< _y << " " << " theta = " << " " << _theta);
 	
 	//~ _x = 500;
@@ -50,11 +52,11 @@ void Particle::move(int dx, int dy, float dtheta, float resolution)
     _x += dx;
     _y += dy;
     _theta += dtheta;
-    //ROS_INFO_STREAM("new x "<< _x << "  new y " << _y << " new theta " << _theta);
+    ROS_INFO_STREAM("new x "<< _x << "  new y " << _y << " new theta " << _theta);
     //~ ROS_INFO_STREAM ("dt" << " " << dt.toSec() << " " << "linear" << " " << linear << " " << "angular" << " " << angular);
 }
 
-void Particle::sense(float angle, unsigned int width, unsigned int height, int** data, float resolution)
+void Particle::sense(float angle, unsigned int width, unsigned int height, int** data, float resolution, int i)
 {
 	int distance = 1 ;
 	float new_x = _x + distance * cos(angle);
@@ -66,7 +68,7 @@ void Particle::sense(float angle, unsigned int width, unsigned int height, int**
 		//~ ROS_INFO_STREAM("new_x = " << " " << (int)(new_x) << " " << "new_y = " << " " << (int)(new_y));
 		if (data[(int)(new_x)][(int)(new_y)] > 50)
 		{
-			_particle_ranges.push_back(distance * resolution);
+			_particle_ranges[i] = (distance * resolution);
 			return;
 		}
 		else
@@ -76,7 +78,7 @@ void Particle::sense(float angle, unsigned int width, unsigned int height, int**
 			new_y = _y + distance * sin(angle);
 		}
 	}
-	_particle_ranges.push_back( (distance-1) * resolution);
+	_particle_ranges[i] = ( (distance-1) * resolution);
 }
 
 void Particle::setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges)
@@ -84,13 +86,13 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height, int** 
 	std::vector<float> distances;
 	float sum = 0;
 	
-	sense(PI + _theta, width, height, data, resolution);
-	sense(3 * PI/2 + _theta, width, height, data, resolution);
-	sense(_theta, width, height, data, resolution);
-	sense(PI/2 + _theta, width, height, data, resolution);
+	sense(PI + _theta, width, height, data, resolution, 0);
+	sense(3 * PI/2 + _theta, width, height, data, resolution, 1);
+	sense(_theta, width, height, data, resolution, 2);
+	sense(PI/2 + _theta, width, height, data, resolution, 3);
 		
 	//~ ROS_INFO_STREAM("Particle_ranges_size" << " " <<_particle_ranges.size());
-	for ( unsigned int i = 0 ; i < _particle_ranges.size() ; i++ )
+	for ( unsigned int i = 0 ; i < 4 ; i++ )
 	{
 		distances.push_back (fabs(ranges[i]-_particle_ranges[i]));
 		sum += 0.8 * distances[i];

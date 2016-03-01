@@ -15,14 +15,14 @@ class Particle
 		int _y;
 		float _theta;
 		float _weight;		
-		std::vector<float> _particle_ranges;
+		float* _particle_ranges;
 	
 	public:
 		Particle();
-		Particle( unsigned int width, unsigned int height, int** data );
+		Particle(unsigned int width, unsigned int height, int** data, std::vector<float> ranges);
 		//~ void setPose( int new_x, int new_y, float new_theta, unsigned int width, unsigned int height );
 		void move(int dx, int dy, float dtheta, float resolution);
-		void sense(float angle, unsigned int width, unsigned int height, int** data, float resolution);
+		void sense(float angle, unsigned int width, unsigned int height, int** data, float resolution, int i);
 		void setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges);
 		int getX();
 		int getY();

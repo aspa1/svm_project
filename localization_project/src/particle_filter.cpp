@@ -32,7 +32,7 @@ ParticleFilter::ParticleFilter()
 		ROS_ERROR("Noise param a2 does not exist");
 	}
 	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
-      "visualization_marker", 0);
+		"visualization_marker", 0);
             
     _velocity_sub = _n.subscribe("/robot0/cmd_vel", 10,
 		&ParticleFilter::velocityCallback, this);
@@ -40,9 +40,9 @@ ParticleFilter::ParticleFilter()
     _timer = _n.createTimer(ros::Duration(20),
 		&ParticleFilter::particlesCallback, this);
     
-    _x = 0;
-    _y = 0;
-    _theta = 0;
+    _x = _x1 = 0;
+    _y = _y1 = 0;
+    _theta = _theta1 = 0;
 }
 
 bool ParticleFilter::particlesInit (
@@ -58,7 +58,8 @@ bool ParticleFilter::particlesInit (
 	for (unsigned int i = 0 ; i < _particles_number ; i++ )
 	{
 		Particle particle( robot_percept.getMapWidth(),
-			robot_percept.getMapHeight(), robot_percept.getMapData());
+			robot_percept.getMapHeight(), robot_percept.getMapData(),
+				robot_percept.getLaserRanges());
 		_particles.push_back(particle);
 		//~ ROS_INFO_STREAM("Particle" << " " << i+1 << ":");
 	}
@@ -95,7 +96,7 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 			//~ ROS_INFO_STREAM("linear = " << " " << _linear << "angular = " << " " << _angular);
 		//~ counter++;
 		}
-		ROS_INFO_STREAM("PW + " << _particles[0].getWeight());
+		ROS_INFO_STREAM("PW = " << _particles[0].getWeight());
 		ROS_INFO_STREAM("AOUA3");
 		//~ ROS_INFO_STREAM("counter" << " " << counter);
 		if (_x != 0 || _y != 0 || _theta != 0)
@@ -109,6 +110,7 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 
 void ParticleFilter::resample()
 {
+	ROS_INFO_STREAM("resample");
 	bool flag = false;
 	for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 	{
@@ -151,7 +153,12 @@ void ParticleFilter::velocityCallback(geometry_msgs::Twist twist)
 	ROS_INFO_STREAM("VelocityCallback");
 	_current_linear = twist.linear.x;
 	_current_angular = twist.angular.z;
-	
+
+	calculateMotion();
+}
+
+void ParticleFilter::calculateMotion()
+{
 	if (_particles_initialized)
 	{
 		if ((_current_angular != _previous_angular) || (_current_linear != _previous_linear))
@@ -185,9 +192,10 @@ void ParticleFilter::velocityCallback(geometry_msgs::Twist twist)
 				_theta += _previous_angular * _dt.toSec();
 				_linear = _previous_linear + noise() + _noise_param1 * fabs(_previous_linear) + _noise_param2 * fabs(_previous_angular);
 				_angular = _previous_angular + noise() + _noise_param1 * fabs(_previous_linear) + _noise_param2 * fabs(_previous_angular);
-				_x1 = _x - _linear / _angular * sinf(_theta) + _linear / _angular * sinf(_theta + _angular * _dt.toSec());
-				_y1 = _y + _linear / _angular * cosf(_theta) - _linear / _angular * cosf(_theta + _angular * _dt.toSec()); 
+				_x1 = _x - (_linear / _angular * sinf(_theta) + _linear / _angular * sinf(_theta + _angular * _dt.toSec())) / robot_percept.getMapResolution();
+				_y1 = _y + (_linear / _angular * cosf(_theta) - _linear / _angular * cosf(_theta + _angular * _dt.toSec())) / robot_percept.getMapResolution(); 
 				_theta1 = _theta + _angular * _dt.toSec() + (noise() + _noise_param1 * fabs(_previous_linear) + _noise_param2 * fabs(_previous_angular)) * _dt.toSec();
+				
 				ROS_INFO_STREAM("Linear : " << _previous_linear << " linear_noise : " << _linear);
 				ROS_INFO_STREAM("Angular : " << _previous_angular << " angular_noise : " << _angular);
 				ROS_INFO_STREAM("x : " << _x << " x1 : " << _x1);

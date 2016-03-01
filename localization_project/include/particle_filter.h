@@ -55,6 +55,7 @@ class ParticleFilter {
 		void velocityCallback(geometry_msgs::Twist twist);
 		void resample();
 		float noise();
+		void calculateMotion();
 };
 
 #endif
