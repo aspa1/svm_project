@@ -36,11 +36,11 @@ class ParticleFilter {
 		float _noise_param2;
 		
 		ros::Duration _dt;
-		int _x;
-		int _y;
+		float _x;
+		float _y;
 		float _theta;
-		int _x1;
-		int _y1;
+		float _x1;
+		float _y1;
 		float _theta1;
 
 	
@@ -55,7 +55,7 @@ class ParticleFilter {
 		void velocityCallback(geometry_msgs::Twist twist);
 		void resample();
 		float noise();
-		void calculateMotion();
+		void calculateMotion(bool flag);
 };
 
 #endif

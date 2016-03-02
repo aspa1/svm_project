@@ -5,25 +5,30 @@ Particle::Particle()
 	
 }
 
-Particle::Particle(unsigned int width, unsigned int height, int** data, std::vector<float> ranges) 
+Particle::Particle(unsigned int width, unsigned int height, int** data, std::vector<float> ranges, float resolution) 
 {	
-	_x = std::rand() % ( width );
-	_y = std::rand() % ( height );
+	_x = std::rand() % (width) * resolution;
+	_y = std::rand() % (height) * resolution;
+	//~ ROS_INFO_STREAM("x = " << _x << " y = " << _y);
+	//~ ROS_INFO_STREAM("(int)(_x / resolution) " << (int)(_x / resolution) << " (int)(_y / resolution) = " << (int)(_y / resolution));
 	 
-	while ( (data[_x][_y] == - 1) || (data[_x][_y] > 50) )
+	while ( (data[(int)(_x / resolution)][(int)(_y / resolution)] == - 1) || (data[(int)(_x / resolution)][(int)(_y / resolution)] > 50) )
 	{
-		_x = std::rand() % ( width );
-		_y = std::rand() % ( height );
+		_x = std::rand() % (width) * resolution;
+		_y = std::rand() % (height) * resolution;
 	}
 
-	_theta = static_cast <float> (rand()) / static_cast <float> 
-		(RAND_MAX/2*PI);
+	//~ _theta = static_cast <float> (rand()) / static_cast <float> 
+		//~ (RAND_MAX/2*PI);
+	_theta = 0;
+	//~ ROS_INFO_STREAM("theta = " << _theta);
+
 		
 	_particle_ranges = new float[ranges.size()];	
 	//~ ROS_INFO_STREAM ("Initial x = "<< " " << _x << " " << "y = "<< _y << " " << " theta = " << " " << _theta);
 	
-	//~ _x = 500;
-	//~ _y = 500;
+	//~ _x = 15;
+	//~ _y = 15;
 	//~ _theta = 0;
 }
 
@@ -44,7 +49,7 @@ Particle::Particle(unsigned int width, unsigned int height, int** data, std::vec
 	//~ _theta = new_theta;
 //~ }
 
-void Particle::move(int dx, int dy, float dtheta, float resolution)
+void Particle::move(float dx, float dy, float dtheta, float resolution)
 {
     //~ ROS_INFO_STREAM("x1 = " << _x << " y1 = " << _y << " theta1 = " << _theta);
     //~ ROS_INFO_STREAM("dx = " << dx << " dy = " << dy << " dtheta = " << dtheta);
@@ -52,17 +57,16 @@ void Particle::move(int dx, int dy, float dtheta, float resolution)
     _x += dx;
     _y += dy;
     _theta += dtheta;
-    ROS_INFO_STREAM("new x "<< _x << "  new y " << _y << " new theta " << _theta);
+    //~ ROS_INFO_STREAM("new x "<< _x << "  new y " << _y << " new theta " << _theta);
     //~ ROS_INFO_STREAM ("dt" << " " << dt.toSec() << " " << "linear" << " " << linear << " " << "angular" << " " << angular);
 }
 
 void Particle::sense(float angle, unsigned int width, unsigned int height, int** data, float resolution, int i)
 {
 	int distance = 1 ;
-	float new_x = _x + distance * cos(angle);
-	float new_y = _y + distance * sin(angle);
+	float new_x = _x / resolution + distance * cos(angle);
+	float new_y = _y / resolution + distance * sin(angle);
 	
-	//~ ROS_INFO_STREAM("new_x = " << " " << (int)(new_x) << " " << "new_y = " << " " << (int)(new_y));
 	while ( ((int)new_x < width && (int)new_y < height) && ((int)new_x >= 0 && (int)new_y >= 0))
 	{
 		//~ ROS_INFO_STREAM("new_x = " << " " << (int)(new_x) << " " << "new_y = " << " " << (int)(new_y));
@@ -74,8 +78,8 @@ void Particle::sense(float angle, unsigned int width, unsigned int height, int**
 		else
 		{
 			distance ++;
-			new_x = _x + distance * cos(angle);
-			new_y = _y + distance * sin(angle);
+			new_x = _x / resolution + distance * cos(angle);
+			new_y = _y / resolution + distance * sin(angle);
 		}
 	}
 	_particle_ranges[i] = ( (distance-1) * resolution);
@@ -95,21 +99,21 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height, int** 
 	for ( unsigned int i = 0 ; i < 4 ; i++ )
 	{
 		distances.push_back (fabs(ranges[i]-_particle_ranges[i]));
-		sum += 0.8 * distances[i];
+		sum += distances[i];
 		//~ ROS_INFO_STREAM("Distances: ");
 		//~ ROS_INFO_STREAM("i = " << i << " " << distances[i]);
 	}
 	
-	_weight = 1/(sum + 1);
+	_weight = pow(1/(sum + 1), 3);
 	//~ ROS_INFO_STREAM("Weight: " << " " << _weight);
 }
 
-int Particle::getX()
+float Particle::getX()
 {
 	return _x;
 }
 
-int Particle::getY() 
+float Particle::getY() 
 {
 	return _y;
 }
