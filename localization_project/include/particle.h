@@ -23,7 +23,7 @@ class Particle
 		//~ void setPose( int new_x, int new_y, float new_theta, unsigned int width, unsigned int height );
 		void move(float dx, float dy, float dtheta, float resolution);
 		void sense(float angle, unsigned int width, unsigned int height, int** data, float resolution, int i);
-		void setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges);
+		void setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges, float max_range);
 		float getX();
 		float getY();
 		float getWeight();

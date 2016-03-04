@@ -18,9 +18,9 @@ Particle::Particle(unsigned int width, unsigned int height, int** data, std::vec
 		_y = std::rand() % (height) * resolution;
 	}
 
-	//~ _theta = static_cast <float> (rand()) / static_cast <float> 
-		//~ (RAND_MAX/2*PI);
-	_theta = 0;
+	_theta = static_cast <float> (rand()) / static_cast <float> 
+		(RAND_MAX/2*PI);
+	//~ _theta = 0;
 	//~ ROS_INFO_STREAM("theta = " << _theta);
 
 		
@@ -63,14 +63,14 @@ void Particle::move(float dx, float dy, float dtheta, float resolution)
 
 void Particle::sense(float angle, unsigned int width, unsigned int height, int** data, float resolution, int i)
 {
-	int distance = 1 ;
+	int distance = 1;
 	float new_x = _x / resolution + distance * cos(angle);
 	float new_y = _y / resolution + distance * sin(angle);
 	
-	while ( ((int)new_x < width && (int)new_y < height) && ((int)new_x >= 0 && (int)new_y >= 0))
+	while (((int)new_x < width && (int)new_y < height) && ((int)new_x >= 0 && (int)new_y >= 0))
 	{
 		//~ ROS_INFO_STREAM("new_x = " << " " << (int)(new_x) << " " << "new_y = " << " " << (int)(new_y));
-		if (data[(int)(new_x)][(int)(new_y)] > 50)
+		if ((data[(int)(new_x)][(int)(new_y)] > 50) ||  (data[(int)(new_x)][(int)(new_y)] == -1))
 		{
 			_particle_ranges[i] = (distance * resolution);
 			return;
@@ -85,7 +85,7 @@ void Particle::sense(float angle, unsigned int width, unsigned int height, int**
 	_particle_ranges[i] = ( (distance-1) * resolution);
 }
 
-void Particle::setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges)
+void Particle::setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges, float max_range)
 {
 	std::vector<float> distances;
 	float sum = 0;
@@ -94,17 +94,29 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height, int** 
 	sense(3 * PI/2 + _theta, width, height, data, resolution, 1);
 	sense(_theta, width, height, data, resolution, 2);
 	sense(PI/2 + _theta, width, height, data, resolution, 3);
-		
+	//~ ROS_INFO_STREAM("Distances: ");
+
 	//~ ROS_INFO_STREAM("Particle_ranges_size" << " " <<_particle_ranges.size());
 	for ( unsigned int i = 0 ; i < 4 ; i++ )
 	{
-		distances.push_back (fabs(ranges[i]-_particle_ranges[i]));
-		sum += distances[i];
-		//~ ROS_INFO_STREAM("Distances: ");
-		//~ ROS_INFO_STREAM("i = " << i << " " << distances[i]);
+		if (_particle_ranges[i] == 0)
+		{
+			_weight = 0;
+			return;
+		}
+		else
+		{	
+			if (_particle_ranges[i] > max_range)
+				_particle_ranges[i] = max_range;
+			distances.push_back (fabs(ranges[i]-_particle_ranges[i]));
+			sum += distances[i];
+			//~ ROS_INFO_STREAM("i = " << i << " " << distances[i]);
+			//~ ROS_INFO_STREAM("particle_ranges: " << _particle_ranges[i]);
+			//~ ROS_INFO_STREAM("ranges : " << ranges[i]);
+		}
 	}
 	
-	_weight = pow(1/(sum + 1), 3);
+	_weight = pow(1/(sum + 1), 2);
 	//~ ROS_INFO_STREAM("Weight: " << " " << _weight);
 }
 

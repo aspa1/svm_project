@@ -6,7 +6,7 @@
  */
 RobotPerception::RobotPerception () 
 {	
-	ROS_INFO_STREAM("RobotPerception Constructor");
+	//~ ROS_INFO_STREAM("RobotPerception Constructor");
 	if(!_n.getParam("/map_topic", _map_topic_param))
 	{
 		ROS_ERROR("Map topic param does not exist");
@@ -34,8 +34,8 @@ void RobotPerception::mapCallback (
 	_map_height = occupancy_grid_msg.info.height;
 	_map_resolution = occupancy_grid_msg.info.resolution; 
 	
-	ROS_INFO_STREAM ("RobotPerception:map_width ="<< " " << _map_width << 
-		" " << "RobotPerception:map_height ="<< " " << _map_height);
+	//~ ROS_INFO_STREAM ("RobotPerception:map_width ="<< " " << _map_width << 
+		//~ " " << "RobotPerception:map_height ="<< " " << _map_height);
 
 	_map_data = new int*[_map_width];
 	for (unsigned int i = 0 ; i < _map_width ; i++)
@@ -63,6 +63,12 @@ void RobotPerception::laserRangesCallback(
 	sensor_msgs::LaserScan laser_scan_msg) 
 {
 	_laser_ranges = laser_scan_msg.ranges;
+	_max_range = laser_scan_msg.range_max;
+	for (unsigned int i = 0 ; i < _laser_ranges.size() ; i ++)
+	{
+		if (_laser_ranges[i] > _max_range)
+			_laser_ranges[i] = _max_range;
+	}		
 }
 
 /**
@@ -114,4 +120,9 @@ int** RobotPerception::getMapData ()
 std::vector<float> RobotPerception::getLaserRanges() 
 {
 	return _laser_ranges;
+}
+
+float RobotPerception::getRangeMax()
+{
+	return _max_range;
 }

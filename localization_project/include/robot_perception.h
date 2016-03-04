@@ -19,6 +19,7 @@ class RobotPerception
 		float _map_resolution;
 		int** _map_data; 
 		std::vector<float> _laser_ranges;
+		float _max_range;
 	
 	
 	public:
@@ -31,6 +32,7 @@ class RobotPerception
 		int** getMapData();
 		int getMapCell (int i, int j);
 		std::vector<float> getLaserRanges();
+		float getRangeMax();
 };
 
 #endif
