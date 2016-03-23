@@ -31,13 +31,17 @@ ParticleFilter::ParticleFilter()
 	{
 		ROS_ERROR("Noise param a2 does not exist");
 	}
+	if(!_n.getParam("duration", _duration))
+	{
+		ROS_ERROR("Duration param does not exist");
+	}
 	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
 		"visualization_marker", 0);
             
     _velocity_sub = _n.subscribe("/robot0/cmd_vel", 10,
 		&ParticleFilter::velocityCallback, this);
     
-    _timer = _n.createTimer(ros::Duration(10),
+    _timer = _n.createTimer(ros::Duration(_duration),
 		&ParticleFilter::particlesCallback, this);
     
     _x = _x1 = 0;
@@ -82,6 +86,8 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 		calculateMotion(true);
 		for (unsigned int i = 0 ; i < _particles_number ; i++)
 		{
+			ROS_INFO_STREAM("_x1 = " << _x1 << " _y1 = " << _y1);
+			ROS_INFO_STREAM("_x = " << _x << " _y = " << _y );
 			//ROS_INFO_STREAM("ParticlesCallback " << " dx = " << _x << "dy = " << _y << " dtheta = " << _theta);
 			//ROS_INFO_STREAM ("noise: " << _particles[i].noise(_deviation));
 			//~ _particles[i].move(_x1, _y1, _theta1, robot_percept.getMapResolution());
@@ -183,7 +189,8 @@ void ParticleFilter::calculateMotion(bool flag)
 {
 	if (_particles_initialized)
 	{
-		if ((_current_angular != _previous_angular) || (_current_linear != _previous_linear) || (flag == true))
+		if ((_current_angular != _previous_angular) ||
+			(_current_linear != _previous_linear) || (flag == true))
 		{
 			if (_flag == false)
 			{
@@ -207,25 +214,36 @@ void ParticleFilter::calculateMotion(bool flag)
 				}
 				else
 				{
-				  _x += (- _previous_linear / _previous_angular * sinf(_theta) + _previous_linear / _previous_angular * 
+				  _x += (- _previous_linear / _previous_angular * sinf(_theta)
+					+ _previous_linear / _previous_angular * 
 					sinf(_theta + _dt.toSec() * _previous_angular));
 				  
-				  _y -= (- _previous_linear / _previous_angular * cosf(_theta) + _previous_linear / _previous_angular * 
+				  _y -= (- _previous_linear / _previous_angular * cosf(_theta)
+					+ _previous_linear / _previous_angular * 
 					cosf(_theta + _dt.toSec() * _previous_angular));
 				}
 				
 				_theta += _previous_angular * _dt.toSec();
-				//~ _linear = _previous_linear + noise() + _noise_param1 * fabs(_previous_linear) + _noise_param2 * fabs(_previous_angular);
-				//~ _angular = _previous_angular + noise() + _noise_param1 * fabs(_previous_linear) + _noise_param2 * fabs(_previous_angular);
-				//~ _x1 = _x - (_linear / _angular * sinf(_theta) + _linear / _angular * sinf(_theta + _angular * _dt.toSec())) / robot_percept.getMapResolution();
-				//~ _y1 = _y + (_linear / _angular * cosf(_theta) - _linear / _angular * cosf(_theta + _angular * _dt.toSec())) / robot_percept.getMapResolution(); 
-				//~ _theta1 = _theta + _angular * _dt.toSec() + (noise() + _noise_param1 * fabs(_previous_linear) + _noise_param2 * fabs(_previous_angular)) * _dt.toSec();
 				
-				//~ ROS_INFO_STREAM("Linear : " << _previous_linear << " linear_noise : " << _linear);
-				//~ ROS_INFO_STREAM("Angular : " << _previous_angular << " angular_noise : " << _angular);
-				//~ ROS_INFO_STREAM("x : " << _x << " x1 : " << _x1);
-				//~ ROS_INFO_STREAM("y : " << _y << " y1 : " << _y1);
-				//~ ROS_INFO_STREAM("theta : " << _theta << " theta1 : " << _theta1);
+				_linear = _previous_linear + _noise_param1 * fabs(_previous_linear) +
+						_noise_param2 * fabs(_previous_angular);
+				_angular = _previous_angular + _noise_param1 * fabs(_previous_linear) +
+						_noise_param2 * fabs(_previous_angular);
+				//~ _x1 = _x - (_linear / _angular * sinf(_theta) +
+					//~ _linear / _angular * sinf(_theta +
+						//~ _angular * _dt.toSec())) / robot_percept.getMapResolution();
+				//~ _y1 = _y + (_linear / _angular * cosf(_theta) -
+					//~ _linear / _angular * cosf(_theta +
+						//~ _angular * _dt.toSec())) / robot_percept.getMapResolution(); 
+				//~ _theta1 = _theta + _angular * _dt.toSec() + (noise() +
+					//~ _noise_param1 * fabs(_previous_linear) +
+						//~ _noise_param2 * fabs(_previous_angular)) * _dt.toSec();
+				
+				ROS_INFO_STREAM("Linear : " << _previous_linear << " linear_noise : " << _linear);
+				ROS_INFO_STREAM("Angular : " << _previous_angular << " angular_noise : " << _angular);
+				ROS_INFO_STREAM("x : " << _x << " x1 : " << _x1);
+				ROS_INFO_STREAM("y : " << _y << " y1 : " << _y1);
+				ROS_INFO_STREAM("theta : " << _theta << " theta1 : " << _theta1);
 				_previous_angular = _current_angular;
 				_previous_linear = _current_linear;
 				_previous_time = _current_time;
@@ -273,7 +291,8 @@ float ParticleFilter::noise()
 	float sum = 0;
 	for ( unsigned int i = 0 ; i < 12 ; i++)
 	{
-		sum += -_deviation + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(2*_deviation)));
+		sum += -_deviation + static_cast <float>
+			(rand()) /( static_cast <float> (RAND_MAX/(2*_deviation)));
 		//~ ROS_INFO_STREAM("function noise i = " << i << " noise = " << -deviation + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(2*deviation))));
 	}
 	return 0.5*sum;

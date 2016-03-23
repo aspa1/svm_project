@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   sensor_msgs
   message_generation
+  tf
 )
 find_package(PkgConfig)
 

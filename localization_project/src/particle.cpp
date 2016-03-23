@@ -12,7 +12,8 @@ Particle::Particle(unsigned int width, unsigned int height, int** data, std::vec
 	//~ ROS_INFO_STREAM("x = " << _x << " y = " << _y);
 	//~ ROS_INFO_STREAM("(int)(_x / resolution) " << (int)(_x / resolution) << " (int)(_y / resolution) = " << (int)(_y / resolution));
 	 
-	while ( (data[(int)(_x / resolution)][(int)(_y / resolution)] == - 1) || (data[(int)(_x / resolution)][(int)(_y / resolution)] > 50) )
+	while ((data[(int)(_x / resolution)][(int)(_y / resolution)] == - 1)
+		|| (data[(int)(_x / resolution)][(int)(_y / resolution)] > 50))
 	{
 		_x = std::rand() % (width) * resolution;
 		_y = std::rand() % (height) * resolution;
@@ -27,8 +28,8 @@ Particle::Particle(unsigned int width, unsigned int height, int** data, std::vec
 	_particle_ranges = new float[ranges.size()];	
 	//~ ROS_INFO_STREAM ("Initial x = "<< " " << _x << " " << "y = "<< _y << " " << " theta = " << " " << _theta);
 	
-	//~ _x = 15;
-	//~ _y = 15;
+	//~ _x = 9;
+	//~ _y = 9;
 	//~ _theta = 0;
 }
 

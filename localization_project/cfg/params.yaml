@@ -2,12 +2,14 @@ map_topic: /map
 
 robot_laser_topic: /robot0/laser_1
 
-particles_number: 1000
+particles_number: 4
 
 enable_visualization: true
 
-standard_deviation: 0.5
+standard_deviation: 0.001
 
 a1: 1
 
 a2: 0
+
+duration: 10

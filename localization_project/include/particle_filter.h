@@ -6,6 +6,7 @@
 
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Twist.h>
+#include <tf/transform_listener.h>
 
 #include "localization_project/particleInitSrv.h"
 
@@ -14,6 +15,7 @@ class ParticleFilter {
 	private:
 		ros::NodeHandle _n;
 		RobotPerception robot_percept;
+		tf::TransformListener _listener;
 		ros::ServiceServer _particle_initialization_service;
 		int _particles_number;
 		std::vector<Particle> _particles; 
@@ -34,6 +36,7 @@ class ParticleFilter {
 		float _deviation;
 		float _noise_param1;
 		float _noise_param2;
+		int _duration;
 		
 		ros::Duration _dt;
 		float _x;
@@ -54,8 +57,8 @@ class ParticleFilter {
 		void particlesCallback(const ros::TimerEvent& event);
 		void velocityCallback(geometry_msgs::Twist twist);
 		void resample();
-		float noise();
 		void calculateMotion(bool flag);
+		float noise();
 };
 
 #endif
