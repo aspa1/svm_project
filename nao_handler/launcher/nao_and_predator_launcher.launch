@@ -1,0 +1,12 @@
+<launch>
+
+  <!-- upload nao robot launcher-->
+  <include file="$(find nao_handler)/launcher/nao_launcher.launch" >
+  <arg name="nao_ip" value="$(arg nao_ip)"/>
+  </include>
+
+  <!-- upload predator launcher -->
+  <include file="$(find pandora_tld)/launch/predator_node_standalone.launch">
+  </include>
+
+</launch>

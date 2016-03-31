@@ -7,52 +7,49 @@ from sensor_msgs.msg import CameraInfo
 
 import rospy
 import sys
+import time
 
 class move_nao_head:
 	def __init__(self):
-		s1 = rospy.Service('/body_stiffness/enable', Empty, self.call_body_stifness_server_enable)
-		#~ s2 = rospy.Service('/body_stiffness/disable', Empty, self.call_body_stifness_server_disable)
-		rospy.Subscriber("/predator/hunt", Polygon, self.move)
-		rospy.Subscriber("/joint_angles", JointAnglesWithSpeed, self.move)
+		rospy.Subscriber("/vision/predator_alert", Polygon, self.move)
 		self.pub = rospy.Publisher('/joint_angles', JointAnglesWithSpeed, queue_size=10)
-		print "hello31"
+		self.call_body_stifness_server_enable()
+		self.image_width = 640.0
+		self.image_height = 480.0
 	
-	def move(self,Polygon):
-		rospy.init_node('nao_head', anonymous=True)
-		#~ rate = rospy.Rate(10) # 10hz
-		#~ while not rospy.is_shutdown():
-		joint= JointAnglesWithSpeed()
-		pred_point= Polygon
-		p= pred_point.points
-		print len(p)
+	def move(self, polygon):
+		
+		joint = JointAnglesWithSpeed()
+
 		joint.joint_names.append("HeadYaw")
 		joint.joint_names.append("HeadPitch")
-		print joint.joint_names
-		#~ joint.joint_names= "HeadPitch,HeadPitch"
-		#~ joint.joint_angles= 0*len(pred_point.points)
-		print "aoua"
-		j= joint.joint_angles
-		print len(j)
-		#~ for i in range(len(pred_point.points)-1):
-			#~ print "hello41"	
-			#~ joint.joint_angles.append(pred_point.points[i])
-			#~ print joint.joint_angles[i]
-		joint.speed= 0.1
-		joint.joint_angles.append(1)
-		joint.joint_angles.append(1)
-		print joint.joint_angles
-		#~ joint.joint_angles= 1
-		
-		
-		
-		rospy.loginfo(joint)
-		self.pub.publish(JointAnglesWithSpeed)
-		
-		#~ hello_str = "hello world %s" % rospy.get_time()
-		#~ rospy.loginfo(hello_str)
-		#~ for i in range(len(pred_point.points)-1):
-			#~ self.pub.publish(joint.joint_angles[i])
+
+		j = joint.joint_angles
+
+		joint.speed = 0.01
+		joint.relative = True
+
+		target_x = polygon.points[0].x + 0.5 * polygon.points[1].x
+		target_y = polygon.points[0].y + 0.5 * polygon.points[1].y
+
+		#~ joint.joint_angles.append(0)
+		#~ joint.joint_angles.append(0)
+		if target_x - 320 / 2.0 < 0:
+			joint.joint_angles.append(0.05)
+		else:
+			joint.joint_angles.append(-0.05)
 			
+		if target_y - 240 / 2.0 < 0:
+			joint.joint_angles.append(-0.05)
+		else:
+			joint.joint_angles.append(0.05)
+			
+		self.pub.publish(joint)
+		
+		print 'Move to ' + str(joint.joint_angles)
+		
+		time.sleep(0.1)
+
 	def call_body_stifness_server_enable(self):
 		print "hello1"
 		rospy.wait_for_service('/body_stiffness/enable')
@@ -64,22 +61,21 @@ class move_nao_head:
 		except rospy.ServiceException, e:
 			print "Body stiffness service call failed: %s"%e
 	
-	#~ def call_body_stifness_server_disable(self):
-		#~ print "hello2"
-		#~ rospy.wait_for_service('/body_stiffness/disable')
-		#~ try:
-			#~ print "hello51"
-			#~ service_handle2 = rospy.ServiceProxy('/body_stiffness/disable', Empty)
-			#~ resp2 = service_handle2()
-			#~ print "Body stiffness is disable"
-		#~ except rospy.ServiceException, e:
-			#~ print "Body stiffness service call failed: %s"%e
+	def call_body_stifness_server_disable(self):
+		print "hello2"
+		rospy.wait_for_service('/body_stiffness/disable')
+		try:
+			print "hello51"
+			service_handle2 = rospy.ServiceProxy('/body_stiffness/disable', Empty)
+			resp2 = service_handle2()
+			print "Body stiffness is disable"
+		except rospy.ServiceException, e:
+			print "Body stiffness service call failed: %s"%e
 	
 		
 if __name__ == "__main__":
-	nao= move_nao_head()
-	nao.call_body_stifness_server_enable()
-	nao.move(Polygon)	
-	#~ nao.call_body_stifness_server_disable()	
+	rospy.init_node('nao_head', anonymous=True)
+	nao = move_nao_head()
+	rospy.spin()	
 
 		
