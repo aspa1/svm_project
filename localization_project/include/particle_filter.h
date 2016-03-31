@@ -28,23 +28,15 @@ class ParticleFilter {
 		float _current_angular;
 		float _previous_linear;
 		float _previous_angular;
-		float _linear;
-		float _angular;
 		bool _particles_initialized;
 		ros::Timer _timer;
 		bool _flag;
-		float _deviation;
+		bool _motion_flag;
+		int _duration;
 		float _noise_param1;
 		float _noise_param2;
-		int _duration;
-		
+		float _deviation;
 		ros::Duration _dt;
-		float _x;
-		float _y;
-		float _theta;
-		float _x1;
-		float _y1;
-		float _theta1;
 
 	
 	public:
@@ -57,8 +49,6 @@ class ParticleFilter {
 		void particlesCallback(const ros::TimerEvent& event);
 		void velocityCallback(geometry_msgs::Twist twist);
 		void resample();
-		void calculateMotion(bool flag);
-		float noise();
 };
 
 #endif
