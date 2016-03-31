@@ -17,48 +17,24 @@ Particle::Particle(unsigned int width, unsigned int height, int** data, std::vec
 		_y = std::rand() % (height) * resolution;
 	}
 
-	_theta = static_cast <float> (rand()) / static_cast <float> 
-		(RAND_MAX/2*PI);
-	_dx = _dy = _dtheta = _i = 0;
-	//~ _theta = 0;
-	//~ ROS_INFO_STREAM("theta = " << _theta);
-
-		
+	_theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/2*PI);
+	_dx = _dy = _dtheta = 0;		
 	_particle_ranges = new float[ranges.size()];	
-	//~ ROS_INFO_STREAM ("Initial x = "<< " " << _x << " " << "y = "<< _y << " " << " theta = " << " " << _theta);
 	
 	//~ _x = 15;
 	//~ _y = 15;
 	//~ _theta = 0.18;
 }
 
-//~ void Particle::setPose(int new_x, int new_y, float new_theta, unsigned int width, unsigned int height) 
-//~ {
-	//~ if (new_x >= width || new_y >= height || new_theta >= 2*PI )
-	//~ {
-		//~ ROS_ERROR ("Coordinates out of bound");
-		//~ return;
-	//~ }
-	//~ if (new_x < 0 || new_y < 0 || new_theta < 0)
-	//~ {
-		//~ ROS_ERROR ("Coordinates cannot be negative");
-		//~ return;
-	//~ }
-	//~ _x = new_x;
-	//~ _y = new_y;
-	//~ _theta = new_theta;
-//~ }
-
 void Particle::move()
 {
-    ROS_INFO_STREAM("Move: dx = " << _dx << " dy = " << _dy << " dtheta = " << _dtheta );
     _x += _dx;
     _y += _dy;
     _theta += _dtheta;
-    ROS_INFO_STREAM("x = " << _x << " y = " << _y << " theta = " << _theta);
-    _dx = _dy = _dtheta = _i = 0;
-    //~ ROS_INFO_STREAM("new x "<< _x << "  new y " << _y << " new theta " << _theta);
-    //~ ROS_INFO_STREAM ("dt" << " " << dt.toSec() << " " << "linear" << " " << linear << " " << "angular" << " " << angular);
+
+	ROS_INFO_STREAM("x = " << _x << " y = " << _y << " theta = " << _theta);
+
+    _dx = _dy = _dtheta = 0;
 }
 
 void Particle::sense(float angle, unsigned int width, unsigned int height, int** data, float resolution, int i)
@@ -85,54 +61,50 @@ void Particle::sense(float angle, unsigned int width, unsigned int height, int**
 	_particle_ranges[i] = ( (distance-1) * resolution);
 }
 
-void Particle::calculateMotion(float previous_linear, float previous_angular, ros::Duration dt, float deviation)
+void Particle::calculateMotion(float previous_linear, float previous_angular, ros::Duration dt, float a1, float a2)
 {
-	if (previous_angular == 0)
+	//~ if (previous_angular == 0)
+	//~ {
+	  //~ _dx += (previous_linear * dt.toSec() * cosf(_theta));
+	  //~ _dy += (previous_linear * dt.toSec() * sinf(_theta));
+	//~ }
+	//~ else
+	//~ {
+	  //~ _dx += (- previous_linear / previous_angular * sinf(_theta)
+		//~ + previous_linear / previous_angular * 
+		//~ sinf(_theta + dt.toSec() * previous_angular));
+	  //~ 
+	  //~ _dy -= (- previous_linear / previous_angular * cosf(_theta)
+		//~ + previous_linear / previous_angular * 
+		//~ cosf(_theta + dt.toSec() * previous_angular));
+	//~ }
+	
+	_linear = previous_linear + noise(a1 * fabs(previous_linear) +
+		a2 * fabs(previous_angular));
+	_angular = previous_angular + noise(a2 * fabs(previous_linear) +
+		a1 * fabs(previous_angular));
+	
+	if (_angular == 0)
 	{
-	  _dx += (previous_linear * dt.toSec() * cosf(_theta));
-	  _dy += (previous_linear * dt.toSec() * sinf(_theta));
+		_dx += (_linear * dt.toSec() * cosf(_theta));
+		_dy += (_linear * dt.toSec() * sinf(_theta));
 	}
 	else
 	{
-	  _dx += (- previous_linear / previous_angular * sinf(_theta)
-		+ previous_linear / previous_angular * 
-		sinf(_theta + dt.toSec() * previous_angular));
+		_dx += (- _linear / _angular * sinf(_theta) + _linear / _angular * 
+			sinf(_theta + dt.toSec() * _angular));
 	  
-	  _dy -= (- previous_linear / previous_angular * cosf(_theta)
-		+ previous_linear / previous_angular * 
-		cosf(_theta + dt.toSec() * previous_angular));
+		_dy -= (- _linear / _angular * cosf(_theta)	+ _linear / _angular * 
+			cosf(_theta + dt.toSec() * _angular));
 	}
 	
-	_dtheta += previous_angular * dt.toSec();
+	_dtheta += _angular * dt.toSec() + noise(a1 * fabs(previous_linear) +
+			a2 * fabs(previous_angular)) * dt.toSec();
 	
-	ROS_INFO_STREAM("CalculateMotion:");
-	ROS_INFO_STREAM("counter = " << _i << " linear = " << previous_linear
-		<< " angular = " << previous_angular << " dt = " << dt << " dx = "
-		<< _dx << " dy = " << _dy << " dtheta = " << _dtheta );
-	_i++;
-	//~ _linear = previous_linear + _noise_param1 * fabs(previous_linear) +
-			//~ _noise_param2 * fabs(previous_angular);
-	//~ _angular = previous_angular + _noise_param1 * fabs(previous_linear) +
-			//~ _noise_param2 * fabs(previous_angular);
-	//~ _x1 = _x - (_linear / _angular * sinf(_theta) +
-		//~ _linear / _angular * sinf(_theta +
-			//~ _angular * _dt.toSec())) / robot_percept.getMapResolution();
-	//~ _y1 = _y + (_linear / _angular * cosf(_theta) -
-		//~ _linear / _angular * cosf(_theta +
-			//~ _angular * _dt.toSec())) / robot_percept.getMapResolution(); 
-	//~ _theta1 = _theta + _angular * _dt.toSec() + (noise() +
-		//~ _noise_param1 * fabs(_previous_linear) +
-			//~ _noise_param2 * fabs(_previous_angular)) * _dt.toSec();
-	
-	//~ ROS_INFO_STREAM("Linear : " << previous_linear << " linear_noise : " << _linear);
-	//~ ROS_INFO_STREAM("Angular : " << previous_angular << " angular_noise : " << _angular);
-	//~ ROS_INFO_STREAM("x : " << _x << " x1 : " << _x1);
-	//~ ROS_INFO_STREAM("y : " << _y << " y1 : " << _y1);
-	//~ ROS_INFO_STREAM("theta : " << _theta << " theta1 : " << _theta1);
-
-	//~ ROS_INFO_STREAM ( "angular = " << " " << _current_angular << " " << "linear=" << " " << _current_linear);
-	//~ ROS_INFO_STREAM ( "dx = " << _x << " " << " dy = " << _y << " dtheta = " << _theta);
-	//~ ROS_INFO_STREAM ( "dt = " << " " << _dt.toSec());
+	//~ ROS_INFO_STREAM("CalculateMotion:");
+	//~ ROS_INFO_STREAM("counter = " << _i << " linear = " << previous_linear
+		//~ << " angular = " << previous_angular << " dt = " << dt << " dx = "
+		//~ << _dx << " dy = " << _dy << " dtheta = " << _dtheta );
 }
 
 float Particle::noise(float deviation) 
@@ -142,7 +114,6 @@ float Particle::noise(float deviation)
 	{
 		sum += - deviation + static_cast <float>
 			(rand()) /( static_cast <float> (RAND_MAX/(2 * deviation)));
-		//~ ROS_INFO_STREAM("function noise i = " << i << " noise = " << -deviation + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(2*deviation))));
 	}
 	return 0.5*sum;
 }
@@ -159,7 +130,7 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height, int** 
 
 	for ( unsigned int i = 0 ; i < 4 ; i++ )
 	{
-		ROS_INFO_STREAM("particle_ranges : " << _particle_ranges[i]);
+		//~ ROS_INFO_STREAM("particle_ranges : " << _particle_ranges[i]);
 		if (_particle_ranges[i] / resolution <= 1)
 		{
 			_weight = 0;

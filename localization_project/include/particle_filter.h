@@ -14,31 +14,28 @@
 class ParticleFilter {
 	private:
 		ros::NodeHandle _n;
-		RobotPerception robot_percept;
-		tf::TransformListener _listener;
 		ros::ServiceServer _particle_initialization_service;
-		int _particles_number;
-		std::vector<Particle> _particles; 
-		bool _visualization_enabled;
 		ros::Publisher _visualization_pub;
 		ros::Subscriber _velocity_sub;
 		ros::Time _current_time;
 		ros::Time _previous_time;
+		ros::Timer _timer;
+		ros::Duration _dt;
+		RobotPerception robot_percept;
+		int _particles_number;
+		int _duration;
+		float _noise_param1;
+		float _noise_param2;
 		float _current_linear;
 		float _current_angular;
 		float _previous_linear;
 		float _previous_angular;
+		std::vector<Particle> _particles; 
+		bool _visualization_enabled;
 		bool _particles_initialized;
-		ros::Timer _timer;
 		bool _flag;
 		bool _motion_flag;
-		int _duration;
-		float _noise_param1;
-		float _noise_param2;
-		float _deviation;
-		ros::Duration _dt;
 
-	
 	public:
 		ParticleFilter();
 		bool particlesInit ( 
