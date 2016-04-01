@@ -24,12 +24,17 @@ class Particle
 	
 	public:
 		Particle();
-		Particle(unsigned int width, unsigned int height, int** data, std::vector<float> ranges, float resolution);
+		Particle(unsigned int width, unsigned int height, int** data,
+			std::vector<float> ranges, float resolution);
 		void move();
-		void sense(float angle, unsigned int width, unsigned int height, int** data, float resolution, int i);
-		void calculateMotion(float previous_linear, float previous_angular, ros::Duration dt, float a1, float a2);
+		void sense(float angle, unsigned int width, unsigned int height,
+			int** data, float resolution, int i);
+		void calculateMotion(float previous_linear, float previous_angular,
+			ros::Duration dt, float a1, float a2);
 		float noise(float deviation);
-		void setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges, float max_range);
+		void setParticleWeight(unsigned int width, unsigned int height,
+			int** data, float resolution, std::vector<float> ranges,
+			float max_range, float increment, float angle_min);
 		float getX();
 		float getY();
 		float getWeight();

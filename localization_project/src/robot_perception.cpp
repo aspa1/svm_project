@@ -51,7 +51,6 @@ void RobotPerception::mapCallback (
 				(int)occupancy_grid_msg.data[_map_width*j + i];
 		}
 	}	
-	
 }
 
 /**
@@ -62,6 +61,8 @@ void RobotPerception::mapCallback (
 void RobotPerception::laserRangesCallback(
 	sensor_msgs::LaserScan laser_scan_msg) 
 {
+	_increment = laser_scan_msg.angle_increment;
+	_angle_min = laser_scan_msg.angle_min;
 	_laser_ranges = laser_scan_msg.ranges;
 	_max_range = laser_scan_msg.range_max;
 	for (unsigned int i = 0 ; i < _laser_ranges.size() ; i ++)
@@ -125,4 +126,14 @@ std::vector<float> RobotPerception::getLaserRanges()
 float RobotPerception::getRangeMax()
 {
 	return _max_range;
+}
+
+float RobotPerception::getAngleIncrement()
+{
+	return _increment;
+}
+
+float RobotPerception::getAngleMin()
+{
+	return _angle_min;
 }

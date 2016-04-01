@@ -70,39 +70,33 @@ bool ParticleFilter::particlesInit (
 
 void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 {
-	ROS_INFO_STREAM("AOUA");
 	if (_particles_initialized)
 	{
+		if (_previous_angular || _previous_linear)
+			_motion_flag = true;
 		_current_time = ros::Time::now();
 		_dt = _current_time - _previous_time;
 		for (unsigned int i = 0 ; i < _particles_number ; i++)
 		{
 			_particles[i].calculateMotion(_previous_linear, _previous_angular, _dt, _noise_param1, _noise_param2);
 			_particles[i].move();
-			ROS_INFO_STREAM("New x = " << _particles[i].getX() << " new y = " << _particles[i].getY());
+			//~ ROS_INFO_STREAM("New x = " << _particles[i].getX() << " new y = " << _particles[i].getY());
 			_previous_angular = _current_angular;
 			_previous_linear = _current_linear;
 			_previous_time = _current_time;
 		}
 		visualize(robot_percept.getMapResolution());
-		ROS_INFO_STREAM("AOUA2");
 		for (unsigned int i = 0 ; i < _particles_number ; i++)
 		{
 			_particles[i].setParticleWeight(robot_percept.getMapWidth(),
 				robot_percept.getMapHeight(), robot_percept.getMapData(),
-				robot_percept.getMapResolution(),
-				robot_percept.getLaserRanges(), robot_percept.getRangeMax());
-			ROS_INFO_STREAM("PW = " << _particles[i].getWeight());
+				robot_percept.getMapResolution(), robot_percept.getLaserRanges(),
+				robot_percept.getRangeMax(), robot_percept.getAngleIncrement(),
+				robot_percept.getAngleMin());
 		}
-		ROS_INFO_STREAM("AOUA3");
 		if (_motion_flag)
 			resample();
-		ROS_INFO_STREAM("AOUA4");
 		_motion_flag = false;
-		for (unsigned int i = 0 ; i < _particles_number ; i++)
-		{
-			ROS_INFO_STREAM("PW = " << _particles[i].getWeight());
-		}
 		visualize(robot_percept.getMapResolution());
 	}
 }
@@ -152,7 +146,6 @@ void ParticleFilter::resample()
 			new_particles.push_back(_particles[index]);
 		}
 	
-		ROS_INFO_STREAM("particles size = " << " " << _particles.size() << "new particles size = " << " " << new_particles.size());
 		_particles = new_particles;
 		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 		{

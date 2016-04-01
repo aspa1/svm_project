@@ -23,7 +23,7 @@ Particle::Particle(unsigned int width, unsigned int height, int** data, std::vec
 	
 	//~ _x = 15;
 	//~ _y = 15;
-	//~ _theta = 0.18;
+	//~ _theta = 0.78;
 }
 
 void Particle::move()
@@ -31,8 +31,6 @@ void Particle::move()
     _x += _dx;
     _y += _dy;
     _theta += _dtheta;
-
-	ROS_INFO_STREAM("x = " << _x << " y = " << _y << " theta = " << _theta);
 
     _dx = _dy = _dtheta = 0;
 }
@@ -100,11 +98,6 @@ void Particle::calculateMotion(float previous_linear, float previous_angular, ro
 	
 	_dtheta += _angular * dt.toSec() + noise(a1 * fabs(previous_linear) +
 			a2 * fabs(previous_angular)) * dt.toSec();
-	
-	//~ ROS_INFO_STREAM("CalculateMotion:");
-	//~ ROS_INFO_STREAM("counter = " << _i << " linear = " << previous_linear
-		//~ << " angular = " << previous_angular << " dt = " << dt << " dx = "
-		//~ << _dx << " dy = " << _dy << " dtheta = " << _dtheta );
 }
 
 float Particle::noise(float deviation) 
@@ -118,17 +111,20 @@ float Particle::noise(float deviation)
 	return 0.5*sum;
 }
 
-void Particle::setParticleWeight(unsigned int width, unsigned int height, int** data, float resolution, std::vector<float> ranges, float max_range)
+void Particle::setParticleWeight(unsigned int width, unsigned int height,
+	int** data, float resolution, std::vector<float> ranges,
+	float max_range, float increment, float angle_min)
 {
 	std::vector<float> distances;
 	float sum = 0;
-	
-	sense(PI + _theta, width, height, data, resolution, 0);
-	sense(3 * PI/2 + _theta, width, height, data, resolution, 1);
-	sense(_theta, width, height, data, resolution, 2);
-	sense(PI/2 + _theta, width, height, data, resolution, 3);
+		
+	for (unsigned int i = 0 ; i < ranges.size(); i++)
+	{
+		sense(i*increment + angle_min + _theta, width, height, data, resolution, i);
+	}
 
-	for ( unsigned int i = 0 ; i < 4 ; i++ )
+
+	for (unsigned int i = 0 ; i < ranges.size() ; i++)
 	{
 		//~ ROS_INFO_STREAM("particle_ranges : " << _particle_ranges[i]);
 		if (_particle_ranges[i] / resolution <= 1)

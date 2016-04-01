@@ -20,6 +20,8 @@ class RobotPerception
 		int** _map_data; 
 		std::vector<float> _laser_ranges;
 		float _max_range;
+		float _increment;
+		float _angle_min;
 	
 	
 	public:
@@ -33,6 +35,8 @@ class RobotPerception
 		int getMapCell (int i, int j);
 		std::vector<float> getLaserRanges();
 		float getRangeMax();
+		float getAngleIncrement();
+		float getAngleMin();
 };
 
 #endif
