@@ -9,17 +9,21 @@ import rospy
 import sys
 import time
 
-class move_nao_head:
+class MoveNaoHead:
 	def __init__(self):
 		rospy.Subscriber("/vision/predator_alert", Polygon, self.move)
 		self.pub = rospy.Publisher('/joint_angles', JointAnglesWithSpeed, queue_size=10)
 		self.call_body_stifness_server_enable()
-		self.image_width = 640.0
-		self.image_height = 480.0
 	
 	def move(self, polygon):
 		
 		joint = JointAnglesWithSpeed()
+		
+		#~ image = CameraInfo()
+		#~ 
+		#~ print image.height
+		#~ print image.width
+		
 
 		joint.joint_names.append("HeadYaw")
 		joint.joint_names.append("HeadPitch")
@@ -31,19 +35,25 @@ class move_nao_head:
 
 		target_x = polygon.points[0].x + 0.5 * polygon.points[1].x
 		target_y = polygon.points[0].y + 0.5 * polygon.points[1].y
+		
+		sub_x = target_x - 320 / 2.0
+		sub_y = target_y - 240 / 2.0
 
-		#~ joint.joint_angles.append(0)
-		#~ joint.joint_angles.append(0)
-		if target_x - 320 / 2.0 < 0:
-			joint.joint_angles.append(0.05)
-		else:
-			joint.joint_angles.append(-0.05)
-			
-		if target_y - 240 / 2.0 < 0:
-			joint.joint_angles.append(-0.05)
-		else:
-			joint.joint_angles.append(0.05)
-			
+		var_x = abs((sub_x / 320) * 0.1)
+		var_y = abs((sub_y / 240) * 0.1)
+		
+		if var_x < 0.05 and var_x > -0.05:
+			if var_y < 0.05 and var_y > -0.05:
+				if sub_x < 0.0:
+					joint.joint_angles.append(var_x)
+				else:
+					joint.joint_angles.append(-var_x)
+					
+				if sub_y < 0.0:
+					joint.joint_angles.append(-var_y)
+				else:
+					joint.joint_angles.append(var_y)
+		
 		self.pub.publish(joint)
 		
 		print 'Move to ' + str(joint.joint_angles)
@@ -75,7 +85,7 @@ class move_nao_head:
 		
 if __name__ == "__main__":
 	rospy.init_node('nao_head', anonymous=True)
-	nao = move_nao_head()
+	nao = MoveNaoHead()
 	rospy.spin()	
 
 		
