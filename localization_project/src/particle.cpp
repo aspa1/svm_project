@@ -126,7 +126,6 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 
 	for (unsigned int i = 0 ; i < ranges.size() ; i++)
 	{
-		//~ ROS_INFO_STREAM("particle_ranges : " << _particle_ranges[i]);
 		if (_particle_ranges[i] / resolution <= 1)
 		{
 			_weight = 0;
@@ -139,6 +138,7 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 			distances.push_back (fabs(ranges[i]-_particle_ranges[i]));
 			sum += distances[i];
 		}
+		//~ ROS_INFO_STREAM("distances : " << distances[i]);
 	}
 	
 	//~ _weight = pow(1/(sum + 1), 2);

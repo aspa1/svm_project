@@ -104,7 +104,6 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 
 void ParticleFilter::resample()
 {
-	ROS_INFO_STREAM("resample");
 	float average = 0;
 	float sum = 0;
 	bool flag = false;
@@ -124,6 +123,7 @@ void ParticleFilter::resample()
 	ROS_INFO_STREAM("average1 = " << average);
 	if (flag == true)
 	{
+		ROS_INFO_STREAM("resample");
 		sum = 0;
 		std::vector<Particle> new_particles;
 		int index = std::rand() % ( _particles_number );
