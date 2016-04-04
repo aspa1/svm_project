@@ -39,6 +39,19 @@ bool SVM::svmPredict (
 	
 	if (fileExist(url) == true) 
 	{	
+		cv::Mat input = cv::imread(url, 0); //Load as grayscale
+		cv::SiftFeatureDetector detector;
+		std::vector<cv::KeyPoint> keypoints;
+		detector.detect(input, keypoints);
+
+		// Add results to image and save.
+		cv::Mat output;
+		cv::drawKeypoints(input, keypoints, output);
+		cv::imwrite("/home/chrisa/catkin_ws/src/thesis/sift_result.bmp", output);
+		//~ imshow( "Display window", output );                   // Show our image inside it.
+//~ 
+		//~ cv::waitKey(0);  
+    
 		cv::Mat image = img.getImg(url);
 		std::vector<float> features = f.imgPixels(image);
 
@@ -78,6 +91,7 @@ bool SVM::svmPredict (
 		res.success = false;
 		return 1;
 	}
+    
 	return true;
 }	
 

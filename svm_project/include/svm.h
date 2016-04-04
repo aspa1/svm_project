@@ -10,6 +10,8 @@
 
 #include <opencv/ml.h>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/nonfree/features2d.hpp>
 
 #include "img_read.h" 
 #include "feature_extraction.h"
