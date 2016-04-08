@@ -13,7 +13,7 @@ class Move:
 		
 		
 		rh.motion.enableMotors()
-		#~ rospy.Subscriber("/vision/predator_alert", Polygon, self.walk)
+		rospy.Subscriber("/vision/predator_alert", Polygon, self.walk)
 		rh.humanoid_motion.goToPosture("Stand", 0.7)
 		time.sleep(1)
 	
