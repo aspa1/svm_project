@@ -8,7 +8,7 @@
 	
 	<include file="$(find stdr_gui)/launch/stdr_gui.launch"/>
 	
-	<node pkg="stdr_robot" type="robot_handler" name="$(anon robot_spawn)" args="add $(find localization_project)/cfg/robot.yaml 15 15 0.78" />
+	<node pkg="stdr_robot" type="robot_handler" name="$(anon robot_spawn)" args="add $(find localization_project)/cfg/robot2.yaml 15 15 0.78" />
 	
 	<rosparam file="$(find localization_project)/cfg/params.yaml" command="load" />
 	

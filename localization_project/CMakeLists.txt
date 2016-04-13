@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   sensor_msgs
   message_generation
+  stdr_msgs
   tf
 )
 find_package(PkgConfig)
@@ -114,6 +115,7 @@ CATKIN_DEPENDS
 	nav_msgs
 	sensor_msgs
 	std_msgs
+	stdr_msgs
 #  DEPENDS system_lib
 )
 

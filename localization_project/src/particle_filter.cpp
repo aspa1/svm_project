@@ -92,7 +92,7 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 				robot_percept.getMapHeight(), robot_percept.getMapData(),
 				robot_percept.getMapResolution(), robot_percept.getLaserRanges(),
 				robot_percept.getRangeMax(), robot_percept.getAngleIncrement(),
-				robot_percept.getAngleMin());
+				robot_percept.getAngleMin(), robot_percept.getRfidPose());
 		}
 		if (_motion_flag)
 			resample();
@@ -123,7 +123,7 @@ void ParticleFilter::resample()
 	ROS_INFO_STREAM("average1 = " << average);
 	if (flag == true)
 	{
-		ROS_INFO_STREAM("resample");
+		ROS_INFO_STREAM("resample");		
 		sum = 0;
 		std::vector<Particle> new_particles;
 		int index = std::rand() % ( _particles_number );

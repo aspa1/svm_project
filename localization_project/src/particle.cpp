@@ -18,7 +18,7 @@ Particle::Particle(unsigned int width, unsigned int height, int** data, std::vec
 	}
 
 	_theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/2*PI);
-	_dx = _dy = _dtheta = 0;		
+	_dx = _dy = _dtheta = _weight = 0;		
 	_particle_ranges = new float[ranges.size()];	
 	
 	//~ _x = 15;
@@ -35,7 +35,7 @@ void Particle::move()
     _dx = _dy = _dtheta = 0;
 }
 
-void Particle::sense(float angle, unsigned int width, unsigned int height, int** data, float resolution, int i)
+void Particle::getRanges(float angle, unsigned int width, unsigned int height, int** data, float resolution, int i)
 {
 	int distance = 1;
 	float new_x = _x / resolution + distance * cos(angle);
@@ -57,6 +57,65 @@ void Particle::sense(float angle, unsigned int width, unsigned int height, int**
 		}
 	}
 	_particle_ranges[i] = ( (distance-1) * resolution);
+}
+
+float Particle::sense(std::vector<std::vector<float> > rfid_pose)
+{
+	float w = 0;
+	float rfid_theta;
+	float particle_theta = _theta;
+	for (unsigned int i = 0 ; i < rfid_pose.size() ; i++)
+	{
+		rfid_theta = atan2(rfid_pose[i][1] - _y, rfid_pose[i][0] - _x);
+		float d_th = rfid_theta - particle_theta;
+		if( cos(d_th) > cos(30 * PI /180.0) )
+			w = 1.0;
+		else
+			w = -1.0;
+	}
+	return w;
+}
+
+void Particle::setParticleWeight(unsigned int width, unsigned int height,
+	int** data, float resolution, std::vector<float> ranges,
+	float max_range, float increment, float angle_min,
+	std::vector<std::vector<float> > rfid_pose)
+{
+	_weight = 0;
+	float tag_w = sense(rfid_pose);
+	
+	std::vector<float> distances;
+	float sum = 0;
+		
+	for (unsigned int i = 0 ; i < ranges.size(); i++)
+	{
+		getRanges(i*increment + angle_min + _theta, width, height, data, resolution, i);
+	}
+
+
+	for (unsigned int i = 0 ; i < ranges.size() ; i++)
+	{
+		if (_particle_ranges[i] / resolution <= 1)
+		{
+			_weight = 0;
+			return;
+		}
+		else
+		{	
+			if (_particle_ranges[i] > max_range)
+				_particle_ranges[i] = max_range;
+			distances.push_back (fabs(ranges[i]-_particle_ranges[i]));
+			sum += distances[i];
+		}
+		//~ ROS_INFO_STREAM("distances : " << distances[i]);
+	}
+	float _sum_w = pow(1/(sum + 1), 0.7);
+	if(tag_w < 0.0)
+	{
+		_weight = _sum_w * 0.0001;
+	}
+	else
+		_weight = _sum_w;
 }
 
 void Particle::calculateMotion(float previous_linear, float previous_angular, ros::Duration dt, float a1, float a2)
@@ -109,40 +168,6 @@ float Particle::noise(float deviation)
 			(rand()) /( static_cast <float> (RAND_MAX/(2 * deviation)));
 	}
 	return 0.5*sum;
-}
-
-void Particle::setParticleWeight(unsigned int width, unsigned int height,
-	int** data, float resolution, std::vector<float> ranges,
-	float max_range, float increment, float angle_min)
-{
-	std::vector<float> distances;
-	float sum = 0;
-		
-	for (unsigned int i = 0 ; i < ranges.size(); i++)
-	{
-		sense(i*increment + angle_min + _theta, width, height, data, resolution, i);
-	}
-
-
-	for (unsigned int i = 0 ; i < ranges.size() ; i++)
-	{
-		if (_particle_ranges[i] / resolution <= 1)
-		{
-			_weight = 0;
-			return;
-		}
-		else
-		{	
-			if (_particle_ranges[i] > max_range)
-				_particle_ranges[i] = max_range;
-			distances.push_back (fabs(ranges[i]-_particle_ranges[i]));
-			sum += distances[i];
-		}
-		//~ ROS_INFO_STREAM("distances : " << distances[i]);
-	}
-	
-	//~ _weight = pow(1/(sum + 1), 2);
-	_weight = 1 / (sum + 1);
 }
 
 float Particle::getX()

@@ -27,14 +27,16 @@ class Particle
 		Particle(unsigned int width, unsigned int height, int** data,
 			std::vector<float> ranges, float resolution);
 		void move();
-		void sense(float angle, unsigned int width, unsigned int height,
+		void getRanges(float angle, unsigned int width, unsigned int height,
 			int** data, float resolution, int i);
+		float sense(std::vector<std::vector<float> > rfid_pose);
+		void setParticleWeight(unsigned int width, unsigned int height,
+			int** data, float resolution, std::vector<float> ranges,
+			float max_range, float increment, float angle_min, 
+			std::vector<std::vector<float> > rfid_pose);
 		void calculateMotion(float previous_linear, float previous_angular,
 			ros::Duration dt, float a1, float a2);
 		float noise(float deviation);
-		void setParticleWeight(unsigned int width, unsigned int height,
-			int** data, float resolution, std::vector<float> ranges,
-			float max_range, float increment, float angle_min);
 		float getX();
 		float getY();
 		float getWeight();
