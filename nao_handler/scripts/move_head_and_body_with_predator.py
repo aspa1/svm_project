@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from geometry_msgs.msg import Polygon
+from geometry_msgs.msg import Twist
 from std_srvs.srv import Empty
 from naoqi_bridge_msgs.msg import JointAnglesWithSpeed
 from sensor_msgs.msg import CameraInfo
@@ -15,6 +16,7 @@ class MoveHeadAndBody:
 		self.rh = RappRobot()
 		self.sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.move)
 		self.pub = rospy.Publisher('/joint_angles', JointAnglesWithSpeed, queue_size=1)
+		self.publ = rospy.Publisher('/inner/cmd_vel', Twist, queue_size=1)
 		self.rh.motion.enableMotors()
 		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
 		self.lost_object_counter = 20
@@ -38,7 +40,6 @@ class MoveHeadAndBody:
 		joint.joint_names.append("HeadYaw")
 		joint.joint_names.append("HeadPitch")
 
-		j = joint.joint_angles
 		#~ print polygon
 		joint.speed = 0.1
 		joint.relative = True
@@ -83,10 +84,10 @@ class MoveHeadAndBody:
 		print x_vel, y_vel, theta_vel
 			
 		if self.lock_motion is False:
-			self.rh.motion.moveByVelocity(x_vel, y_vel, theta_vel)
+			self.set_velocities(x_vel, y_vel, theta_vel)
 			self.pub.publish(joint)
 		else:
-			self.rh.motion.moveByVelocity(0, 0, 0)
+			self.set_velocities(0, 0, 0)
 			
 		[batt, none] = self.rh.sensors.getBatteryLevels()
 		battery = batt[0]
@@ -106,6 +107,23 @@ class MoveHeadAndBody:
 			self.lock_motion = True
 			self.rh.motion.moveByVelocity(0, 0, 0)
 			print 'Locked due to 2 seconds'
+			
+	def set_velocities(self, x, y, theta):
+		velocities = Twist()
+		
+		self.rh.motion.moveByVelocity(x, y, theta)
+		[r,e] = self.rh.motion.getVelocities()
+		
+		# r is in [-1,1] where 1 is the max speed
+		# you must put m/s and rad/sec in velocities
+		
+		velocities.linear.x = r[0]
+		velocities.linear.y = r[1]
+		velocities.angular.z = r[2]
+		
+		print x,y,theta,str(r)
+		self.publ.publish(velocities)
+		
 		
 if __name__ == "__main__":
 	rospy.init_node('nao_head', anonymous=True)
