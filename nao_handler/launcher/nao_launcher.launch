@@ -31,6 +31,7 @@
   <!-- Specify here all dependent settings (default top) -->
   <include file="$(find naoqi_sensors_py)/launch/camera.launch" ns="nao_robot/camera/top" >
     <arg name="nao_ip"        value="$(arg nao_ip)" />
+    <arg name="resolution" value="1" />
   </include>
   <include file="$(find naoqi_sensors_py)/launch/camera.launch" ns="nao_robot/camera/bottom" >
     <arg name="nao_ip"        value="$(arg nao_ip)" />

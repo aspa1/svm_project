@@ -2,11 +2,13 @@
 
   <!-- upload nao robot launcher-->
   <include file="$(find nao_handler)/launcher/nao_launcher.launch" >
-  <arg name="nao_ip" value="$(arg nao_ip)"/>
+  <arg name="nao_ip" value="$(arg nao_ip)"/>  
   </include>
+  
+  <node name="$(anon nao)" pkg="nao_handler" type="move_head_and_body_with_predator.py" />  
 
   <!-- upload predator launcher -->
   <include file="$(find pandora_tld)/launch/predator_node_standalone.launch">
   </include>
-
+  
 </launch>
