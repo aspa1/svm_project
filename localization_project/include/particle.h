@@ -39,6 +39,7 @@ class Particle
 		float noise(float deviation);
 		float getX();
 		float getY();
+		float getTheta();
 		float getWeight();
 };
 

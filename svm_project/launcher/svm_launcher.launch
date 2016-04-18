@@ -1,8 +1,0 @@
-<launch>
-	
-	
-	<node type="svm" pkg="svm_project" name="svm" output="screen" />
-	
-	
-
-</launch>

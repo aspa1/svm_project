@@ -192,7 +192,7 @@ void ParticleFilter::velocityCallback(geometry_msgs::Twist twist)
 
 void ParticleFilter::visualize(float resolution)
 {
-	visualization_msgs::Marker m;
+	visualization_msgs::Marker m, m1;
 	
 	m.header.frame_id = "map";
     m.header.stamp = ros::Time();
@@ -217,4 +217,36 @@ void ParticleFilter::visualize(float resolution)
     }
 	
 	 _visualization_pub.publish(m);
+	 
+	m1.header.frame_id = "map";
+    m1.header.stamp = ros::Time();
+    m1.type = visualization_msgs::Marker::SPHERE_LIST;
+    m1.action = visualization_msgs::Marker::ADD;
+    m1.id = 0;
+    m1.ns = "Best Particle";
+    m1.scale.x = 0.35;
+    m1.scale.y = 0.35;
+    m1.scale.z = 0.35;
+    m1.color.a = 1.0;
+    m1.color.r = 0.0;
+    m1.color.g = 0.0;
+    m1.color.b = 1.0;
+    
+    float max_weight = _particles[0].getWeight();
+    int id = 0;
+	for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
+	{
+		if (_particles[i].getWeight() > max_weight)
+			max_weight = _particles[i].getWeight();
+			id = i ;
+	}
+	
+	geometry_msgs::Point p1;
+	p1.x = _particles[id].getX();
+	p1.y = _particles[id].getY();
+	m1.points.push_back(p1);
+	
+	ROS_INFO_STREAM("Best particle: x = " << _particles[id].getX() <<
+		" y = " << _particles[id].getY() << " theta = " << _particles[id].getTheta());
+	 _visualization_pub.publish(m1);
 }

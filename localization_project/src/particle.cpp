@@ -180,6 +180,11 @@ float Particle::getY()
 	return _y;
 }
 
+float Particle::getTheta() 
+{
+	return _theta;
+}
+
 float Particle::getWeight()
 {
 	return _weight;

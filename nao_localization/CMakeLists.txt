@@ -1,17 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(svm_project)
+project(nao_localization)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED
-	roscpp
-	rospy
-	roslib
-	std_msgs
-	message_generation
-	cv_bridge
-	resource_retriever
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -55,11 +51,11 @@ find_package(catkin REQUIRED
 # )
 
 ## Generate services in the 'srv' folder
- add_service_files(
-   FILES
-   trainSvmSrv.srv
-   urlRetrieverSrv.srv
-)
+# add_service_files(
+#   FILES
+#   Service1.srv
+#   Service2.srv
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -69,10 +65,10 @@ find_package(catkin REQUIRED
 # )
 
 ## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs  # Or other packages containing msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -104,17 +100,9 @@ find_package(catkin REQUIRED
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-#  LIBRARIES svm
-CATKIN_DEPENDS 
-	roscpp
-	rospy
-	roslib
-	std_msgs
-	message_generation
-	cv_bridge
-	opencv2
-	resource_retriever
+#  INCLUDE_DIRS include
+#  LIBRARIES nao_localization
+#  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -124,68 +112,32 @@ CATKIN_DEPENDS
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include)
+# include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-
-add_library(svm_lib src/svm.cpp)
-target_link_libraries(svm_lib ${catkin_LIBRARIES})
-add_dependencies(svm_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_library(img_read_lib src/img_read.cpp)
-target_link_libraries(img_read_lib ${catkin_LIBRARIES})
-add_dependencies(img_read_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_library(feature_extraction_lib src/feature_extraction.cpp)
-target_link_libraries(feature_extraction_lib ${catkin_LIBRARIES})
-add_dependencies(feature_extraction_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
-
+# add_library(nao_localization
+#   src/${PROJECT_NAME}/nao_localization.cpp
+# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
+# add_dependencies(nao_localization ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-#~ add_executable(server src/svm_server.cpp src/image_processing.cpp)
- #~ target_link_libraries(server
-   #~ ${catkin_LIBRARIES}
-#~ )
-#~ add_dependencies (server ${catkin_EXPORTED_TARGETS})
-#~ 
-#~ 
-#~ add_executable(client src/svm_client.cpp src/image_processing.cpp)
-#~ target_link_libraries(client 
-   #~ ${catkin_LIBRARIES}
-#~ )
-#~ add_dependencies (client ${catkin_EXPORTED_TARGETS})
-
-add_executable(svm src/main.cpp)
- target_link_libraries(svm
-	svm_lib
-	img_read_lib
-	feature_extraction_lib
-	opencv_nonfree
-   #~ ${catkin_LIBRARIES}
-)
-add_dependencies (svm svm_project_gencpp ${catkin_EXPORTED_TARGETS})
-
-
-#add_executable(img_loader src/img_load.cpp)
-
+# add_executable(nao_localization_node src/nao_localization_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(svm_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(nao_localization_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-
-
-
+# target_link_libraries(nao_localization_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -202,7 +154,7 @@ add_dependencies (svm svm_project_gencpp ${catkin_EXPORTED_TARGETS})
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS svm svm_node
+# install(TARGETS nao_localization nao_localization_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -227,7 +179,7 @@ add_dependencies (svm svm_project_gencpp ${catkin_EXPORTED_TARGETS})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_svm.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_nao_localization.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
