@@ -1,8 +1,8 @@
 map_topic: /map
 
-robot_laser_topic: /inner/sonar_measurements
+robot_laser_topic: /robot0/laser_1
 
-velocity_topic: /inner/cmd_vel
+velocity_topic: /robot0/cmd_vel
 
 particles_number: 20000
 

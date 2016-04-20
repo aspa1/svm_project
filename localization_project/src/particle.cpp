@@ -17,7 +17,7 @@ Particle::Particle(unsigned int width, unsigned int height, int** data, std::vec
 		_y = std::rand() % (height) * resolution;
 	}
 
-	_theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/2*PI);
+	_theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/ (2 * PI));
 	_dx = _dy = _dtheta = _weight = 0;		
 	_particle_ranges = new float[ranges.size()];	
 	

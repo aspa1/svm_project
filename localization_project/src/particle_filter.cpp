@@ -141,7 +141,7 @@ void ParticleFilter::resample()
 		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 		{
 			beta += static_cast <float> (rand()) / static_cast <float> 
-				(RAND_MAX/ 2*max_weight);
+				(RAND_MAX/ (2*max_weight));
 			while (beta > _particles[index].getWeight())
 			{
 				beta -= _particles[index].getWeight();
@@ -241,8 +241,10 @@ void ParticleFilter::visualize(float resolution)
 	for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 	{
 		if (_particles[i].getWeight() > max_weight)
+		{
 			max_weight = _particles[i].getWeight();
-			id = i ;
+			id = i;
+		}
 	}
 	
 	geometry_msgs::Point p1;
