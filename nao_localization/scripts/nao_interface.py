@@ -18,7 +18,7 @@ class NaoInterface:
 		laser_msg = LaserScan()
 		laser_msg.ranges.append(sonars['front_right'])
 		laser_msg.ranges.append(sonars['front_left'])
-		laser_msg.range_max = 2.55
+		laser_msg.range_max = 1.00
 		laser_msg.angle_increment = 0.785398185253
 		laser_msg.angle_min = -0.392699092627
 		self.pub.publish(laser_msg)
