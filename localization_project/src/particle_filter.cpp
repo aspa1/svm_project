@@ -32,10 +32,14 @@ ParticleFilter::ParticleFilter()
 	{
 		ROS_ERROR("Noise param a2 does not exist");
 	}
+	if(!_n.getParam("/velocity_topic", _velocity_topic))
+    {
+		ROS_ERROR("Velocity_topic param does not exist");
+	}
 	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
 		"visualization_marker", 0);
             
-    _velocity_sub = _n.subscribe("/robot0/cmd_vel", 10,
+    _velocity_sub = _n.subscribe(_velocity_topic, 10,
 		&ParticleFilter::velocityCallback, this);
     
     _timer = _n.createTimer(ros::Duration(_duration),

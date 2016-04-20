@@ -21,6 +21,7 @@ class ParticleFilter {
 		ros::Time _previous_time;
 		ros::Timer _timer;
 		ros::Duration _dt;
+		std::string _velocity_topic;
 		RobotPerception robot_percept;
 		int _particles_number;
 		int _duration;

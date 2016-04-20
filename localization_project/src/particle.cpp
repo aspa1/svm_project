@@ -92,7 +92,6 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 		getRanges(i*increment + angle_min + _theta, width, height, data, resolution, i);
 	}
 
-
 	for (unsigned int i = 0 ; i < ranges.size() ; i++)
 	{
 		if (_particle_ranges[i] / resolution <= 1)
@@ -109,6 +108,7 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 		}
 		//~ ROS_INFO_STREAM("distances : " << distances[i]);
 	}
+	
 	float _sum_w = pow(1/(sum + 1), 0.7);
 	if(tag_w < 0.0)
 	{
