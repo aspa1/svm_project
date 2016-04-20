@@ -14,7 +14,7 @@ import time
 class MoveHeadAndBody:
 	def __init__(self):
 		self.rh = RappRobot()
-		self.sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.move)
+		self.sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.track_bounding_box)
 		self.pub = rospy.Publisher('/joint_angles', JointAnglesWithSpeed, queue_size=1)
 		self.publ = rospy.Publisher('/inner/cmd_vel', Twist, queue_size=1)
 		self.rh.motion.enableMotors()
@@ -23,8 +23,9 @@ class MoveHeadAndBody:
 		self.lock_motion = False
 		self.hunt_initiated = False
 		rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
+		rospy.Timer(rospy.Duration(0.1), self.get_velocities_callback)
 	
-	def move(self, polygon):
+	def track_bounding_box(self, polygon):
 		self.hunt_initiated = True
 		self.lost_object_counter = 20
 		
@@ -72,10 +73,10 @@ class MoveHeadAndBody:
 		
 		if sonars['front_left'] <= 0.3 or sonars['front_right'] <= 0.3:
 			self.lock_motion = True
-			print 'Locked due to sonars'
+			rospy.logerr("Locked due to sonars")
 		elif head_pitch >= 0.4 or head_pitch <= -0.4:
 			self.lock_motion = True
-			print 'Locked due to head pitch'
+			rospy.logerr("Locked due to head pitch")
 		else:
 			theta_vel = head_yaw * 0.1
 			if -0.2 < head_yaw < 0.2:
@@ -88,6 +89,7 @@ class MoveHeadAndBody:
 			self.pub.publish(joint)
 		else:
 			self.set_velocities(0, 0, 0)
+			self.sub.unregister()
 			
 		[batt, none] = self.rh.sensors.getBatteryLevels()
 		battery = batt[0]
@@ -105,23 +107,38 @@ class MoveHeadAndBody:
 			self.lost_object_counter -= 1
 		if self.lost_object_counter < 0:
 			self.lock_motion = True
-			self.rh.motion.moveByVelocity(0, 0, 0)
-			print 'Locked due to 2 seconds'
+			#~ self.rh.motion.moveByVelocity(0, 0, 0)
+			self.set_velocities(0, 0, 0)
+			rospy.logerr("Locked due to 2 seconds")
+			self.sub.unregister()
+			
 			
 	def set_velocities(self, x, y, theta):
-		velocities = Twist()
+		#~ velocities = Twist()
 		
 		self.rh.motion.moveByVelocity(x, y, theta)
-		[r,e] = self.rh.motion.getVelocities()
+		#~ [r,e] = self.rh.motion.getVelocities()
 		
 		# r is in [-1,1] where 1 is the max speed
 		# you must put m/s and rad/sec in velocities
+		
+		#~ velocities.linear.x = r[0]
+		#~ velocities.linear.y = r[1]
+		#~ velocities.angular.z = r[2]
+		
+		#~ print x,y,theta,str(r)
+		#~ self.publ.publish(velocities)
+	
+	def get_velocities_callback(self, event):
+		velocities = Twist()
+		
+		[r,e] = self.rh.motion.getVelocities()
 		
 		velocities.linear.x = r[0]
 		velocities.linear.y = r[1]
 		velocities.angular.z = r[2]
 		
-		print x,y,theta,str(r)
+		rospy.loginfo("%s", velocities)
 		self.publ.publish(velocities)
 		
 		
