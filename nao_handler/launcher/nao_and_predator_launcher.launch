@@ -7,8 +7,5 @@
   
   <node name="$(anon nao)" pkg="nao_handler" type="move_head_and_body_with_predator.py" />  
 
-  <!-- upload predator launcher -->
-  <include file="$(find pandora_tld)/launch/predator_node_standalone.launch">
-  </include>
   
 </launch>
