@@ -17,7 +17,7 @@ Particle::Particle(unsigned int width, unsigned int height, int** data, std::vec
 		_y = std::rand() % (height) * resolution;
 	}
 
-	_theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/ (2 * PI));
+	_theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/ 2 * PI);
 	_dx = _dy = _dtheta = _weight = 0;		
 	_particle_ranges = new float[ranges.size()];	
 	
@@ -77,22 +77,24 @@ float Particle::sense(std::vector<std::vector<float> > rfid_pose)
 }
 
 void Particle::setParticleWeight(unsigned int width, unsigned int height,
-	int** data, float resolution, std::vector<float> ranges,
+	int** data, float resolution, const std::vector<float>& ranges,
 	float max_range, float increment, float angle_min,
-	std::vector<std::vector<float> > rfid_pose)
+	std::vector<std::vector<float> > rfid_pose, int step, float strictness)
 {
+	ROS_INFO_STREAM("setParticleWeight");
 	_weight = 0;
 	float tag_w = sense(rfid_pose);
 	
-	std::vector<float> distances;
+	std::vector<float> distances(ranges.size(), 0);
 	float sum = 0;
 		
-	for (unsigned int i = 0 ; i < ranges.size(); i++)
+	for (unsigned int i = 0 ; i < ranges.size(); i+=step)
 	{
+		//~ ROS_INFO_STREAM("i = " << i);
 		getRanges(i*increment + angle_min + _theta, width, height, data, resolution, i);
 	}
 
-	for (unsigned int i = 0 ; i < ranges.size() ; i++)
+	for (unsigned int i = 0 ; i < ranges.size() ; i+=step)
 	{
 		if (_particle_ranges[i] / resolution <= 1)
 		{
@@ -103,19 +105,21 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 		{	
 			if (_particle_ranges[i] > max_range)
 				_particle_ranges[i] = max_range;
-			distances.push_back (fabs(ranges[i]-_particle_ranges[i]));
+			distances[i] = (fabs(ranges[i]-_particle_ranges[i]));
 			sum += distances[i];
 		}
 		//~ ROS_INFO_STREAM("distances : " << distances[i]);
 	}
 	
-	float _sum_w = pow(1/(sum + 1), 0.7);
+	sum = sum/ranges.size();
+	float _sum_w = pow(1/(sum + 1), strictness);
 	if(tag_w < 0.0)
 	{
 		_weight = _sum_w * 0.0001;
 	}
 	else
 		_weight = _sum_w;
+	ROS_INFO_STREAM("sum = " << sum << " weight = " << _weight);
 }
 
 void Particle::calculateMotion(float previous_linear, float previous_angular, ros::Duration dt, float a1, float a2)

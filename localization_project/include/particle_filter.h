@@ -25,8 +25,10 @@ class ParticleFilter {
 		RobotPerception robot_percept;
 		int _particles_number;
 		int _duration;
+		int _sampling_step;
 		float _noise_param1;
 		float _noise_param2;
+		float _strictness_param;
 		float _current_linear;
 		float _current_angular;
 		float _previous_linear;

@@ -229,4 +229,3 @@ std::vector<std::vector<float> > RobotPerception::getRfidPose()
 {
 	return _rfid_pose;
 }
-

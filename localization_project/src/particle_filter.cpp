@@ -36,6 +36,14 @@ ParticleFilter::ParticleFilter()
     {
 		ROS_ERROR("Velocity_topic param does not exist");
 	}
+	if(!_n.getParam("/rays_subsampling_step", _sampling_step))
+    {
+		ROS_ERROR("Sampling_step param does not exist");
+	}
+	if(!_n.getParam("/strictness", _strictness_param))
+    {
+		ROS_ERROR("Strictness param does not exist");
+	}
 	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
 		"visualization_marker", 0);
             
@@ -74,8 +82,12 @@ bool ParticleFilter::particlesInit (
 
 void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 {
+	ROS_INFO_STREAM("ParticlesCallback");
+	ros::Time time1, time2;
+	ros::Duration dt;
 	if (_particles_initialized)
 	{
+		time1 = ros::Time::now();
 		if (_previous_angular || _previous_linear)
 			_motion_flag = true;
 		_current_time = ros::Time::now();
@@ -96,12 +108,18 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 				robot_percept.getMapHeight(), robot_percept.getMapData(),
 				robot_percept.getMapResolution(), robot_percept.getLaserRanges(),
 				robot_percept.getRangeMax(), robot_percept.getAngleIncrement(),
-				robot_percept.getAngleMin(), robot_percept.getRfidPose());
+				robot_percept.getAngleMin(), robot_percept.getRfidPose(),
+				_sampling_step, _strictness_param);
 		}
+		ROS_INFO_STREAM("setParticleWeight Complete");
 		if (_motion_flag)
 			resample();
 		_motion_flag = false;
 		visualize(robot_percept.getMapResolution());
+		time2 = ros::Time::now();
+		dt = time2 - time1;
+		ROS_INFO_STREAM("dt = " << dt.toSec());
+		ROS_INFO_STREAM("ParticleCallback end");
 	}
 }
 
@@ -141,7 +159,7 @@ void ParticleFilter::resample()
 		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 		{
 			beta += static_cast <float> (rand()) / static_cast <float> 
-				(RAND_MAX/ (2*max_weight));
+				(RAND_MAX/ 2*max_weight);
 			while (beta > _particles[index].getWeight())
 			{
 				beta -= _particles[index].getWeight();

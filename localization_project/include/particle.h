@@ -31,9 +31,9 @@ class Particle
 			int** data, float resolution, int i);
 		float sense(std::vector<std::vector<float> > rfid_pose);
 		void setParticleWeight(unsigned int width, unsigned int height,
-			int** data, float resolution, std::vector<float> ranges,
+			int** data, float resolution, const std::vector<float>& ranges,
 			float max_range, float increment, float angle_min, 
-			std::vector<std::vector<float> > rfid_pose);
+			std::vector<std::vector<float> > rfid_pose, int step, float strictness);
 		void calculateMotion(float previous_linear, float previous_angular,
 			ros::Duration dt, float a1, float a2);
 		float noise(float deviation);

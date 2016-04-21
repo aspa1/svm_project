@@ -23,15 +23,15 @@ class NaoInterface:
 		laser_msg.angle_min = -0.392699092627
 		self.pub.publish(laser_msg)
 		
-	#~ def qrDetectionCallback(self, event):
-		#~ print "QrDetection"
-		#~ self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "1280x960")
-		#~ self.rh.utilities.moveFileToPC("/home/nao/test.jpg", "/home/aspa/test.jpg")
-		#~ svc = QrDetection(image="/home/aspa/test.jpg")
-		#~ response = svc.call()
-		#~ print response.serialize()
-		#~ head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])[0]
-		#~ print head_yaw
+	def qrDetectionCallback(self, event):
+		print "QrDetection"
+		self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "1280x960")
+		self.rh.utilities.moveFileToPC("/home/nao/test.jpg", "/home/aspa/test.jpg")
+		svc = QrDetection(image="/home/aspa/test.jpg")
+		response = svc.call()
+		print response.serialize()
+		head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])[0]
+		print head_yaw
 
 		
 if __name__ == "__main__":

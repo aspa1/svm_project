@@ -1,10 +1,14 @@
 map_topic: /map
 
-robot_laser_topic: /robot0/laser_1
+robot_laser_topic: /robot0/laser_0
 
 velocity_topic: /robot0/cmd_vel
 
-particles_number: 20000
+rays_subsampling_step: 60
+
+strictness: 0.7
+
+particles_number: 1000
 
 enable_visualization: true
 
@@ -12,7 +16,7 @@ a1: 0.1
 
 a2: 0.05
 
-duration: 0.5
+duration: 5
 
 rfid_reader_topic: /robot0/rfid_reader_0
 
