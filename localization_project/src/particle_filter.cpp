@@ -67,7 +67,8 @@ bool ParticleFilter::particlesInit (
 	{
 		Particle particle(robot_percept.getMapWidth(),
 			robot_percept.getMapHeight(), robot_percept.getMapData(),
-				robot_percept.getLaserRanges(), robot_percept.getMapResolution());
+			robot_percept.getLaserRanges(), robot_percept.getMapResolution(),
+			_sampling_step);
 		_particles.push_back(particle);
 	}
 	_particles_initialized = true;
@@ -82,7 +83,6 @@ bool ParticleFilter::particlesInit (
 
 void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 {
-	ROS_INFO_STREAM("ParticlesCallback");
 	ros::Time time1, time2;
 	ros::Duration dt;
 	if (_particles_initialized)
@@ -94,7 +94,8 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 		_dt = _current_time - _previous_time;
 		for (unsigned int i = 0 ; i < _particles_number ; i++)
 		{
-			_particles[i].calculateMotion(_previous_linear, _previous_angular, _dt, _noise_param1, _noise_param2);
+			_particles[i].calculateMotion(_previous_linear,
+				_previous_angular, _dt, _noise_param1, _noise_param2);
 			_particles[i].move();
 			//~ ROS_INFO_STREAM("New x = " << _particles[i].getX() << " new y = " << _particles[i].getY());
 			_previous_angular = _current_angular;
@@ -111,7 +112,6 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 				robot_percept.getAngleMin(), robot_percept.getRfidPose(),
 				_sampling_step, _strictness_param);
 		}
-		ROS_INFO_STREAM("setParticleWeight Complete");
 		if (_motion_flag)
 			resample();
 		_motion_flag = false;
@@ -119,7 +119,6 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 		time2 = ros::Time::now();
 		dt = time2 - time1;
 		ROS_INFO_STREAM("dt = " << dt.toSec());
-		ROS_INFO_STREAM("ParticleCallback end");
 	}
 }
 
@@ -131,7 +130,7 @@ void ParticleFilter::resample()
 	bool flag = false;
 	for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 	{
-		if (_particles[i].getWeight() > 0.00001)
+		if (_particles[i].getWeight() > 0.001)
 		{
 			flag = true;
 			break;
@@ -159,7 +158,7 @@ void ParticleFilter::resample()
 		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 		{
 			beta += static_cast <float> (rand()) / static_cast <float> 
-				(RAND_MAX/ 2*max_weight);
+				(RAND_MAX/ (2*max_weight));
 			while (beta > _particles[index].getWeight())
 			{
 				beta -= _particles[index].getWeight();
@@ -175,6 +174,15 @@ void ParticleFilter::resample()
 		}
 		average = sum/ _particles_number;
 		ROS_INFO_STREAM("average2 = " << average);
+	}
+	else
+	{
+		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
+		{
+			_particles[i].randomize(robot_percept.getMapWidth(),
+				robot_percept.getMapHeight(), robot_percept.getMapData(),
+				robot_percept.getMapResolution());
+		}
 	}
 }
 
@@ -202,7 +210,8 @@ void ParticleFilter::velocityCallback(geometry_msgs::Twist twist)
 			_dt = _current_time - _previous_time;
 			for (int i = 0 ; i < _particles_number; i ++)
 			{
-				_particles[i].calculateMotion(_previous_linear, _previous_angular, _dt, _noise_param1, _noise_param2);
+				_particles[i].calculateMotion(_previous_linear,
+					_previous_angular, _dt, _noise_param1, _noise_param2);
 			}
 			_previous_angular = _current_angular;
 			_previous_linear = _current_linear;

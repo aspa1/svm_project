@@ -11,6 +11,8 @@
 class Particle
 {
 	private:
+		float _previous_x;
+		float _previous_y;
 		float _x;
 		float _y;
 		float _theta;
@@ -21,14 +23,17 @@ class Particle
 		float* _particle_ranges;
 		float _linear;
 		float _angular;
+		std::vector<float> _distances;
 	
 	public:
 		Particle();
 		Particle(unsigned int width, unsigned int height, int** data,
-			std::vector<float> ranges, float resolution);
+			std::vector<float> ranges, float resolution, int step);
+		void randomize(unsigned int width, unsigned int height,
+			int** data, float resolution);
 		void move();
 		void getRanges(float angle, unsigned int width, unsigned int height,
-			int** data, float resolution, int i);
+			int** data, float resolution, float max_range, int i);
 		float sense(std::vector<std::vector<float> > rfid_pose);
 		void setParticleWeight(unsigned int width, unsigned int height,
 			int** data, float resolution, const std::vector<float>& ranges,
