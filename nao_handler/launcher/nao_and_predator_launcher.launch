@@ -5,7 +5,10 @@
   <arg name="nao_ip" value="$(arg nao_ip)"/>  
   </include>
   
-  <node name="$(anon nao)" pkg="nao_handler" type="move_head_and_body_with_predator.py" />  
+  <node name="$(anon nao)" pkg="nao_handler" type="move_head_and_body_with_predator.py" output="screen" />  
 
+  <!-- upload predator launcher-->
+  <include file="$(find pandora_tld)/launch/predator_node.launch">
+  </include>
   
 </launch>
