@@ -17,6 +17,7 @@ class MoveHeadAndBody:
 		self.rh = RappRobot()
 		self.pub = rospy.Publisher('/joint_angles', JointAnglesWithSpeed, queue_size=1)
 		self.publ = rospy.Publisher('/inner/cmd_vel', Twist, queue_size=1)
+		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior_callback)
 		self.rh.motion.enableMotors()
 		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
 		self.lost_object_counter = 20
