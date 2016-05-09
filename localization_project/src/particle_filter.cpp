@@ -175,15 +175,15 @@ void ParticleFilter::resample()
 		average = sum/ _particles_number;
 		ROS_INFO_STREAM("average2 = " << average);
 	}
-	else
-	{
-		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
-		{
-			_particles[i].randomize(robot_percept.getMapWidth(),
-				robot_percept.getMapHeight(), robot_percept.getMapData(),
-				robot_percept.getMapResolution());
-		}
-	}
+	//~ else
+	//~ {
+		//~ for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
+		//~ {
+			//~ _particles[i].randomize(robot_percept.getMapWidth(),
+				//~ robot_percept.getMapHeight(), robot_percept.getMapData(),
+				//~ robot_percept.getMapResolution());
+		//~ }
+	//~ }
 }
 
 void ParticleFilter::velocityCallback(geometry_msgs::Twist twist)

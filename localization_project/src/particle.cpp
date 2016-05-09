@@ -8,7 +8,7 @@ Particle::Particle()
 Particle::Particle(unsigned int width, unsigned int height, int** data,
 	std::vector<float> ranges, float resolution, int step) 
 {	
-	randomize(width, height, data, resolution);
+	//~ randomize(width, height, data, resolution);
 	
 	std::vector <float> temp(ranges.size()/step + 1, 0);
 	//~ std::vector <float> temp(ranges.size(), 0);
@@ -17,9 +17,9 @@ Particle::Particle(unsigned int width, unsigned int height, int** data,
 	_particle_ranges = new float[ranges.size()/step + 1];	
 	//~ _particle_ranges = new float[ranges.size()];	
 	
-	//~ _x = 15;
-	//~ _y = 15;
-	//~ _theta = 0.78;
+	_x = 6;
+	_y = 4;
+	_theta = 0;
 }
 
 void Particle::randomize(unsigned int width, unsigned int height,
