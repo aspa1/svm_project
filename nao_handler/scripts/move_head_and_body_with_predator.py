@@ -7,6 +7,8 @@ from naoqi_bridge_msgs.msg import JointAnglesWithSpeed
 from sensor_msgs.msg import CameraInfo
 from rapp_robot_api import RappRobot 
 from nao_handler.srv import SetBehavior
+#~ from nao_handler.srv import SetGoal
+#~ from localization_project.h import particle
 
 import rospy
 import sys
@@ -17,7 +19,8 @@ class MoveHeadAndBody:
 		self.rh = RappRobot()
 		self.pub = rospy.Publisher('/joint_angles', JointAnglesWithSpeed, queue_size=1)
 		self.publ = rospy.Publisher('/inner/cmd_vel', Twist, queue_size=1)
-		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior_callback)
+		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior)
+		#~ self.sub = rospy.Service('set_goal', SetGoal, self.set_goal)
 		self.rh.motion.enableMotors()
 		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
 		self.lost_object_counter = 20
@@ -99,16 +102,19 @@ class MoveHeadAndBody:
 			self.lost_object_counter -= 1
 		if self.lost_object_counter < 0:
 			self.lock_motion = True
-			self.x = 0.0
-			self.y = 0.0
-			self.theta = 0.0
+			self.x_vel = 0.0
+			self.y_vel = 0.0
+			self.theta_vel = 0.0
 			rospy.loginfo("Locked due to 2 seconds")
 			self.sub.unregister()
 			
 			
 	def set_velocities_callback(self, event):
 		
-		self.rh.motion.moveByVelocity(self.x, self.y, self.theta)
+		self.rh.motion.moveByVelocity(self.x_vel, self.y_vel, self.theta_vel)
+		#~ rospy.loginfo("%s", self.x_vel)
+		#~ rospy.loginfo("%s", self.y_vel)
+		#~ rospy.loginfo("%s", self.theta_vel)
 		
 		velocities = Twist()
 		
@@ -118,26 +124,26 @@ class MoveHeadAndBody:
 		velocities.linear.y = r[1]
 		velocities.angular.z = r[2]
 		
-		rospy.loginfo("%s", velocities)
+		#~ rospy.loginfo("%s", velocities)
 		self.publ.publish(velocities)
 		
 		
-	def obstacle_avoidance_callback:
+	def obstacle_avoidance_callback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()[0]
 		
 		if sonars['front_left'] <= 0.5:
-			self.x = 0.0
-			self.theta = -(0.8 - sonars['front_left'])
+			self.x_vel = 0.0
+			self.theta_vel = -(0.8 - sonars['front_left'])
 		elif sonars['front_right'] <= 0.5:
-			self.x = 0.0
-			self.theta = 0.8 - sonars['front_right']
+			self.x_vel = 0.0
+			self.theta_vel = 0.8 - sonars['front_right']
 		else:
-			self.x = 0.5
-			self.theta = 0.0		
+			self.x_vel = 0.5
+			self.theta_vel = 0.0		
 		
-		self.rh.motion.moveByVelocity(self.x, self.y, self.theta)
+		self.rh.motion.moveByVelocity(self.x_vel, self.y_vel, self.theta_vel)
 	
-	def set_behavior_callback(self, request):
+	def set_behavior(self, request):
 		if request.behavior =="track_bounding_box":
 			self.sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.track_bounding_box)
 			
@@ -150,12 +156,15 @@ class MoveHeadAndBody:
 		elif request.behavior =="obstacle_avoidance":
 			obstacle_timer = rospy.Timer(rospy.Duration(0.1), self.obstacle_avoidance_callback)
 			
+			self.sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.track_bounding_box)
 			self.sub.unregister()			
 			res = SetBehavior()
 			res.success = True
 			return True
 	
+	#~ def set_goal(self, request):
 		
+			
 		
 if __name__ == "__main__":
 	rospy.init_node('nao_head', anonymous=True)
