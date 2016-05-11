@@ -1,2 +1,4 @@
-string id
-float32 direction
+float32 x
+float32 y
+string message
+string type
