@@ -12,6 +12,8 @@ from visualization_msgs.msg import Marker
 from rapp_robot_api import RappRobot 
 from nao_handler.srv import *
 from ogmpp_communications.srv import OgmppPathPlanningSrv
+from ogmpp_communications.srv import OgmppPathPlanningSrvRequest
+from ogmpp_communications.srv import OgmppPathPlanningSrvResponse
 import tf
 
 import rospy
@@ -41,6 +43,8 @@ class MoveHeadAndBody:
 		rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
 		rospy.Timer(rospy.Duration(0.1), self.set_velocities_callback)
 		rospy.Timer(rospy.Duration(0.1), self.get_robot_position_callback)
+		
+		self.listener = tf.TransformListener()
 	
 	def track_bounding_box(self, polygon):
 		self.hunt_initiated = True
@@ -171,14 +175,20 @@ class MoveHeadAndBody:
 			return True
 			
 	def get_path(self, request):
+		print "Waiting for path service"
 		rospy.wait_for_service('/ogmpp_path_planners/plan')
+		print "Service ok"
 		try:
-			path = rospy.ServiceProxy('/ogmpp_path_planners/plan', OgmppPathPlanningSrv)
+			pathSrv = rospy.ServiceProxy('/ogmpp_path_planners/plan', OgmppPathPlanningSrv)
+			path = OgmppPathPlanningSrvRequest()
 			path.method = "uniform_prm"
 			path.data.begin.x = self.robot_x
 			path.data.begin.y = self.robot_y
 			path.data.end.x = request.x
 			path.data.end.y = request.y
+			
+			pathRes = pathSrv(path)
+			print pathRes
 			
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
@@ -202,16 +212,13 @@ class MoveHeadAndBody:
 		
 				
 	def get_robot_position_callback(self, event):
-		robot = 
-		if robot.ns == "Best Particle":
-			self.robot_x = robot.points.x
-			self.robot_y = robot.points.y
-		
-		rospy.loginfo("%s",robot)
-		rospy.loginfo("robot ns:%s",robot.ns)
-		rospy.loginfo("robot x:%s",self.robot_x)
-		rospy.loginfo("robot y:%s",self.robot_y)
-			
+		try:
+			(trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
+			self.robot_x = trans[0]
+			self.robot_y = trans[1]
+		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
+			print ex
+				
 		
 if __name__ == "__main__":
 	rospy.init_node('nao_head', anonymous=True)

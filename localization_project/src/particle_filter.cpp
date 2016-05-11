@@ -290,4 +290,5 @@ void ParticleFilter::visualize(float resolution)
 	q.setRPY(0, 0, _particles[id].getTheta());
 	transform.setRotation(q);
 	br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "nao_pose"));
+	ROS_INFO_STREAM("Published");
 }
