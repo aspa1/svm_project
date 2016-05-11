@@ -10,8 +10,9 @@ from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker
 from rapp_robot_api import RappRobot 
-from nao_handler.srv import GetPath
+from nao_handler.srv import *
 from ogmpp_communications.srv import OgmppPathPlanningSrv
+import tf
 
 import rospy
 import sys
@@ -168,7 +169,7 @@ class MoveHeadAndBody:
 			res = SetBehavior()
 			res.success = True
 			return True
-	rospy
+			
 	def get_path(self, request):
 		rospy.wait_for_service('/ogmpp_path_planners/plan')
 		try:
@@ -184,7 +185,7 @@ class MoveHeadAndBody:
 		
 		ros_path = Path()
 		
-        #~ ros_path.header.frame_id = "map"
+		#~ ros_path.header.frame_id = "map"
 		_map = OccupancyGrid()
         
 		for p in self.path:
@@ -201,10 +202,15 @@ class MoveHeadAndBody:
 		
 				
 	def get_robot_position_callback(self, event):
-		robot = Marker()
+		robot = 
 		if robot.ns == "Best Particle":
 			self.robot_x = robot.points.x
 			self.robot_y = robot.points.y
+		
+		rospy.loginfo("%s",robot)
+		rospy.loginfo("robot ns:%s",robot.ns)
+		rospy.loginfo("robot x:%s",self.robot_x)
+		rospy.loginfo("robot y:%s",self.robot_y)
 			
 		
 if __name__ == "__main__":
