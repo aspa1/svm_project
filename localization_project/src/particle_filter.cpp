@@ -46,7 +46,7 @@ ParticleFilter::ParticleFilter()
 	}
 	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
 		"visualization_marker", 0);
-            
+		            
     _velocity_sub = _n.subscribe(_velocity_topic, 10,
 		&ParticleFilter::velocityCallback, this);
     
@@ -175,15 +175,15 @@ void ParticleFilter::resample()
 		average = sum/ _particles_number;
 		ROS_INFO_STREAM("average2 = " << average);
 	}
-	else
-	{
-		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
-		{
-			_particles[i].randomize(robot_percept.getMapWidth(),
-				robot_percept.getMapHeight(), robot_percept.getMapData(),
-				robot_percept.getMapResolution());
-		}
-	}
+	//~ else
+	//~ {
+		//~ for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
+		//~ {
+			//~ _particles[i].randomize(robot_percept.getMapWidth(),
+				//~ robot_percept.getMapHeight(), robot_percept.getMapData(),
+				//~ robot_percept.getMapResolution());
+		//~ }
+	//~ }
 }
 
 void ParticleFilter::velocityCallback(geometry_msgs::Twist twist)
@@ -282,4 +282,12 @@ void ParticleFilter::visualize(float resolution)
 	ROS_INFO_STREAM("Best particle: x = " << _particles[id].getX() <<
 		" y = " << _particles[id].getY() << " theta = " << _particles[id].getTheta());
 	 _visualization_pub.publish(m1);
+	 
+	static tf::TransformBroadcaster br;
+	tf::Transform transform;
+	transform.setOrigin( tf::Vector3(_particles[id].getX(), _particles[id].getY(), 0.0) );
+	tf::Quaternion q;
+	q.setRPY(0, 0, _particles[id].getTheta());
+	transform.setRotation(q);
+	br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "nao_pose"));
 }

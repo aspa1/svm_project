@@ -6,7 +6,7 @@
 
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Twist.h>
-#include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
 
 #include "localization_project/particleInitSrv.h"
 
@@ -22,6 +22,7 @@ class ParticleFilter {
 		ros::Timer _timer;
 		ros::Duration _dt;
 		std::string _velocity_topic;
+		std::string inner_pose;
 		RobotPerception robot_percept;
 		int _particles_number;
 		int _duration;
