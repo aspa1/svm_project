@@ -188,29 +188,32 @@ class MoveHeadAndBody:
 			path.data.end.y = request.y
 			
 			pathRes = pathSrv(path)
-			print pathRes
+			#~ print pathRes
 			
+			ros_path = Path()
+			
+			ros_path.header.frame_id = "map"
+			_map = OccupancyGrid()
+			
+			for p in self.path:
+				ps = PoseStamped()
+				ps.header.frame_id = "map"
+				ps.pose.position.x = p[0] * _map.data.info.resolution + \
+					_map.data.info.origin.position.x
+				ps.pose.position.y = p[1] * _map.data.info.resolution + \
+					_map.data.info.origin.position.y
+				print ps
+				ros_path.poses.append(ps)
+			
+			self.path_publisher.publish(ros_path)
+
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
+
+		res = GetPath()
+		res.success = True
+		return True
 		
-		ros_path = Path()
-		
-		#~ ros_path.header.frame_id = "map"
-		_map = OccupancyGrid()
-        
-		for p in self.path:
-			ps = PoseStamped()
-			ps.header.frame_id = "map"
-			ps.pose.position.x = p[0] * _map.info.resolution + \
-				_map.info.origin['x']
-			ps.pose.position.y = p[1] * _map.info.resolution + \
-				_map.info.origin['y']
-			
-			ros_path.poses.append(ps)
-		
-		self.path_publisher.publish(ros_path)
-		
-				
 	def get_robot_position_callback(self, event):
 		try:
 			(trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
