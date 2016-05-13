@@ -3,7 +3,9 @@ from rapp_robot_api import RappRobot
 from sensor_msgs.msg import LaserScan
 from RappCloud import QrDetection
 from nao_localization.srv import SetObject
+from nao_localization.srv import SetObjectResponse
 from nao_localization.srv import GetObjects
+from nao_localization.srv import GetObjectsResponse
 from nao_localization.msg import ObjectMsg
 
 import rospy
@@ -19,6 +21,7 @@ class NaoInterface:
 		self.s1 = rospy.Service('get_objects', GetObjects, self.getObjectsCallback)
 		
 		self.objects = {}
+		self.static_objects = []
 		
 	def sonarsCallback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()[0]
@@ -41,27 +44,57 @@ class NaoInterface:
 		print head_yaw
 		
 	def setNewObjectCallback(self, req):
-		obj = ObjectMsg()
-		obj.x = req.x
-		obj.y = req.y
-		obj.message = req.message
-		obj.type = req.type
-		self.objects[req.message] = obj
+		print "setNewObjectCallback"
+		print req
+		self.objects[req.object.message] = req.object
+		res = SetObjectResponse()
+		res.success = True
+		return res
 		
 	def getObjectsCallback(self, req):
+		res = GetObjectsResponse()
 		if req.localization_type == "dynamic":
-			for i in range(0, self.objects):
+			for i in range(0, len(self.objects)):
 				obj = ObjectMsg()
-				obj.x = objects[i].x
-				obj.y = objects[i].y
-				obj.message = objects[i].message
-				obj.type = objects[i].type
-				if req.object_type == objects[i].type or req.object_type == "all" or req.object_type == "":
-					if req.message in self.objects:
+				obj.x = self.objects.values()[i].x
+				obj.y = self.objects.values()[i].y
+				obj.message = self.objects.values()[i].message
+				obj.type = self.objects.values()[i].type
+				if req.object_type == self.objects.values()[i].type or req.object_type == "all" or req.object_type == "":
+					if obj.message in res.objects:
 						continue
 					res.objects.append(obj)
+		elif req.localization_type == "static":
+			for i in range(0, len(self.static_objects)):
+				obj = ObjectMsg()
+				obj.x = static_objects[i].x
+				obj.y = static_objects[i].y
+				obj.message = static_objects[i].message
+				obj.type = static_objects[i].type
+				res.objects.append(obj)
+		elif req.localization_type == "all":
+			for i in range(0, len(self.objects)):
+				obj = ObjectMsg()
+				obj.x = self.objects.values()[i].x
+				obj.y = self.objects.values()[i].y
+				obj.message = self.objects.values()[i].message
+				obj.type = self.objects.values()[i].type
+				if req.object_type == self.objects.values()[i].type or req.object_type == "all" or req.object_type == "":
+					if obj.message in res.objects:
+						continue
+					res.objects.append(obj)
+			for i in range(0, len(self.static_objects)):
+				obj = ObjectMsg()
+				obj.x = static_objects[i].x
+				obj.y = static_objects[i].y
+				obj.message = static_objects[i].message
+				obj.type = static_objects[i].type
+				res.objects.append(obj)
+		else:
+			print "No such type"
+		res.success = True	
 		print res.objects
-		return res.objects				
+		return res		
 		
 if __name__ == "__main__":
 	rospy.init_node('nao_interface_node', anonymous=True)
