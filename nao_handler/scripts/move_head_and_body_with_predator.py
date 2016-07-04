@@ -73,14 +73,14 @@ class MoveHeadAndBody:
 				
 		print self.rh.sensors.getSonarsMeasurements()
 		
-		[ans, err] = self.rh.humanoid_motion.getJointAngles(['HeadYaw', 'HeadPitch'])
+		ans = self.rh.humanoid_motion.getJointAngles(['HeadYaw', 'HeadPitch'])['angles']
 		head_yaw = ans[0]
 		head_pitch = ans[1]
 		#~ print 'HeadPitch' + str(head_pitch)
 		#~ print 'HeadYaw' + str(head_yaw)
 		
 		
-		sonars = self.rh.sensors.getSonarsMeasurements()[0]
+		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		
 		if sonars['front_left'] <= 0.3 or sonars['front_right'] <= 0.3:
 			self.lock_motion = True
@@ -100,8 +100,7 @@ class MoveHeadAndBody:
 				self.theta_vel = 0
 				self.sub.unregister()
 			
-		[batt, none] = self.rh.sensors.getBatteryLevels()
-		battery = batt[0]
+		battery = self.rh.sensors.getBatteryLevels()['levels'][0]
 		
 		if battery < 25:
 			self.rh.audio.setVolume(100)
@@ -130,7 +129,7 @@ class MoveHeadAndBody:
 		
 		velocities = Twist()
 		
-		[r,e] = self.rh.motion.getVelocities()
+		r = self.rh.motion.getVelocities()['velocities']
 		
 		velocities.linear.x = r[0]
 		velocities.linear.y = r[1]
@@ -141,7 +140,7 @@ class MoveHeadAndBody:
 		
 		
 	def obstacle_avoidance_callback(self, event):
-		sonars = self.rh.sensors.getSonarsMeasurements()[0]
+		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		
 		if sonars['front_left'] <= 0.5:
 			self.x_vel = 0.0
