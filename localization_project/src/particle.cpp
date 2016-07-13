@@ -17,8 +17,8 @@ Particle::Particle(unsigned int width, unsigned int height, int** data,
 	_particle_ranges = new float[ranges.size()/step + 1];	
 	//~ _particle_ranges = new float[ranges.size()];	
 	
-	//~ _x = 6;
-	//~ _y = 4;
+	//~ _x = 15;
+	//~ _y = 15;
 	//~ _theta = 0;
 }
 

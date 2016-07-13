@@ -39,6 +39,7 @@ class ParticleFilter {
 		bool _particles_initialized;
 		bool _flag;
 		bool _motion_flag;
+	
 
 	public:
 		ParticleFilter();
@@ -50,6 +51,8 @@ class ParticleFilter {
 		void particlesCallback(const ros::TimerEvent& event);
 		void velocityCallback(geometry_msgs::Twist twist);
 		void resample();
+		
+		
 };
 
 #endif

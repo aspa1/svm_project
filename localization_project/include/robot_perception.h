@@ -12,6 +12,8 @@
 #include <fstream>
 #include <sstream>
 #include <iterator>
+#include <boost/filesystem.hpp>
+
 
 class RobotPerception
 {

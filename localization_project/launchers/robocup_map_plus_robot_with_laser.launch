@@ -8,11 +8,12 @@
 	
 	<!-- include file="$(find stdr_gui)/launch/stdr_gui.launch" -->
 	
-	<node pkg="stdr_robot" type="robot_handler" name="$(anon robot_spawn)" args="add $(find stdr_resources)/resources/robots/pandora_robot.yaml 6 4 0" />
-	<!--node pkg="stdr_robot" type="robot_handler" name="$(anon robot_spawn)" args="add $(find localization_project)/cfg/robot.yaml 6 4 0" -->
+	<node pkg="stdr_robot" type="robot_handler" name="$(anon robot_spawn)" args="add $(find stdr_resources)/resources/robots/pandora_robot.yaml 4 4 0" />
+	<!-- node pkg="stdr_robot" type="robot_handler" name="$(anon robot_spawn)" args="add $(find localization_project)/cfg/robot2.yaml 15 15 0" -->
+
 	
 	<rosparam file="$(find localization_project)/cfg/params.yaml" command="load" />
 	
-	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find localization_project)/cfg/particles.rviz"/>
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find localization_project)/cfg/particles.rviz" />
 	
 </launch>

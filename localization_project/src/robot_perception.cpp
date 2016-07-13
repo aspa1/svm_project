@@ -71,9 +71,9 @@ void RobotPerception::RfidTagsCallback (stdr_msgs::RfidTagVector
 	rfid_tag_msg)
 {
 	_rfid_tags = rfid_tag_msg.rfid_tags;
-		
 	std::ofstream data_file;
-	data_file.open("/home/aspa/catkin_ws/src/thesis/localization_project/cfg/example.txt");
+	boost::filesystem::path full_path = boost::filesystem::system_complete("localization_project/cfg/QRs.txt");
+	data_file.open(full_path.string().c_str());
 	for (unsigned int i = 0 ; i < _rfid_tags.size(); i++)
 	{
 		data_file << _rfid_tags[i].tag_id << "\t" <<
@@ -82,7 +82,7 @@ void RobotPerception::RfidTagsCallback (stdr_msgs::RfidTagVector
 	data_file.close();
 		
 	std::string line;
-	std::ifstream file ("/home/aspa/catkin_ws/src/thesis/localization_project/cfg/example.txt");
+	std::ifstream file (full_path.string().c_str());
 	if (file.is_open())
 	{
 		while (getline (file,line))
