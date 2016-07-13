@@ -85,20 +85,30 @@ class MoveHeadAndBody:
 		if sonars['front_left'] <= 0.3 or sonars['front_right'] <= 0.3:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to sonars")
+			print "sonars:", sonars['front_left'], sonars['front_right']
+			print "Head_pitch:",head_pitch
+			print "Head_yaw:",head_yaw
+			print "Sub_x:", sub_x
+			print "Sub_y:", sub_y
 		elif head_pitch >= 0.4 or head_pitch <= -0.4:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to head pitch")
+			print "sonars:", sonars['front_left'], sonars['front_right']
+			print "Head_pitch:",head_pitch
+			print "Head_yaw:",head_yaw
+			print "Sub_x:", sub_x
+			print "Sub_y:", sub_y
+		print "self.lock_motion:", self.lock_motion
+		if self.lock_motion is False:
+			self.theta_vel = head_yaw * 0.1
+			if -0.2 < head_yaw < 0.2:
+				self.x_vel = 0.3
+			self.pub.publish(joint)
 		else:
-			if self.lock_motion is False:
-				self.theta_vel = head_yaw * 0.1
-				if -0.2 < head_yaw < 0.2:
-					self.x_vel = 0.3
-				self.pub.publish(joint)
-			else:
-				self.x_vel = 0
-				self.y_vel = 0
-				self.theta_vel = 0
-				self.sub.unregister()
+			self.x_vel = 0
+			self.y_vel = 0
+			self.theta_vel = 0
+			#~ self.sub.unregister()
 			
 		battery = self.rh.sensors.getBatteryLevels()['levels'][0]
 		
@@ -119,7 +129,7 @@ class MoveHeadAndBody:
 			self.y_vel = 0.0
 			self.theta_vel = 0.0
 			rospy.loginfo("Locked due to 2 seconds")
-			self.sub.unregister()
+			#~ self.sub.unregister()
 			
 			
 	def set_velocities_callback(self, event):
@@ -204,7 +214,7 @@ class MoveHeadAndBody:
 				print ps
 				ros_path.poses.append(ps)
 			
-			self.path_publisher.publish(ros_path)
+			#~ self.path_publisher.publish(ros_path)
 
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
@@ -214,12 +224,13 @@ class MoveHeadAndBody:
 		return True
 		
 	def get_robot_position_callback(self, event):
-		try:
-			(trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
-			self.robot_x = trans[0]
-			self.robot_y = trans[1]
-		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
-			print ex
+		pass
+		#~ try:
+			#~ (trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
+			#~ self.robot_x = trans[0]
+			#~ self.robot_y = trans[1]
+		#~ except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
+			#~ print ex
 				
 		
 if __name__ == "__main__":
