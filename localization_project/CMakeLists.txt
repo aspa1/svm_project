@@ -7,6 +7,7 @@ project(localization_project)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  roslib
   std_msgs
   nav_msgs
   sensor_msgs
@@ -111,6 +112,7 @@ catkin_package(
 CATKIN_DEPENDS 
 	roscpp
 	rospy
+	roslib
 	std_msgs
 	nav_msgs
 	sensor_msgs

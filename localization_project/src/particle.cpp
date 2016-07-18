@@ -9,7 +9,6 @@ Particle::Particle(unsigned int width, unsigned int height, int** data,
 	std::vector<float> ranges, float resolution, int step) 
 {	
 	randomize(width, height, data, resolution);
-	
 	std::vector <float> temp(ranges.size()/step + 1, 0);
 	//~ std::vector <float> temp(ranges.size(), 0);
 	_distances = temp;
@@ -134,7 +133,7 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 		}
 	}
 	
-	sum = sum/(ranges.size()/step);
+	sum = sum/(ranges.size()/step + 1);
 	float _sum_w = pow(1/(sum + 1), strictness);
 	if(tag_w < 0.0)
 	{
