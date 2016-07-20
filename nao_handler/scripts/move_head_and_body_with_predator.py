@@ -19,6 +19,7 @@ import tf
 import rospy
 import sys
 import time
+import math
 
 class MoveHeadAndBody:
 	def __init__(self):
@@ -30,21 +31,51 @@ class MoveHeadAndBody:
 		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior)
 		self.service_path = rospy.Service('get_path', GetPath, self.get_path)
 		self.rh.motion.enableMotors()
-		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
-		self.lost_object_counter = 20
+		
 		self.lock_motion = False
 		self.hunt_initiated = False
+		self.find_distance_with_sonars = False
 		self.x_vel = 0
 		self.y_vel = 0
 		self.theta_vel = 0
 		self.robot_x = 0
 		self.robot_y = 0
 		self.path = []
-		rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
-		rospy.Timer(rospy.Duration(0.1), self.set_velocities_callback)
-		rospy.Timer(rospy.Duration(0.1), self.get_robot_position_callback)
+
+		self.set_vel_timer = rospy.Timer(rospy.Duration(0.1), self.set_velocities_callback)
+		self.get_robot_pos_timer = rospy.Timer(rospy.Duration(0.1), self.get_robot_position_callback)
+
+		self.obstacle_timer = rospy.Timer(rospy.Duration(0.1), self.obstacle_avoidance_callback)
+		self.obstacle_timer.shutdown()
+		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
+		self.lost_obj_timer.shutdown()
 		
+		self.object_tracking_sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.track_bounding_box)
+		self.object_tracking_sub.unregister()
+
 		self.listener = tf.TransformListener()
+	
+	def enableObstacleAvoidance(self):
+		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
+		self.obstacle_timer = rospy.Timer(rospy.Duration(0.5), self.obstacle_avoidance_callback)
+
+	def disableObstacleAvoidance(self):
+		self.obstacle_timer.shutdown()
+		self.x_vel = 0
+		self.y_vel = 0
+		self.theta_vel = 0
+	
+	def enableObjectTracking(self):
+		self.rh.humanoid_motion.goToPosture("Crouch", 0.7)
+		self.object_tracking_sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.track_bounding_box)
+		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
+		self.lost_object_counter = 20
+		self.lock_motion = False
+		self.hunt_initiated = False
+	
+	def disableObjectTracking(self):
+		self.lost_obj_timer.shutdown()
+		self.object_tracking_sub.unregister()
 	
 	def track_bounding_box(self, polygon):
 		self.hunt_initiated = True
@@ -82,23 +113,17 @@ class MoveHeadAndBody:
 		
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		
-		if sonars['front_left'] <= 0.3 or sonars['front_right'] <= 0.3:
+		if (sonars['front_left'] <= 0.5 or sonars['front_right'] <= 0.5) and self.lock_motion == False:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to sonars")
-			print "sonars:", sonars['front_left'], sonars['front_right']
-			print "Head_pitch:",head_pitch
-			print "Head_yaw:",head_yaw
-			print "Sub_x:", sub_x
-			print "Sub_y:", sub_y
-		elif head_pitch >= 0.4 or head_pitch <= -0.4:
+			self.find_distance_with_sonars = True
+			
+		elif (head_pitch >= 0.4 or head_pitch <= -0.4) and self.lock_motion == False:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to head pitch")
-			print "sonars:", sonars['front_left'], sonars['front_right']
-			print "Head_pitch:",head_pitch
-			print "Head_yaw:",head_yaw
-			print "Sub_x:", sub_x
-			print "Sub_y:", sub_y
+			
 		print "self.lock_motion:", self.lock_motion
+		
 		if self.lock_motion is False:
 			self.theta_vel = head_yaw * 0.1
 			if -0.2 < head_yaw < 0.2:
@@ -108,7 +133,42 @@ class MoveHeadAndBody:
 			self.x_vel = 0
 			self.y_vel = 0
 			self.theta_vel = 0
-			#~ self.sub.unregister()
+			
+		if  self.lock_motion is True:
+			#~ self.disableObjectTracking()
+			
+			print "sonars:", sonars['front_left'], sonars['front_right']
+			print "Head_pitch:",head_pitch
+			print "Head_yaw:",head_yaw
+			print "Sub_x:", sub_x
+			print "Sub_y:", sub_y
+			
+			dx = 0
+			sy = 0
+			if self.find_distance_with_sonars is True and\
+				(sonars['front_left'] <= 0.5 or sonars['front_right'] <= 0.5):				
+				if (sonars['front_left'] <= sonars['front_right']):
+					dx = sonars['front_left']
+					sy = +1
+				else:
+					dx = sonars['front_right']
+					sy = -1
+			else:
+				x = (sub_y * 47.6* 3.14159 / 180) / 240.0
+				print "x=", x
+				total_x = head_pitch + x + 0.021
+				print "total_x=",total_x
+				dx = 0.53 / math.tan(total_x)
+				sy = -1
+				
+			print "dx= ",dx
+			y = (sub_x * 60.9 * 3.14159 / 180) / 320.0
+			print "y=", y
+			total_y = head_yaw + sy * y
+			print "total_y=",total_y
+			dy = dx * math.tan(total_y)
+			print "dy= " ,dy
+			self.disableObjectTracking()
 			
 		battery = self.rh.sensors.getBatteryLevels()['levels'][0]
 		
@@ -123,14 +183,12 @@ class MoveHeadAndBody:
 	def lost_object_callback(self, event):
 		if self.hunt_initiated:
 			self.lost_object_counter -= 1
-		if self.lost_object_counter < 0:
+		if self.lost_object_counter < 0 and self.hunt_initiated == True:
+			rospy.loginfo("Locked due to 2 seconds")
 			self.lock_motion = True
 			self.x_vel = 0.0
 			self.y_vel = 0.0
 			self.theta_vel = 0.0
-			rospy.loginfo("Locked due to 2 seconds")
-			#~ self.sub.unregister()
-			
 			
 	def set_velocities_callback(self, event):
 		
@@ -162,27 +220,28 @@ class MoveHeadAndBody:
 			self.x_vel = 0.5
 			self.theta_vel = 0.0		
 		
-		self.rh.motion.moveByVelocity(self.x_vel, self.y_vel, self.theta_vel)
+		#~ self.rh.motion.moveByVelocity(self.x_vel, self.y_vel, self.theta_vel)
 	
 	def set_behavior(self, request):
+		print 'Going to behavior: ' + request.behavior
 		if request.behavior =="track_bounding_box":
-			self.sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.track_bounding_box)
+			self.disableObstacleAvoidance()
+			print 'Obstacle avoidance disabled'
+			self.enableObjectTracking()
+			print 'Object tracking enabled'
 			
-			obstacle_timer = rospy.Timer(rospy.Duration(0.1), self.obstacle_avoidance_callback)
-			obstacle_timer.shutdown()
-			
-			res = SetBehavior()
-			res.success = True
-			return True
 		elif request.behavior =="obstacle_avoidance":
-			obstacle_timer = rospy.Timer(rospy.Duration(0.1), self.obstacle_avoidance_callback)
-			
-			self.sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.track_bounding_box)
-			self.sub.unregister()			
-			res = SetBehavior()
-			res.success = True
-			return True
-			
+			self.disableObjectTracking()
+			print 'Object tracking disabled'
+			self.enableObstacleAvoidance()
+			print 'Obstacle avoidance enabled'
+		
+		print 'Behavior set'
+		res = SetBehavior()
+		res.success = True
+		return True
+		
+		
 	def get_path(self, request):
 		print "Waiting for path service"
 		rospy.wait_for_service('/ogmpp_path_planners/plan')
