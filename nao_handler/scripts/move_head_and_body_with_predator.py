@@ -168,6 +168,7 @@ class MoveHeadAndBody:
 			print "total_y=",total_y
 			dy = dx * math.tan(total_y)
 			print "dy= " ,dy
+			
 			self.disableObjectTracking()
 			
 		battery = self.rh.sensors.getBatteryLevels()['levels'][0]
