@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <visualization_msgs/Marker.h>
 #include <sensor_msgs/LaserScan.h>
 #include <stdr_msgs/RfidSensorMeasurementMsg.h>
 #include <stdr_msgs/RfidTagVector.h>
@@ -12,6 +13,8 @@
 #include <fstream>
 #include <sstream>
 #include <iterator>
+#include <boost/filesystem.hpp>
+
 
 class RobotPerception
 {
@@ -25,6 +28,7 @@ class RobotPerception
 		ros::Subscriber _laser_sub;
 		ros::Subscriber _rfid_reader_sub;
 		ros::Subscriber _rfid_tags_sub;
+		ros::Publisher _visualization_pub;
 		unsigned int _map_width;
 		unsigned int _map_height;
 		float _map_resolution;
@@ -46,9 +50,9 @@ class RobotPerception
 		RobotPerception();
 		void mapCallback(nav_msgs::OccupancyGrid occupancy_grid_msg);
 		void laserRangesCallback(sensor_msgs::LaserScan laser_scan_msg);
-		void RfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg rfid_reader_msg);
-		void RfidTagsCallback (stdr_msgs::RfidTagVector rfid_tag_msg);
-		void RfidPose();
+		void rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg rfid_reader_msg);
+		void rfidTagsCallback (stdr_msgs::RfidTagVector rfid_tag_msg);
+		void rfidPose();
 		unsigned int getMapWidth();
 		unsigned int getMapHeight();
 		float getMapResolution();

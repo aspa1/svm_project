@@ -9,7 +9,6 @@ Particle::Particle(unsigned int width, unsigned int height, int** data,
 	std::vector<float> ranges, float resolution, int step) 
 {	
 	randomize(width, height, data, resolution);
-	
 	std::vector <float> temp(ranges.size()/step + 1, 0);
 	//~ std::vector <float> temp(ranges.size(), 0);
 	_distances = temp;
@@ -17,8 +16,8 @@ Particle::Particle(unsigned int width, unsigned int height, int** data,
 	_particle_ranges = new float[ranges.size()/step + 1];	
 	//~ _particle_ranges = new float[ranges.size()];	
 	
-	//~ _x = 6;
-	//~ _y = 4;
+	//~ _x = 15;
+	//~ _y = 15;
 	//~ _theta = 0;
 }
 
@@ -134,7 +133,7 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 		}
 	}
 	
-	sum = sum/(ranges.size()/step);
+	sum = sum/(ranges.size()/step + 1);
 	float _sum_w = pow(1/(sum + 1), strictness);
 	if(tag_w < 0.0)
 	{

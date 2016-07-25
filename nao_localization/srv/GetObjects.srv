@@ -1,0 +1,5 @@
+string localization_type
+string object_type
+---
+nao_localization/ObjectMsg[] objects
+bool success

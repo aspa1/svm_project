@@ -26,14 +26,17 @@ RobotPerception::RobotPerception ()
 		ROS_ERROR("Rfid_tags topic param does not exist");
 	}
 	_rfid_tags_sub = _n.subscribe(_rfid_tags_topic_param, 1,
-		&RobotPerception::RfidTagsCallback, this);
+		&RobotPerception::rfidTagsCallback, this);
 		
 	if (!_n.getParam("/rfid_reader_topic", _rfid_reader_topic_param))
 	{
 		ROS_ERROR("Rfid_reader topic param does not exist");
 	}
 	_rfid_reader_sub = _n.subscribe(_rfid_reader_topic_param, 1,
-		&RobotPerception::RfidReaderCallback, this);
+		&RobotPerception::rfidReaderCallback, this);
+		
+	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
+		"visualization_marker", 0);
 }
 
 /**
@@ -67,13 +70,20 @@ void RobotPerception::mapCallback (
 	}	
 }
 
-void RobotPerception::RfidTagsCallback (stdr_msgs::RfidTagVector
+void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
 	rfid_tag_msg)
 {
+	//~ ROS_INFO_STREAM("rfidTagsCallback");
+	
 	_rfid_tags = rfid_tag_msg.rfid_tags;
-		
 	std::ofstream data_file;
-	data_file.open("/home/aspa/catkin_ws/src/thesis/localization_project/cfg/example.txt");
+	std::string _path = ros::package::getPath("localization_project");
+	std::string full_path = _path + "/cfg/AllQRs.txt";
+	//~ boost::filesystem::path full_path = boost::filesystem::system_complete("QRs.txt");
+	//~ data_file.open(full_path.string().c_str());
+	data_file.open(full_path.c_str());
+	//~ ROS_INFO_STREAM("Full path = " << full_path.string().c_str());
+	//~ ROS_INFO_STREAM("Full path = " << full_path);
 	for (unsigned int i = 0 ; i < _rfid_tags.size(); i++)
 	{
 		data_file << _rfid_tags[i].tag_id << "\t" <<
@@ -82,7 +92,8 @@ void RobotPerception::RfidTagsCallback (stdr_msgs::RfidTagVector
 	data_file.close();
 		
 	std::string line;
-	std::ifstream file ("/home/aspa/catkin_ws/src/thesis/localization_project/cfg/example.txt");
+	//~ std::ifstream file (full_path.string().c_str());
+	std::ifstream file (full_path.c_str());
 	if (file.is_open())
 	{
 		while (getline (file,line))
@@ -91,24 +102,57 @@ void RobotPerception::RfidTagsCallback (stdr_msgs::RfidTagVector
 			float x, y;
 			std::istringstream ss(line);
 			ss >> id >> x >> y;
-			_rfid_tags_id.push_back(id);
-			_rfid_tags_x.push_back(x);
-			_rfid_tags_y.push_back(y);
+			std::size_t found = id.find("Localization");
+			visualization_msgs::Marker m;
+	
+			if (found!=std::string::npos)
+			{
+				ROS_INFO_STREAM("Localization QR");
+				ROS_INFO_STREAM("Found = ");
+				_rfid_tags_id.push_back(id);
+				_rfid_tags_x.push_back(x);
+				_rfid_tags_y.push_back(y);
+								
+				m.header.frame_id = "map";
+				m.header.stamp = ros::Time();
+				m.type = visualization_msgs::Marker::SPHERE_LIST;
+				m.action = visualization_msgs::Marker::ADD;
+				m.id = 0;
+				m.ns = "Localization_QRs";
+				m.scale.x = 0.35;
+				m.scale.y = 0.35;
+				m.scale.z = 0.35;
+				m.color.a = 1.0;
+				m.color.r = 0.0;
+				m.color.g = 1.0;
+				m.color.b = 0.0;	
+							
+				geometry_msgs::Point p;
+				p.x = x;
+				p.y = y;
+				m.points.push_back(p);
+	
+				_visualization_pub.publish(m);
+			}
+			else
+			{
+				ROS_INFO_STREAM("Object QR");
+			}
 		}
 	file.close();
 	}	    
 }
 
-void RobotPerception::RfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg
+void RobotPerception::rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg
 	rfid_reader_msg)
 {
 	_rfid_pose.clear();
 	_rfid_ids = rfid_reader_msg.rfid_tags_ids;
 	_rfid_msgs = rfid_reader_msg.rfid_tags_msgs;
-	RfidPose();
+	rfidPose();
 }
 
-void RobotPerception::RfidPose()
+void RobotPerception::rfidPose()
 {
 	for (unsigned int i = 0 ; i < _rfid_ids.size() ; i++)
 	{
