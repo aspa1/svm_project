@@ -1,7 +1,6 @@
 #ifndef ROBOT_PERCEPTION_H
 #define ROBOT_PERCEPTION_H
 
-
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <nav_msgs/OccupancyGrid.h>
@@ -14,6 +13,7 @@
 #include <sstream>
 #include <iterator>
 #include <boost/filesystem.hpp>
+#include <tf/transform_listener.h>
 
 
 class RobotPerception
@@ -22,6 +22,8 @@ class RobotPerception
 		ros::NodeHandle _n;
 		std::string _map_topic_param;
 		std::string _laser_topic_param;
+		std::string _laser_param;
+		std::string _robot_param;
 		std::string _rfid_reader_topic_param;
 		std::string _rfid_tags_topic_param;
 		ros::Subscriber _map_sub;
@@ -44,6 +46,9 @@ class RobotPerception
 		float _max_range;
 		float _increment;
 		float _angle_min;
+		tf::TransformListener _listener;
+		bool _flag;
+		float yy;
 	
 	
 	public:

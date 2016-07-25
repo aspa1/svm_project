@@ -104,6 +104,7 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 	
 	for (unsigned int i = 0 ; i < ranges.size(); i+=step)
 	{
+		//~ ROS_INFO_STREAM("angle = " << i*increment + angle_min );
 		getRanges(i*increment + angle_min + _theta, width, height, data,
 			//~ resolution, max_range, i);
 			resolution, max_range, k);

@@ -6,6 +6,7 @@
  */
 RobotPerception::RobotPerception () 
 {	
+	_flag = false;
 	//~ ROS_INFO_STREAM("RobotPerception Constructor");
 	if(!_n.getParam("/map_topic", _map_topic_param))
 	{
@@ -21,6 +22,16 @@ RobotPerception::RobotPerception ()
 	_laser_sub = _n.subscribe(_laser_topic_param, 1,
 		&RobotPerception::laserRangesCallback, this);
 		
+	if(!_n.getParam("/robot_param", _robot_param))
+	{
+		ROS_ERROR("Robot param does not exist");
+	}
+	
+	if(!_n.getParam("/laser_param", _laser_param))
+	{
+		ROS_ERROR("Laser param does not exist");
+	}
+	
 	if (!_n.getParam("/rfid_tags_topic", _rfid_tags_topic_param))
 	{
 		ROS_ERROR("Rfid_tags topic param does not exist");
@@ -182,8 +193,25 @@ void RobotPerception::rfidPose()
 void RobotPerception::laserRangesCallback(
 	sensor_msgs::LaserScan laser_scan_msg) 
 {
+	tf::StampedTransform transform;
+	if (!_flag)
+	{
+		try
+		{
+			_listener.lookupTransform(_robot_param, _laser_param,  
+								   ros::Time(0), transform);
+			yy = tf::getYaw(transform.getRotation());
+			ROS_ERROR_STREAM(yy);	
+			_flag = true;
+		}
+		catch (tf::TransformException &ex)
+		{
+			ROS_ERROR("%s",ex.what());
+			ros::Duration(1.0).sleep();
+		}
+    }
 	_increment = laser_scan_msg.angle_increment;
-	_angle_min = laser_scan_msg.angle_min;
+	_angle_min = laser_scan_msg.angle_min + yy;
 	_laser_ranges = laser_scan_msg.ranges;
 	_max_range = laser_scan_msg.range_max;
 	for (unsigned int i = 0 ; i < _laser_ranges.size() ; i ++)
