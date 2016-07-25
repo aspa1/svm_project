@@ -24,7 +24,7 @@ class NaoInterface:
 		self.static_objects = []
 		
 	def sonarsCallback(self, event):
-		sonars = self.rh.sensors.getSonarsMeasurements()[0]
+		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		laser_msg = LaserScan()
 		laser_msg.ranges.append(sonars['front_right'])
 		laser_msg.ranges.append(sonars['front_left'])
@@ -40,7 +40,7 @@ class NaoInterface:
 		svc = QrDetection(image="/home/aspa/test.jpg")
 		response = svc.call()
 		print response.serialize()
-		head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])[0]
+		head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])['angles'][0]
 		print head_yaw
 		
 	def setNewObjectCallback(self, req):
