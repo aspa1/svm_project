@@ -41,6 +41,10 @@ class MoveHeadAndBody:
 		self.robot_x = 0
 		self.robot_y = 0
 		self.path = []
+		self.predator_topic = rospy.get_param('predator_topic')
+		self.sonar_value = rospy.get_param('sonar_limit_value')
+		self.head_pitch_value = rospy.get_param('head_pitch_limit_value')
+		self.head_yaw_value = rospy.get_param('head_yaw_limit_value')
 
 		self.set_vel_timer = rospy.Timer(rospy.Duration(0.1), self.set_velocities_callback)
 		self.get_robot_pos_timer = rospy.Timer(rospy.Duration(0.1), self.get_robot_position_callback)
@@ -50,7 +54,7 @@ class MoveHeadAndBody:
 		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
 		self.lost_obj_timer.shutdown()
 		
-		self.object_tracking_sub = rospy.Subscriber(rospy.get_param('predator_topic'), Polygon, self.track_bounding_box)
+		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.track_bounding_box)
 		self.object_tracking_sub.unregister()
 
 		self.listener = tf.TransformListener()
@@ -67,7 +71,7 @@ class MoveHeadAndBody:
 	
 	def enableObjectTracking(self):
 		self.rh.humanoid_motion.goToPosture("Crouch", 0.7)
-		self.object_tracking_sub = rospy.Subscriber(rospy.get_param('predator_topic'), Polygon, self.track_bounding_box)
+		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.track_bounding_box)
 		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
 		self.lost_object_counter = 20
 		self.lock_motion = False
@@ -113,12 +117,12 @@ class MoveHeadAndBody:
 		
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		
-		if (sonars['front_left'] <= rospy.get_param('sonar_limit_value') or sonars['front_right'] <= rospy.get_param('sonar_limit_value')) and self.lock_motion == False:
+		if (sonars['front_left'] <= self.sonar_value or sonars['front_right'] <= self.sonar_value) and self.lock_motion == False:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to sonars")
 			self.find_distance_with_sonars = True
 			
-		elif (head_pitch >= rospy.get_param('head_pitch_limit_value') or head_pitch <= -rospy.get_param('head_pitch_limit_value')) and self.lock_motion == False:
+		elif (head_pitch >= self.head_pitch_value or head_pitch <= -self.head_pitch_value) and self.lock_motion == False:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to head pitch")
 			
@@ -126,7 +130,7 @@ class MoveHeadAndBody:
 		
 		if self.lock_motion is False:
 			self.theta_vel = head_yaw * 0.1
-			if -rospy.get_param('head_yaw_limit_value') < head_yaw < rospy.get_param('head_yaw_limit_value'):
+			if -self.head_yaw_value < head_yaw < self.head_yaw_value:
 				self.x_vel = 0.3
 			self.pub.publish(joint)
 		else:
@@ -146,7 +150,7 @@ class MoveHeadAndBody:
 			dx = 0
 			sy = 0
 			if self.find_distance_with_sonars is True and\
-				(sonars['front_left'] <= rospy.get_param('sonar_limit_value') or sonars['front_right'] <= rospy.get_param('sonar_limit_value')):				
+				(sonars['front_left'] <= self.sonar_value or sonars['front_right'] <= self.sonar_value):				
 				if (sonars['front_left'] <= sonars['front_right']):
 					dx = sonars['front_left']
 					sy = +1
@@ -168,6 +172,7 @@ class MoveHeadAndBody:
 			print "total_y=",total_y
 			dy = dx * math.tan(total_y)
 			print "dy= " ,dy
+			
 			self.disableObjectTracking()
 			
 		battery = self.rh.sensors.getBatteryLevels()['levels'][0]
@@ -190,6 +195,8 @@ class MoveHeadAndBody:
 			self.y_vel = 0.0
 			self.theta_vel = 0.0
 			
+			self.disableObjectTracking()
+			
 	def set_velocities_callback(self, event):
 		
 		self.rh.motion.moveByVelocity(self.x_vel, self.y_vel, self.theta_vel)
@@ -210,10 +217,10 @@ class MoveHeadAndBody:
 	def obstacle_avoidance_callback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		
-		if sonars['front_left'] <= rospy.get_param('sonar_limit_value'):
+		if sonars['front_left'] <= self.sonar_value:
 			self.x_vel = 0.0
 			self.theta_vel = -(0.8 - sonars['front_left'])
-		elif sonars['front_right'] <= rospy.get_param('sonar_limit_value'):
+		elif sonars['front_right'] <= self.sonar_value:
 			self.x_vel = 0.0
 			self.theta_vel = 0.8 - sonars['front_right']
 		else:
