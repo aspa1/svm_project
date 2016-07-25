@@ -24,9 +24,9 @@ import math
 class MoveHeadAndBody:
 	def __init__(self):
 		self.rh = RappRobot()
-		self.pub = rospy.Publisher('/joint_angles', JointAnglesWithSpeed, queue_size=1)
-		self.publ = rospy.Publisher('/inner/cmd_vel', Twist, queue_size=1)
-		self.path_publisher = rospy.Publisher('/as/path', \
+		self.pub = rospy.Publisher(rospy.get_param('joint_angles_topic'), JointAnglesWithSpeed, queue_size=1)
+		self.publ = rospy.Publisher(rospy.get_param('velocities_topic'), Twist, queue_size=1)
+		self.path_publisher = rospy.Publisher(rospy.get_param('path_pub_topic'), \
 			Path, queue_size = 10)
 		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior)
 		self.service_path = rospy.Service('get_path', GetPath, self.get_path)
@@ -50,7 +50,7 @@ class MoveHeadAndBody:
 		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
 		self.lost_obj_timer.shutdown()
 		
-		self.object_tracking_sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.track_bounding_box)
+		self.object_tracking_sub = rospy.Subscriber(rospy.get_param('predator_topic'), Polygon, self.track_bounding_box)
 		self.object_tracking_sub.unregister()
 
 		self.listener = tf.TransformListener()
@@ -67,7 +67,7 @@ class MoveHeadAndBody:
 	
 	def enableObjectTracking(self):
 		self.rh.humanoid_motion.goToPosture("Crouch", 0.7)
-		self.object_tracking_sub = rospy.Subscriber("/vision/predator_alert", Polygon, self.track_bounding_box)
+		self.object_tracking_sub = rospy.Subscriber(rospy.get_param('predator_topic'), Polygon, self.track_bounding_box)
 		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
 		self.lost_object_counter = 20
 		self.lock_motion = False
@@ -113,12 +113,12 @@ class MoveHeadAndBody:
 		
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		
-		if (sonars['front_left'] <= 0.5 or sonars['front_right'] <= 0.5) and self.lock_motion == False:
+		if (sonars['front_left'] <= rospy.get_param('sonar_limit_value') or sonars['front_right'] <= rospy.get_param('sonar_limit_value')) and self.lock_motion == False:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to sonars")
 			self.find_distance_with_sonars = True
 			
-		elif (head_pitch >= 0.4 or head_pitch <= -0.4) and self.lock_motion == False:
+		elif (head_pitch >= rospy.get_param('head_pitch_limit_value') or head_pitch <= -rospy.get_param('head_pitch_limit_value')) and self.lock_motion == False:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to head pitch")
 			
@@ -126,7 +126,7 @@ class MoveHeadAndBody:
 		
 		if self.lock_motion is False:
 			self.theta_vel = head_yaw * 0.1
-			if -0.2 < head_yaw < 0.2:
+			if -rospy.get_param('head_yaw_limit_value') < head_yaw < rospy.get_param('head_yaw_limit_value'):
 				self.x_vel = 0.3
 			self.pub.publish(joint)
 		else:
@@ -146,7 +146,7 @@ class MoveHeadAndBody:
 			dx = 0
 			sy = 0
 			if self.find_distance_with_sonars is True and\
-				(sonars['front_left'] <= 0.5 or sonars['front_right'] <= 0.5):				
+				(sonars['front_left'] <= rospy.get_param('sonar_limit_value') or sonars['front_right'] <= rospy.get_param('sonar_limit_value')):				
 				if (sonars['front_left'] <= sonars['front_right']):
 					dx = sonars['front_left']
 					sy = +1
@@ -210,10 +210,10 @@ class MoveHeadAndBody:
 	def obstacle_avoidance_callback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		
-		if sonars['front_left'] <= 0.5:
+		if sonars['front_left'] <= rospy.get_param('sonar_limit_value'):
 			self.x_vel = 0.0
 			self.theta_vel = -(0.8 - sonars['front_left'])
-		elif sonars['front_right'] <= 0.5:
+		elif sonars['front_right'] <= rospy.get_param('sonar_limit_value'):
 			self.x_vel = 0.0
 			self.theta_vel = 0.8 - sonars['front_right']
 		else:

@@ -1,0 +1,14 @@
+#limit values
+sonar_limit_value: 0.5
+head_yaw_limit_value: 0.2
+head_pitch_limit_value: 0.4
+
+# Topics to read and post data
+# Subscribers
+predator_topic: '/vision/predator_alert'
+
+# Topics to read and post data
+# Publishers
+joint_angles_topic: '/joint_angles'
+velocities_topic: '/inner/cmd_vel'
+path_pub_topic: '/as/path'
