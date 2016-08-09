@@ -178,12 +178,12 @@ void ParticleFilter::resample()
 	}
 	else
 	{
-		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
-		{
-			_particles[i].randomize(robot_percept.getMapWidth(),
-				robot_percept.getMapHeight(), robot_percept.getMapData(),
-				robot_percept.getMapResolution());
-		}
+		//~ for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
+		//~ {
+			//~ _particles[i].randomize(robot_percept.getMapWidth(),
+				//~ robot_percept.getMapHeight(), robot_percept.getMapData(),
+				//~ robot_percept.getMapResolution());
+		//~ }
 	}
 }
 

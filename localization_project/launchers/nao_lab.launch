@@ -10,4 +10,6 @@
 	
 	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find localization_project)/cfg/particles.rviz"/>
 	
+	<node name="$(anon nao)" pkg="nao_localization" type="nao_interface.py" output="screen" />
+
 </launch>

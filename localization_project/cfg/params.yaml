@@ -6,7 +6,7 @@ laser_param: robot0_laser_1
 
 robot_param: robot0
 
-velocity_topic: /robot0/cmd_vel
+velocity_topic: /inner/cmd_vel
 
 rays_subsampling_step: 1
 

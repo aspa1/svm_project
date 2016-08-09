@@ -290,13 +290,13 @@ class MoveHeadAndBody:
 		return True
 		
 	def get_robot_position_callback(self, event):
-		pass
-		#~ try:
-			#~ (trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
-			#~ self.robot_x = trans[0]
-			#~ self.robot_y = trans[1]
-		#~ except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
-			#~ print ex
+		#~ pass
+		try:
+			(trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
+			self.robot_x = trans[0]
+			self.robot_y = trans[1]
+		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
+			print ex
 				
 		
 if __name__ == "__main__":
