@@ -85,7 +85,7 @@ void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
 	rfid_tag_msg)
 {
 	//~ ROS_INFO_STREAM("rfidTagsCallback");
-	
+	int counter = 0;
 	_rfid_tags = rfid_tag_msg.rfid_tags;
 	std::ofstream data_file;
 	std::string _path = ros::package::getPath("localization_project");
@@ -114,12 +114,12 @@ void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
 			std::istringstream ss(line);
 			ss >> id >> x >> y;
 			std::size_t found = id.find("Localization");
-			visualization_msgs::Marker m;
+			visualization_msgs::Marker m, m1;
 	
 			if (found!=std::string::npos)
 			{
 				ROS_INFO_STREAM("Localization QR");
-				ROS_INFO_STREAM("Found = ");
+				ROS_INFO_STREAM("Found = " << found);
 				_rfid_tags_id.push_back(id);
 				_rfid_tags_x.push_back(x);
 				_rfid_tags_y.push_back(y);
@@ -128,15 +128,15 @@ void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
 				m.header.stamp = ros::Time();
 				m.type = visualization_msgs::Marker::SPHERE_LIST;
 				m.action = visualization_msgs::Marker::ADD;
-				m.id = 0;
+				m.id = counter;
 				m.ns = "Localization_QRs";
 				m.scale.x = 0.35;
 				m.scale.y = 0.35;
 				m.scale.z = 0.35;
 				m.color.a = 1.0;
-				m.color.r = 0.0;
-				m.color.g = 1.0;
-				m.color.b = 0.0;	
+				m.color.r = 1.0;
+				m.color.g = 0.0;
+				m.color.b = 1.0;	
 							
 				geometry_msgs::Point p;
 				p.x = x;
@@ -144,6 +144,30 @@ void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
 				m.points.push_back(p);
 	
 				_visualization_pub.publish(m);
+				
+				m1.header.frame_id = "map";
+				m1.header.stamp = ros::Time();
+				m1.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+				m1.action = visualization_msgs::Marker::ADD;
+				m1.id = counter;
+				m1.ns = "Localization_QR_id";
+				m1.scale.z = 0.5;
+				m1.color.a = 1.0;
+				m1.color.r = 0.0;
+				m1.color.g = 1.0;
+				m1.color.b = 0.0;
+				m1.text = id;
+				ROS_INFO_STREAM("Description = " << m1.text);
+				m1.pose.position.x = x;
+				m1.pose.position.y = y;
+				geometry_msgs::Point p1;
+				p1.x = x;
+				p1.y = y;
+				m1.points.push_back(p1);
+				
+				_visualization_pub.publish(m1);
+				ROS_INFO_STREAM("x = " << x  << " y = " << y );
+				counter++;
 			}
 			else
 			{
