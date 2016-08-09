@@ -1,6 +1,6 @@
 map_topic: /map
 
-robot_laser_topic: /robot0/laser_1
+robot_laser_topic: /inner/sonar_measurements
 
 laser_param: robot0_laser_1
 
