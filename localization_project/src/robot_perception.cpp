@@ -217,24 +217,24 @@ void RobotPerception::rfidPose()
 void RobotPerception::laserRangesCallback(
 	sensor_msgs::LaserScan laser_scan_msg) 
 {
-	yy = 0;
-	//~ tf::StampedTransform transform;
-	//~ if (!_flag)
-	//~ {
-		//~ try
-		//~ {
-			//~ _listener.lookupTransform(_robot_param, _laser_param,  
-								   //~ ros::Time(0), transform);
-			//~ yy = tf::getYaw(transform.getRotation());
-			//~ ROS_ERROR_STREAM(yy);	
-			//~ _flag = true;
-		//~ }
-		//~ catch (tf::TransformException &ex)
-		//~ {
-			//~ ROS_ERROR("%s",ex.what());
-			//~ ros::Duration(1.0).sleep();
-		//~ }
-    //~ }
+	//~ yy = 0;
+	tf::StampedTransform transform;
+	if (!_flag)
+	{
+		try
+		{
+			_listener.lookupTransform(_robot_param, _laser_param,  
+								   ros::Time(0), transform);
+			yy = tf::getYaw(transform.getRotation());
+			ROS_ERROR_STREAM(yy);	
+			_flag = true;
+		}
+		catch (tf::TransformException &ex)
+		{
+			ROS_ERROR("%s",ex.what());
+			ros::Duration(1.0).sleep();
+		}
+    }
 	_increment = laser_scan_msg.angle_increment;
 	_angle_min = laser_scan_msg.angle_min + yy;
 	_laser_ranges = laser_scan_msg.ranges;

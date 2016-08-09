@@ -31,6 +31,7 @@ class Particle
 			std::vector<float> ranges, float resolution, int step);
 		void randomize(unsigned int width, unsigned int height,
 			int** data, float resolution);
+		void setPose (float x, float y, float theta);
 		void move();
 		void getRanges(float angle, unsigned int width, unsigned int height,
 			int** data, float resolution, float max_range, int i);

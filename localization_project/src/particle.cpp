@@ -7,18 +7,20 @@ Particle::Particle()
 
 Particle::Particle(unsigned int width, unsigned int height, int** data,
 	std::vector<float> ranges, float resolution, int step) 
-{	
-	//~ randomize(width, height, data, resolution);
+{
 	std::vector <float> temp(ranges.size()/step + 1, 0);
 	//~ std::vector <float> temp(ranges.size(), 0);
 	_distances = temp;
 	_dx = _dy = _dtheta = _weight = 0;		
 	_particle_ranges = new float[ranges.size()/step + 1];	
 	//~ _particle_ranges = new float[ranges.size()];	
-	
-	_x = 9;
-	_y = 6;
-	_theta = 0;
+}
+
+void Particle::setPose (float x, float y, float theta)
+{
+	_x = x;
+	_y = y;
+	_theta = theta;
 }
 
 void Particle::randomize(unsigned int width, unsigned int height,

@@ -34,7 +34,11 @@ class ParticleFilter {
 		float _current_angular;
 		float _previous_linear;
 		float _previous_angular;
+		float _initial_x;
+		float _initial_y;
+		float _initial_theta;
 		std::vector<Particle> _particles; 
+		bool _initial_pose_flag;
 		bool _visualization_enabled;
 		bool _particles_initialized;
 		bool _flag;

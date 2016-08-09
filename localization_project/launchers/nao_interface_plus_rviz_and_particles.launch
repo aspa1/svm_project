@@ -11,5 +11,9 @@
 	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find localization_project)/cfg/particles.rviz"/>
 	
 	<node name="$(anon nao)" pkg="nao_localization" type="nao_interface.py" output="screen" />
+	
+	<node pkg="localization_project" type="localization" name="localization" output="screen" />
+	
+	<node pkg="rosservice" type="rosservice" name="particles" args="call --wait /particles_initialization"/>
 
 </launch>

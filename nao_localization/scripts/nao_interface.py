@@ -8,6 +8,7 @@ from nao_localization.srv import GetObjects
 from nao_localization.srv import GetObjectsResponse
 from nao_localization.msg import ObjectMsg
 
+import rospkg
 import rospy
 import sys
 
@@ -36,10 +37,12 @@ class NaoInterface:
 		
 	def qrDetectionCallback(self, event):
 		print "QrDetection"
+		rospack = rospkg.RosPack()
+		img_path = rospack.get_path('nao_localization') + "/cfg/nao_capture.jpg"
 		self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "1280x960")
-		self.rh.utilities.moveFileToPC("/home/nao/test.jpg", "/home/chrisa/test.jpg")
+		self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
 		#svc = QrDetection(imageFilepath="/home/chrisa/test.jpg")
-		response = self.ch.qrDetection("/home/chrisa/test.jpg")
+		response = self.ch.qrDetection(img_path)
 		print response
 		head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])['angles'][0]
 		print head_yaw

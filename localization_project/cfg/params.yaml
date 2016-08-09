@@ -1,12 +1,12 @@
 map_topic: /map
 
-robot_laser_topic: /inner/sonar_measurements
+robot_laser_topic: /robot0/laser_1
 
 laser_param: robot0_laser_1
 
 robot_param: robot0
 
-velocity_topic: /inner/cmd_vel
+velocity_topic: /robot0/cmd_vel
 
 rays_subsampling_step: 1
 
@@ -25,3 +25,11 @@ duration: 1
 rfid_reader_topic: /robot0/rfid_reader_0
 
 rfid_tags_topic: /stdr_server/rfid_list
+
+initial_pose_known: true
+
+initial_x: 15
+
+initial_y: 15
+
+initial_theta: 0

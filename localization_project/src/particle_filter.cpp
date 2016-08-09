@@ -16,6 +16,25 @@ ParticleFilter::ParticleFilter()
 		&ParticleFilter::particlesInit, this);
 	ROS_INFO("Service ready to initialize particles");
 	
+	if(!_n.getParam("/initial_pose_known", _initial_pose_flag))
+    {
+		ROS_ERROR("Initial_pose_known param does not exist");
+	}
+	if (_initial_pose_flag)
+	{
+		if(!_n.getParam("/initial_x", _initial_x))
+		{
+			ROS_ERROR("Initial_x does not exist");
+		}
+		if(!_n.getParam("/initial_y", _initial_y))
+		{
+			ROS_ERROR("Initial_y param does not exist");
+		}
+		if(!_n.getParam("/initial_theta", _initial_theta))
+		{
+			ROS_ERROR("Initial_theta param does not exist");
+		}
+	}
 	if(!_n.getParam("/enable_visualization", _visualization_enabled))
     {
 		ROS_ERROR("Enable_visualization param does not exist");
@@ -70,6 +89,12 @@ bool ParticleFilter::particlesInit (
 			robot_percept.getMapHeight(), robot_percept.getMapData(),
 			robot_percept.getLaserRanges(), robot_percept.getMapResolution(),
 			_sampling_step);
+		if (_initial_pose_flag)
+			particle.setPose(_initial_x, _initial_y, _initial_theta);
+		else
+			particle.randomize(robot_percept.getMapWidth(),
+				robot_percept.getMapHeight(), robot_percept.getMapData(),
+				robot_percept.getMapResolution());
 		_particles.push_back(particle);
 	}
 	_particles_initialized = true;
@@ -178,12 +203,12 @@ void ParticleFilter::resample()
 	}
 	else
 	{
-		//~ for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
-		//~ {
-			//~ _particles[i].randomize(robot_percept.getMapWidth(),
-				//~ robot_percept.getMapHeight(), robot_percept.getMapData(),
-				//~ robot_percept.getMapResolution());
-		//~ }
+		for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
+		{
+			_particles[i].randomize(robot_percept.getMapWidth(),
+				robot_percept.getMapHeight(), robot_percept.getMapData(),
+				robot_percept.getMapResolution());
+		}
 	}
 }
 
