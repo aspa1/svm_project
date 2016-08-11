@@ -61,6 +61,7 @@ find_package(PkgConfig)
 add_service_files(
    FILES
    particleInitSrv.srv
+   rfidTagsVisualizeSrv.srv
 #   Service2.srv
 )
 

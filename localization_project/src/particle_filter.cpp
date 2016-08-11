@@ -209,6 +209,7 @@ void ParticleFilter::resample()
 				robot_percept.getMapHeight(), robot_percept.getMapData(),
 				robot_percept.getMapResolution());
 		}
+		ROS_ERROR_STREAM("Oops! Particles randomized");
 	}
 }
 

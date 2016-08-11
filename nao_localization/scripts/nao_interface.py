@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from rapp_robot_api import RappRobot
 from sensor_msgs.msg import LaserScan
+from stdr_msgs.msg import RfidSensorMeasurementMsg
 from RappCloud import RappPlatformAPI
 from nao_localization.srv import SetObject
 from nao_localization.srv import SetObjectResponse
@@ -19,6 +20,7 @@ class NaoInterface:
 		rospy.Timer(rospy.Duration(0.1), self.sonarsCallback)
 		rospy.Timer(rospy.Duration(5), self.qrDetectionCallback)
 		self.pub = rospy.Publisher('/inner/sonar_measurements', LaserScan, queue_size=1)
+		self.pub1 = rospy.Publisher('/inner/qr_detection', RfidSensorMeasurementMsg, queue_size=1)
 		self.s = rospy.Service('set_object', SetObject, self.setNewObjectCallback)
 		self.s1 = rospy.Service('get_objects', GetObjects, self.getObjectsCallback)
 		
@@ -45,6 +47,10 @@ class NaoInterface:
 		response = self.ch.qrDetection(img_path)
 		print response
 		print response['qr_messages']
+		if "Localization" in response['qr_messages']:
+			qr_msg = RfidSensorMeasurementMsg()
+			qr_msg.rfid_tags_ids.append(response['qr_messages'])
+			self.pub1.publish(qr_msg)
 		head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])['angles'][0]
 		print head_yaw
 		

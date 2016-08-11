@@ -14,11 +14,12 @@
 #include <iterator>
 #include <boost/filesystem.hpp>
 #include <tf/transform_listener.h>
-
+#include "localization_project/rfidTagsVisualizeSrv.h"
 
 class RobotPerception
 {
 	private:
+		ros::ServiceServer _rfid_tags_visualization_service;
 		ros::NodeHandle _n;
 		std::string _map_topic_param;
 		std::string _laser_topic_param;
@@ -26,6 +27,7 @@ class RobotPerception
 		std::string _robot_param;
 		std::string _rfid_reader_topic_param;
 		std::string _rfid_tags_topic_param;
+		std::string _qr_file_path;
 		ros::Subscriber _map_sub;
 		ros::Subscriber _laser_sub;
 		ros::Subscriber _rfid_reader_sub;
@@ -48,12 +50,18 @@ class RobotPerception
 		float _angle_min;
 		tf::TransformListener _listener;
 		bool _flag;
+		bool _stdr_in_use;
+		bool _rfid_reader_exists;
 		float yy;
 	
 	
 	public:
 		RobotPerception();
 		void mapCallback(nav_msgs::OccupancyGrid occupancy_grid_msg);
+		bool rfidTagsVisualize (
+			localization_project::rfidTagsVisualizeSrv::Request& req,
+			localization_project::rfidTagsVisualizeSrv::Response& res
+		);
 		void laserRangesCallback(sensor_msgs::LaserScan laser_scan_msg);
 		void rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg rfid_reader_msg);
 		void rfidTagsCallback (stdr_msgs::RfidTagVector rfid_tag_msg);

@@ -5,9 +5,16 @@
  * param and subcribes to these topics.
  */
 RobotPerception::RobotPerception () 
-{	
-	_flag = false;
+{
 	//~ ROS_INFO_STREAM("RobotPerception Constructor");
+	_qr_file_path = ros::package::getPath("localization_project") + "/cfg/AllQRs.txt";
+	
+	_flag = false;
+	
+	_rfid_tags_visualization_service = _n.advertiseService (
+		"rfid_tags_visualization", &RobotPerception::rfidTagsVisualize, this);
+	ROS_INFO("Service ready to visualize RFIDs");
+	
 	if(!_n.getParam("/map_topic", _map_topic_param))
 	{
 		ROS_ERROR("Map topic param does not exist");
@@ -22,6 +29,9 @@ RobotPerception::RobotPerception ()
 	_laser_sub = _n.subscribe(_laser_topic_param, 1,
 		&RobotPerception::laserRangesCallback, this);
 		
+	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
+		"visualization_marker", 0);
+		
 	if(!_n.getParam("/robot_param", _robot_param))
 	{
 		ROS_ERROR("Robot param does not exist");
@@ -32,22 +42,36 @@ RobotPerception::RobotPerception ()
 		ROS_ERROR("Laser param does not exist");
 	}
 	
-	if (!_n.getParam("/rfid_tags_topic", _rfid_tags_topic_param))
+	if (!_n.getParam("/stdr_used", _stdr_in_use))
 	{
-		ROS_ERROR("Rfid_tags topic param does not exist");
+		ROS_ERROR("Stdr_used param does not exist");
 	}
-	_rfid_tags_sub = _n.subscribe(_rfid_tags_topic_param, 1,
-		&RobotPerception::rfidTagsCallback, this);
-		
-	if (!_n.getParam("/rfid_reader_topic", _rfid_reader_topic_param))
+	
+	if (!_n.getParam("/rfid_reader_exists", _rfid_reader_exists))
 	{
-		ROS_ERROR("Rfid_reader topic param does not exist");
+		ROS_ERROR("Rfid_reader_exists param does not exist");
 	}
-	_rfid_reader_sub = _n.subscribe(_rfid_reader_topic_param, 1,
-		&RobotPerception::rfidReaderCallback, this);
-		
-	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
-		"visualization_marker", 0);
+
+	if (_rfid_reader_exists)
+	{
+		if (_stdr_in_use) 
+		{
+			if (!_n.getParam("/rfid_tags_topic", _rfid_tags_topic_param))
+			{
+				ROS_ERROR("Rfid_tags topic param does not exist");
+			}
+
+			_rfid_tags_sub = _n.subscribe(_rfid_tags_topic_param, 1,
+				&RobotPerception::rfidTagsCallback, this);
+		}
+			
+		if (!_n.getParam("/rfid_reader_topic", _rfid_reader_topic_param))
+		{
+			ROS_ERROR("Rfid_reader topic param does not exist");
+		}
+		_rfid_reader_sub = _n.subscribe(_rfid_reader_topic_param, 1,
+			&RobotPerception::rfidReaderCallback, this);
+	}
 }
 
 /**
@@ -81,30 +105,16 @@ void RobotPerception::mapCallback (
 	}	
 }
 
-void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
-	rfid_tag_msg)
-{
-	//~ ROS_INFO_STREAM("rfidTagsCallback");
+
+bool RobotPerception::rfidTagsVisualize (
+	localization_project::rfidTagsVisualizeSrv::Request& req,
+	localization_project::rfidTagsVisualizeSrv::Response& res
+	)
+{	
 	int counter = 0;
-	_rfid_tags = rfid_tag_msg.rfid_tags;
-	std::ofstream data_file;
-	std::string _path = ros::package::getPath("localization_project");
-	std::string full_path = _path + "/cfg/AllQRs.txt";
-	//~ boost::filesystem::path full_path = boost::filesystem::system_complete("QRs.txt");
-	//~ data_file.open(full_path.string().c_str());
-	data_file.open(full_path.c_str());
-	//~ ROS_INFO_STREAM("Full path = " << full_path.string().c_str());
-	//~ ROS_INFO_STREAM("Full path = " << full_path);
-	for (unsigned int i = 0 ; i < _rfid_tags.size(); i++)
-	{
-		data_file << _rfid_tags[i].tag_id << "\t" <<
-			_rfid_tags[i].pose.x << "\t" << _rfid_tags[i].pose.y << "\n"; 
-	}
-	data_file.close();
-		
 	std::string line;
 	//~ std::ifstream file (full_path.string().c_str());
-	std::ifstream file (full_path.c_str());
+	std::ifstream file (_qr_file_path.c_str());
 	if (file.is_open())
 	{
 		while (getline (file,line))
@@ -113,14 +123,16 @@ void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
 			float x, y;
 			std::istringstream ss(line);
 			ss >> id >> x >> y;
+			ROS_INFO_STREAM("id = " << id << " x = " << x << " y = " << y);
 			std::size_t found = id.find("Localization");
 			visualization_msgs::Marker m, m1;
-	
+
 			if (found!=std::string::npos)
 			{
 				ROS_INFO_STREAM("Localization QR");
 				ROS_INFO_STREAM("Found = " << found);
 				_rfid_tags_id.push_back(id);
+				ROS_INFO_STREAM("_rfid_tags_id = " << id.c_str());
 				_rfid_tags_x.push_back(x);
 				_rfid_tags_y.push_back(y);
 								
@@ -136,14 +148,14 @@ void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
 				m.color.a = 1.0;
 				m.color.r = 1.0;
 				m.color.g = 0.0;
-				m.color.b = 1.0;	
+				m.color.b = 1.0;
 							
 				geometry_msgs::Point p;
 				p.x = x;
 				p.y = y;
 				m.points.push_back(p);
-	
 				_visualization_pub.publish(m);
+				ROS_INFO_STREAM("Visualization marker published");
 				
 				m1.header.frame_id = "map";
 				m1.header.stamp = ros::Time();
@@ -175,15 +187,36 @@ void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
 			}
 		}
 	file.close();
-	}	    
+	}
+	
+	ROS_INFO_STREAM(counter << " " << "Localization QRs visualized");
+	
+	res.success = true;
+	return true;
 }
+
+void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
+	rfid_tag_msg)
+{
+	//~ ROS_INFO_STREAM("rfidTagsCallback");
+	_rfid_tags = rfid_tag_msg.rfid_tags;
+	std::ofstream data_file;
+	data_file.open(_qr_file_path.c_str());
+	for (unsigned int i = 0 ; i < _rfid_tags.size(); i++)
+	{
+		data_file << _rfid_tags[i].tag_id << "\t" <<
+			_rfid_tags[i].pose.x << "\t" << _rfid_tags[i].pose.y << "\n"; 
+	}
+	data_file.close();
+}
+
 
 void RobotPerception::rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg
 	rfid_reader_msg)
 {
 	_rfid_pose.clear();
 	_rfid_ids = rfid_reader_msg.rfid_tags_ids;
-	_rfid_msgs = rfid_reader_msg.rfid_tags_msgs;
+	//~ _rfid_msgs = rfid_reader_msg.rfid_tags_msgs;
 	rfidPose();
 }
 
@@ -217,24 +250,27 @@ void RobotPerception::rfidPose()
 void RobotPerception::laserRangesCallback(
 	sensor_msgs::LaserScan laser_scan_msg) 
 {
-	yy = 0;
-	//~ tf::StampedTransform transform;
-	//~ if (!_flag)
-	//~ {
-		//~ try
-		//~ {
-			//~ _listener.lookupTransform(_robot_param, _laser_param,  
-								   //~ ros::Time(0), transform);
-			//~ yy = tf::getYaw(transform.getRotation());
-			//~ ROS_ERROR_STREAM(yy);	
-			//~ _flag = true;
-		//~ }
-		//~ catch (tf::TransformException &ex)
-		//~ {
-			//~ ROS_ERROR("%s",ex.what());
-			//~ ros::Duration(1.0).sleep();
-		//~ }
-    //~ }
+	if (_stdr_in_use)
+	{
+		tf::StampedTransform transform;
+		if (!_flag)
+		{
+			try
+			{
+				_listener.lookupTransform(_robot_param, _laser_param, ros::Time(0), transform);
+				yy = tf::getYaw(transform.getRotation());
+				ROS_ERROR_STREAM(yy);	
+				_flag = true;
+			}
+			catch (tf::TransformException &ex)
+			{
+				ROS_ERROR("%s",ex.what());
+				ros::Duration(1.0).sleep();
+			}
+		}
+	}
+	else
+		yy = 0;
 	_increment = laser_scan_msg.angle_increment;
 	_angle_min = laser_scan_msg.angle_min + yy;
 	_laser_ranges = laser_scan_msg.ranges;
