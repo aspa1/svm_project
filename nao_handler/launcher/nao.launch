@@ -1,0 +1,12 @@
+<launch>
+
+  <!-- upload nao robot launcher-->
+  <include file="$(find nao_handler)/launcher/nao_launcher.launch" >
+  <arg name="nao_ip" value="$(arg nao_ip)"/>  
+  </include>
+  
+  <node name="$(anon nao)" pkg="nao_handler" type="obstacle_avoidance.py" output="screen" />
+  
+  <rosparam file="$(find nao_handler)/config/values_and_topics.yaml" command="load" />  
+  
+</launch>

@@ -1,25 +1,25 @@
 map_topic: /map
 
-robot_laser_topic: /robot0/laser_1
+robot_laser_topic: /inner/sonar_measurements
 
 laser_param: robot0_laser_1
 
 robot_param: robot0
 
-velocity_topic: /robot0/cmd_vel
+velocity_topic: /inner/cmd_vel
 
 rays_subsampling_step: 1
 
-strictness: 1.5
+strictness: 0.8
 
 particles_number: 10000
 
 enable_visualization: true
 
-a1: 0.1
-
-a2: 0.05
-
+#a1: 0.1
+a1: 0
+#a2: 0.05
+a2: 0
 duration: 1
 
 rfid_reader_topic: /robot0/rfid_reader_0
@@ -28,8 +28,8 @@ rfid_tags_topic: /stdr_server/rfid_list
 
 initial_pose_known: true
 
-initial_x: 15
+initial_x: 10
 
-initial_y: 15
+initial_y: 7
 
 initial_theta: 0

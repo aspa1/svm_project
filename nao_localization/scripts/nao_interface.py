@@ -44,6 +44,7 @@ class NaoInterface:
 		#svc = QrDetection(imageFilepath="/home/chrisa/test.jpg")
 		response = self.ch.qrDetection(img_path)
 		print response
+		print response['qr_messages']
 		head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])['angles'][0]
 		print head_yaw
 		

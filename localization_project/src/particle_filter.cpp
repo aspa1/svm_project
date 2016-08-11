@@ -104,7 +104,7 @@ bool ParticleFilter::particlesInit (
 		visualize(robot_percept.getMapResolution());
 	
 	res.success = true;
-	return true;	
+	return true;
 }
 
 void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
