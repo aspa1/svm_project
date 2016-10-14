@@ -26,6 +26,7 @@ class TrackingAndMotion:
 		self.rh = RappRobot()
 		self.pub = rospy.Publisher(rospy.get_param('joint_angles_topic'), JointAnglesWithSpeed, queue_size=1)
 		self.publ = rospy.Publisher(rospy.get_param('velocities_topic'), Twist, queue_size=1)
+		self.robot_position_pub = rospy.Publisher(rospy.get_param('robot_position_topic'), Twist, queue_size=1)
 		self.path_publisher = rospy.Publisher(rospy.get_param('path_pub_topic'), \
 			Path, queue_size = 10)
 		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior)
@@ -40,6 +41,8 @@ class TrackingAndMotion:
 		self.theta_vel = 0
 		self.robot_x = 0
 		self.robot_y = 0
+		self.dx = 0
+		self.dy = 0
 		self.path = []
 		self.predator_topic = rospy.get_param('predator_topic')
 		self.sonar_value = rospy.get_param('sonar_limit_value')
@@ -47,6 +50,7 @@ class TrackingAndMotion:
 		self.head_yaw_value = rospy.get_param('head_yaw_limit_value')
 
 		self.set_vel_timer = rospy.Timer(rospy.Duration(0.1), self.set_velocities_callback)
+		self.set_position_timer = rospy.Timer(rospy.Duration(0.1), self.set_position_callback)
 		self.get_robot_pos_timer = rospy.Timer(rospy.Duration(0.1), self.get_robot_position_callback)
 
 		self.obstacle_timer = rospy.Timer(rospy.Duration(0.1), self.obstacle_avoidance_callback)
@@ -95,7 +99,7 @@ class TrackingAndMotion:
 		joint.joint_names.append("HeadYaw")
 		joint.joint_names.append("HeadPitch")
 
-		#~ print polygon
+		
 		joint.speed = 0.1
 		joint.relative = True
 
@@ -143,8 +147,10 @@ class TrackingAndMotion:
 			self.y_vel = 0
 			self.theta_vel = 0
 			
+		#~ robot_pos = Twist()
 		if  self.lock_motion is True:
 			#~ self.disableObjectTracking()
+			
 			
 			print "sonars:", sonars['front_left'], sonars['front_right']
 			print "Head_pitch:",head_pitch
@@ -152,33 +158,42 @@ class TrackingAndMotion:
 			print "Sub_x:", sub_x
 			print "Sub_y:", sub_y
 			
-			dx = 0
+			#~ dx = 0
 			sy = 0
 			if self.find_distance_with_sonars is True and\
 				(sonars['front_left'] <= self.sonar_value or sonars['front_right'] <= self.sonar_value):				
 				if (sonars['front_left'] <= sonars['front_right']):
-					dx = sonars['front_left']
+					self.dx = sonars['front_left']
 					sy = +1
 				else:
-					dx = sonars['front_right']
+					self.dx = sonars['front_right']
 					sy = -1
 			else:
 				x = (sub_y * 47.6* 3.14159 / 180) / 240.0
 				print "x=", x
 				total_x = head_pitch + x + 0.021
 				print "total_x=",total_x
-				dx = 0.53 / math.tan(total_x)
+				self.dx = 0.53 / math.tan(total_x)
 				sy = -1
 				
-			print "dx= ",dx
+			print "dx= ",self.dx
 			y = (sub_x * 60.9 * 3.14159 / 180) / 320.0
 			print "y=", y
 			total_y = head_yaw + sy * y
 			print "total_y=",total_y
-			dy = dx * math.tan(total_y)
-			print "dy= " ,dy
+			self.dy = self.dx * math.tan(total_y)
+			print "dy= " ,self.dy
 			
+			#~ robot_pos.linear.x = dx
+			#~ robot_pos.linear.y = dy
+			#~ print robot_pos
+			
+			#~ self.robot_position_pub.publish(robot_pos)
 			self.disableObjectTracking()
+			
+		
+		
+		#~ print robot_pos
 			
 		battery = self.rh.sensors.getBatteryLevels()['levels'][0]
 		
@@ -190,6 +205,15 @@ class TrackingAndMotion:
 			self.rh.motion.disableMotors()
 			sys.exit(1)
 			
+	def set_position_callback(self, event):
+		robot_pos = Twist()
+		
+		robot_pos.linear.x = self.dx
+		robot_pos.linear.y = self.dy
+		print robot_pos
+		
+		self.robot_position_pub.publish(robot_pos)
+	
 	def lost_object_callback(self, event):
 		if self.hunt_initiated:
 			self.lost_object_counter -= 1
@@ -215,7 +239,6 @@ class TrackingAndMotion:
 		velocities.linear.y = r[1]
 		velocities.angular.z = r[2]
 		
-		#~ rospy.loginfo("%s", velocities)
 		self.publ.publish(velocities)
 		
 		
@@ -242,8 +265,6 @@ class TrackingAndMotion:
 			self.x_vel = 0.5
 			self.theta_vel = 0.0
 		
-		#~ self.move_head_timer = rospy.Timer(rospy.Duration(5), self.headMotionCallback)
-		#~ self.rh.motion.moveByVelocity(self.x_vel, self.y_vel, self.theta_vel)
 	
 	def set_behavior(self, request):
 		print 'Going to behavior: ' + request.behavior
