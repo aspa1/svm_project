@@ -19,7 +19,7 @@ class NaoInterface:
 		self.ch = RappPlatformAPI()
 		rospy.Timer(rospy.Duration(0.1), self.sonarsCallback)
 		rospy.Timer(rospy.Duration(5), self.qrDetectionCallback)
-		self.pub = rospy.Publisher('/inner/sonar_measurements', LaserScan, queue_size=1)
+		#self.pub = rospy.Publisher('/inner/sonar_measurements', LaserScan, queue_size=1)
 		self.pub1 = rospy.Publisher('/inner/qr_detection', RfidSensorMeasurementMsg, queue_size=1)
 		self.s = rospy.Service('set_object', SetObject, self.setNewObjectCallback)
 		self.s1 = rospy.Service('get_objects', GetObjects, self.getObjectsCallback)
@@ -41,7 +41,8 @@ class NaoInterface:
 		print "QrDetection"
 		rospack = rospkg.RosPack()
 		img_path = rospack.get_path('nao_localization') + "/cfg/nao_capture.jpg"
-		self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "1280x960")
+		self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "640x480")
+		print img_path
 		self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
 		#svc = QrDetection(imageFilepath="/home/chrisa/test.jpg")
 		response = self.ch.qrDetection(img_path)

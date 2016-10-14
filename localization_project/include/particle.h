@@ -19,7 +19,7 @@ class Particle
 		float _dx;
 		float _dy;
 		float _dtheta;
-		float _weight;		
+		float _weight;
 		float* _particle_ranges;
 		float _linear;
 		float _angular;
@@ -35,7 +35,7 @@ class Particle
 		void move();
 		void getRanges(float angle, unsigned int width, unsigned int height,
 			int** data, float resolution, float max_range, int i);
-		float sense(std::vector<std::vector<float> > rfid_pose);
+		float rfidSense(std::vector<std::vector<float> > rfid_pose);
 		void setParticleWeight(unsigned int width, unsigned int height,
 			int** data, float resolution, const std::vector<float>& ranges,
 			float max_range, float increment, float angle_min, 

@@ -13,7 +13,7 @@
 
 	<node pkg="localization_project" type="localization" name="localization" output="screen" />
 
-	<node pkg="rosservice" type="rosservice" name="particles" args="call --wait /particles_initialization" />
+	<!-- node pkg="rosservice" type="rosservice" name="particles" args="call wait /particles_initialization" -->
 
 	<rosparam file="$(find localization_project)/cfg/params.yaml" command="load" />
 

@@ -1,2 +1,2 @@
-Localizatio_2	12.86	15.8
-Localization_1	13.48	14.54
+	16.96	15.38
+Localization_3	17.46	15.78

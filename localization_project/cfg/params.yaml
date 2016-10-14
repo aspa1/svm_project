@@ -3,8 +3,10 @@ map_topic: /map
 #robot_laser_topic: /inner/sonar_measurements
 robot_laser_topic: /robot0/laser_1
 
+#only when stdr is used
 laser_param: robot0_laser_1
 
+#only when stdr is used
 robot_param: robot0
 
 #velocity_topic: /inner/cmd_vel
@@ -27,6 +29,7 @@ duration: 1
 rfid_reader_topic: /robot0/rfid_reader_0
 #rfid_reader_topic: /inner/qr_detection
 
+#only when stdr is used
 rfid_tags_topic: /stdr_server/rfid_list
 
 initial_pose_known: false

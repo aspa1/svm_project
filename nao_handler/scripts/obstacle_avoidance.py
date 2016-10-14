@@ -41,7 +41,7 @@ class ObstacleAvoidance:
 		self.robot_x = 0
 		self.robot_y = 0
 		self.path = []
-		self.predator_topic = rospy.get_param('predator_topic')
+		#~ self.predator_topic = rospy.get_param('predator_topic')
 		self.sonar_value = rospy.get_param('sonar_limit_value')
 		self.head_pitch_value = rospy.get_param('head_pitch_limit_value')
 		self.head_yaw_value = rospy.get_param('head_yaw_limit_value')

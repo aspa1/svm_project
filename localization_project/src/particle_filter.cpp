@@ -140,6 +140,7 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 		}
 		if (_motion_flag)
 			resample();
+		
 		_motion_flag = false;
 		visualize(robot_percept.getMapResolution());
 		time2 = ros::Time::now();

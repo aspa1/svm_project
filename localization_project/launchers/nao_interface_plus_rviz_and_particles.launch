@@ -16,4 +16,6 @@
 	
 	<node pkg="rosservice" type="rosservice" name="particles" args="call --wait /particles_initialization"/>
 
+	<rosparam file="$(find nao_handler)/config/values_and_topics.yaml" command="load" />  
+
 </launch>

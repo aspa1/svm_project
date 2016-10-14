@@ -77,7 +77,7 @@ void Particle::getRanges(float angle, unsigned int width, unsigned int height,
 	_particle_ranges[i] = ((distance-1) * resolution);
 }
 
-float Particle::sense(std::vector<std::vector<float> > rfid_pose)
+float Particle::rfidSense(std::vector<std::vector<float> > rfid_pose)
 {
 	float w = 0;
 	float rfid_theta;
@@ -86,7 +86,7 @@ float Particle::sense(std::vector<std::vector<float> > rfid_pose)
 	{
 		rfid_theta = atan2(rfid_pose[i][1] - _y, rfid_pose[i][0] - _x);
 		float d_th = rfid_theta - particle_theta;
-		if( cos(d_th) > cos(30 * PI /180.0) )
+		if( cos(d_th) > cos(30 * PI /180.0) ) // -30 < d_th < 30
 			w = 1.0;
 		else
 			w = -1.0;
@@ -100,7 +100,7 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 	std::vector<std::vector<float> > rfid_pose, int step, float strictness)
 {
 	_weight = 0;
-	float tag_w = sense(rfid_pose);
+	float tag_w = rfidSense(rfid_pose);
 	float sum = 0;
 	int k = 0;	
 	
@@ -137,13 +137,13 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 	}
 	
 	sum = sum/(ranges.size()/step + 1);
-	float _sum_w = pow(1/(sum + 1), strictness);
+	float sum_w = pow(1/(sum + 1), strictness);
 	if(tag_w < 0.0)
 	{
-		_weight = _sum_w * 0.0001;
+		_weight = sum_w * 0.0001;
 	}
 	else
-		_weight = _sum_w;
+		_weight = sum_w;
 }
 
 void Particle::calculateMotion(float previous_linear, float previous_angular, ros::Duration dt, float a1, float a2)
