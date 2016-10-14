@@ -224,15 +224,10 @@ class TrackingAndMotion:
 			print "head motion changed False"
 			self.head_motion = True
 			self.rh.humanoid_motion.setJointAngles(["HeadYaw"],[0.2], 0.1)
-			print self.head_motion
-			print "aoua1"
 		else:
 			print "head motion changed True"
 			self.head_motion = False
 			self.rh.humanoid_motion.setJointAngles(["HeadYaw"],[-0.4], 0.1)
-			print self.head_motion
-			print "aoua2"
-		
 		
 	def obstacle_avoidance_callback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
