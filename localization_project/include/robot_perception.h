@@ -65,7 +65,7 @@ class RobotPerception
 		void laserRangesCallback(sensor_msgs::LaserScan laser_scan_msg);
 		void rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg rfid_reader_msg);
 		void rfidTagsCallback (stdr_msgs::RfidTagVector rfid_tag_msg);
-		void rfidPose();
+		void rfidFileRead();
 		unsigned int getMapWidth();
 		unsigned int getMapHeight();
 		float getMapResolution();

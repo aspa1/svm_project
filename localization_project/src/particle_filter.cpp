@@ -123,7 +123,6 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 			_particles[i].calculateMotion(_previous_linear,
 				_previous_angular, _dt, _noise_param1, _noise_param2);
 			_particles[i].move();
-			//~ ROS_INFO_STREAM("New x = " << _particles[i].getX() << " new y = " << _particles[i].getY());
 			_previous_angular = _current_angular;
 			_previous_linear = _current_linear;
 			_previous_time = _current_time;
@@ -138,8 +137,11 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 				robot_percept.getAngleMin(), robot_percept.getRfidPose(),
 				_sampling_step, _strictness_param);
 		}
-		if (_motion_flag)
+		if (_motion_flag || ( (_flag == 0) &&
+			(_particles[0].rfidSense(robot_percept.getRfidPose()) != 0) ))
+		{
 			resample();
+		}
 		
 		_motion_flag = false;
 		visualize(robot_percept.getMapResolution());
@@ -171,7 +173,7 @@ void ParticleFilter::resample()
 	ROS_INFO_STREAM("average1 = " << average);
 	if (flag == true)
 	{
-		ROS_INFO_STREAM("resample");		
+		ROS_INFO_STREAM("resample");
 		sum = 0;
 		std::vector<Particle> new_particles;
 		int index = std::rand() % ( _particles_number );
@@ -210,7 +212,7 @@ void ParticleFilter::resample()
 				robot_percept.getMapHeight(), robot_percept.getMapData(),
 				robot_percept.getMapResolution());
 		}
-		ROS_ERROR_STREAM("Oops! Particles randomized");
+		ROS_ERROR_STREAM("Oops! Robot lost, particles randomized");
 	}
 }
 
@@ -274,7 +276,6 @@ void ParticleFilter::visualize(float resolution)
       p.y = _particles[i].getY();
       m.points.push_back(p);
     }
-	
 	 _visualization_pub.publish(m);
 	 
 	m1.header.frame_id = "map";
@@ -311,7 +312,6 @@ void ParticleFilter::visualize(float resolution)
 		" y = " << _particles[id].getY() << " theta = " << _particles[id].getTheta());
 	 _visualization_pub.publish(m1);
 	
-	
 	static tf::TransformBroadcaster br;
 	tf::Transform transform;
 	transform.setOrigin( tf::Vector3(_particles[id].getX(), _particles[id].getY(), 0.0) );
@@ -319,6 +319,4 @@ void ParticleFilter::visualize(float resolution)
 	q.setRPY(0, 0, _particles[id].getTheta());
 	transform.setRotation(q);
 	br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "nao_pose"));
-
 }
-

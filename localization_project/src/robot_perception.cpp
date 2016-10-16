@@ -6,15 +6,14 @@
  */
 RobotPerception::RobotPerception () 
 {
-	//~ ROS_INFO_STREAM("RobotPerception Constructor");
 	_qr_file_path = ros::package::getPath("localization_project") + "/cfg/AllQRs.txt";
-	
+
 	_flag = false;
-	
+
 	_rfid_tags_visualization_service = _n.advertiseService (
 		"rfid_tags_visualization", &RobotPerception::rfidTagsVisualize, this);
 	ROS_INFO("Service ready to visualize RFIDs");
-	
+
 	if(!_n.getParam("/map_topic", _map_topic_param))
 	{
 		ROS_ERROR("Map topic param does not exist");
@@ -31,20 +30,23 @@ RobotPerception::RobotPerception ()
 		
 	_visualization_pub = _n.advertise<visualization_msgs::Marker>(
 		"visualization_marker", 0);
-		
-	if(!_n.getParam("/robot_param", _robot_param))
-	{
-		ROS_ERROR("Robot param does not exist");
-	}
-	
-	if(!_n.getParam("/laser_param", _laser_param))
-	{
-		ROS_ERROR("Laser param does not exist");
-	}
 	
 	if (!_n.getParam("/stdr_used", _stdr_in_use))
 	{
 		ROS_ERROR("Stdr_used param does not exist");
+	}
+	
+	if (_stdr_in_use)
+	{
+		if(!_n.getParam("/robot_param", _robot_param))
+		{
+			ROS_ERROR("Robot param does not exist");
+		}
+	
+		if(!_n.getParam("/laser_param", _laser_param))
+		{
+			ROS_ERROR("Laser param does not exist");
+		}
 	}
 	
 	if (!_n.getParam("/rfid_reader_exists", _rfid_reader_exists))
@@ -64,12 +66,16 @@ RobotPerception::RobotPerception ()
 			_rfid_tags_sub = _n.subscribe(_rfid_tags_topic_param, 1,
 				&RobotPerception::rfidTagsCallback, this);
 		}
+		else
+		{
+			rfidFileRead();
+		}
 			
 		if (!_n.getParam("/rfid_reader_topic", _rfid_reader_topic_param))
 		{
 			ROS_ERROR("Rfid_reader topic param does not exist");
 		}
-		_rfid_reader_sub = _n.subscribe(_rfid_reader_topic_param, 1,
+		_rfid_reader_sub = _n.subscribe(_rfid_reader_topic_param, 2,
 			&RobotPerception::rfidReaderCallback, this);
 	}
 }
@@ -102,9 +108,62 @@ void RobotPerception::mapCallback (
 			_map_data[i][j] =
 				(int)occupancy_grid_msg.data[_map_width*j + i];
 		}
-	}	
+	}
 }
 
+void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
+	rfid_tag_msg)
+{
+	_rfid_tags_id.clear();
+	_rfid_tags_x.clear();
+	_rfid_tags_y.clear();
+	//~ ROS_ERROR_STREAM("rfidTagsCallback");
+	_rfid_tags = rfid_tag_msg.rfid_tags;
+	 for (unsigned int i = 0 ; i < _rfid_tags.size(); i++)
+	{
+		std::size_t found = _rfid_tags[i].tag_id.find("Loc");
+		if (found!=std::string::npos)
+		{
+			_rfid_tags_id.push_back(_rfid_tags[i].tag_id);
+			_rfid_tags_x.push_back(_rfid_tags[i].pose.x);
+			_rfid_tags_y.push_back(_rfid_tags[i].pose.y);
+		}
+	}
+	//~ std::ofstream data_file;
+	//~ data_file.open(_qr_file_path.c_str());
+	//~ for (unsigned int i = 0 ; i < _rfid_tags.size(); i++)
+	//~ {
+		//~ data_file << _rfid_tags[i].tag_id << "\t" <<
+			//~ _rfid_tags[i].pose.x << "\t" << _rfid_tags[i].pose.y << "\n"; 
+	//~ }
+	//~ data_file.close();
+	//~ 
+	//~ rfidFileRead();
+}
+
+void RobotPerception::rfidFileRead()
+{
+	std::string line;
+	std::ifstream qr_file (_qr_file_path.c_str());
+	if (qr_file.is_open())
+	{
+		while (getline (qr_file,line))
+		{
+			std::string id;
+			float x, y;
+			std::istringstream ss(line);
+			ss >> id >> x >> y;
+			std::size_t found = id.find("Loc");
+			if (found!=std::string::npos)
+			{
+				_rfid_tags_id.push_back(id);
+				_rfid_tags_x.push_back(x);
+				_rfid_tags_y.push_back(y);
+			}
+		}
+	}
+	qr_file.close();
+}
 
 bool RobotPerception::rfidTagsVisualize (
 	localization_project::rfidTagsVisualizeSrv::Request& req,
@@ -112,116 +171,75 @@ bool RobotPerception::rfidTagsVisualize (
 	)
 {	
 	int counter = 0;
-	std::string line;
-	//~ std::ifstream file (full_path.string().c_str());
-	std::ifstream file (_qr_file_path.c_str());
-	if (file.is_open())
+	for(unsigned int i = 0 ; i < _rfid_tags_id.size() ; i++)
 	{
-		while (getline (file,line))
-		{
-			std::string id;
-			float x, y;
-			std::istringstream ss(line);
-			ss >> id >> x >> y;
-			ROS_INFO_STREAM("id = " << id << " x = " << x << " y = " << y);
-			std::size_t found = id.find("Localization");
-			visualization_msgs::Marker m, m1;
+		std::string id = _rfid_tags_id[i];
+		float x = _rfid_tags_x[i];
+		float y = _rfid_tags_y[i];
+		visualization_msgs::Marker m, m1;
 
-			if (found!=std::string::npos)
-			{
-				ROS_INFO_STREAM("Localization QR");
-				ROS_INFO_STREAM("Found = " << found);
-				_rfid_tags_id.push_back(id);
-				ROS_INFO_STREAM("_rfid_tags_id = " << id.c_str());
-				_rfid_tags_x.push_back(x);
-				_rfid_tags_y.push_back(y);
-								
-				m.header.frame_id = "map";
-				m.header.stamp = ros::Time();
-				m.type = visualization_msgs::Marker::SPHERE_LIST;
-				m.action = visualization_msgs::Marker::ADD;
-				m.id = counter;
-				m.ns = "Localization_QRs";
-				m.scale.x = 0.35;
-				m.scale.y = 0.35;
-				m.scale.z = 0.35;
-				m.color.a = 1.0;
-				m.color.r = 1.0;
-				m.color.g = 0.0;
-				m.color.b = 1.0;
-							
-				geometry_msgs::Point p;
-				p.x = x;
-				p.y = y;
-				m.points.push_back(p);
-				_visualization_pub.publish(m);
-				ROS_INFO_STREAM("Visualization marker published");
-				
-				m1.header.frame_id = "map";
-				m1.header.stamp = ros::Time();
-				m1.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-				m1.action = visualization_msgs::Marker::ADD;
-				m1.id = counter;
-				m1.ns = "Localization_QR_id";
-				m1.scale.z = 0.5;
-				m1.color.a = 1.0;
-				m1.color.r = 0.0;
-				m1.color.g = 1.0;
-				m1.color.b = 0.0;
-				m1.text = id;
-				ROS_INFO_STREAM("Description = " << m1.text);
-				m1.pose.position.x = x;
-				m1.pose.position.y = y;
-				geometry_msgs::Point p1;
-				p1.x = x;
-				p1.y = y;
-				m1.points.push_back(p1);
-				
-				_visualization_pub.publish(m1);
-				ROS_INFO_STREAM("x = " << x  << " y = " << y );
-				counter++;
-			}
-			else
-			{
-				ROS_INFO_STREAM("Object QR");
-			}
-		}
-	file.close();
+		//~ ROS_INFO_STREAM("Localization QR");
+		//~ ROS_INFO_STREAM("_rfid_tags_id = " << id.c_str());
+						
+		m.header.frame_id = "map";
+		m.header.stamp = ros::Time();
+		m.type = visualization_msgs::Marker::SPHERE_LIST;
+		m.action = visualization_msgs::Marker::ADD;
+		m.id = counter;
+		m.ns = "Localization_QRs";
+		m.scale.x = 0.35;
+		m.scale.y = 0.35;
+		m.scale.z = 0.35;
+		m.color.a = 1.0;
+		m.color.r = 1.0;
+		m.color.g = 0.0;
+		m.color.b = 1.0;
+					
+		geometry_msgs::Point p;
+		p.x = x;
+		p.y = y;
+		m.points.push_back(p);
+		_visualization_pub.publish(m);
+		//~ ROS_INFO_STREAM("Visualization marker published");
+		
+		m1.header.frame_id = "map";
+		m1.header.stamp = ros::Time();
+		m1.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+		m1.action = visualization_msgs::Marker::ADD;
+		m1.id = counter;
+		m1.ns = "Localization_QR_id";
+		m1.scale.z = 0.5;
+		m1.color.a = 1.0;
+		m1.color.r = 0.0;
+		m1.color.g = 1.0;
+		m1.color.b = 0.0;
+		m1.text = id;
+		//~ ROS_INFO_STREAM("Description = " << m1.text);
+		m1.pose.position.x = x;
+		m1.pose.position.y = y;
+		geometry_msgs::Point p1;
+		p1.x = x;
+		p1.y = y;
+		m1.points.push_back(p1);
+		
+		_visualization_pub.publish(m1);
+		//~ ROS_INFO_STREAM("x = " << x  << " y = " << y );
+		counter++;
 	}
 	
-	ROS_INFO_STREAM(counter << " " << "Localization QRs visualized");
+	//~ ROS_INFO_STREAM(counter << " " << "Localization QRs visualized");
 	
 	res.success = true;
 	return true;
 }
-
-void RobotPerception::rfidTagsCallback (stdr_msgs::RfidTagVector
-	rfid_tag_msg)
-{
-	//~ ROS_INFO_STREAM("rfidTagsCallback");
-	_rfid_tags = rfid_tag_msg.rfid_tags;
-	std::ofstream data_file;
-	data_file.open(_qr_file_path.c_str());
-	for (unsigned int i = 0 ; i < _rfid_tags.size(); i++)
-	{
-		data_file << _rfid_tags[i].tag_id << "\t" <<
-			_rfid_tags[i].pose.x << "\t" << _rfid_tags[i].pose.y << "\n"; 
-	}
-	data_file.close();
-}
-
 
 void RobotPerception::rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg
 	rfid_reader_msg)
 {
 	_rfid_pose.clear();
 	_rfid_ids = rfid_reader_msg.rfid_tags_ids;
-	//~ _rfid_msgs = rfid_reader_msg.rfid_tags_msgs;
-	rfidPose();
-}
 
-void RobotPerception::rfidPose()
-{
+	//~ std::vector<std::vector<float> > tmp_rfids;
 	for (unsigned int i = 0 ; i < _rfid_ids.size() ; i++)
 	{
 		for (unsigned int j = 0 ; j < _rfid_tags_id.size() ; j++)
@@ -232,14 +250,11 @@ void RobotPerception::rfidPose()
 				temp.push_back(_rfid_tags_x[j]);
 				temp.push_back(_rfid_tags_y[j]);
 				_rfid_pose.push_back(temp);
+				//~ tmp_rfids.push_back(temp);
 			}
 		}
 	}
-	//~ for (unsigned int i = 0 ; i < _rfid_pose.size() ; i++)
-	//~ {
-		//~ ROS_INFO_STREAM (" i = " << i );
-		//~ ROS_INFO_STREAM(" Pose x = " << _rfid_pose[i][0] << " y = " << _rfid_pose[i][1]);
-	//~ }
+	//~ _rfid_pose = tmp_rfids;
 }
 
 /**

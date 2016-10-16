@@ -2,7 +2,7 @@
 
 Particle::Particle() 
 {
-	
+
 }
 
 Particle::Particle(unsigned int width, unsigned int height, int** data,
@@ -11,9 +11,9 @@ Particle::Particle(unsigned int width, unsigned int height, int** data,
 	std::vector <float> temp(ranges.size()/step + 1, 0);
 	//~ std::vector <float> temp(ranges.size(), 0);
 	_distances = temp;
-	_dx = _dy = _dtheta = _weight = 0;		
-	_particle_ranges = new float[ranges.size()/step + 1];	
-	//~ _particle_ranges = new float[ranges.size()];	
+	_dx = _dy = _dtheta = _weight = 0;
+	_particle_ranges = new float[ranges.size()/step + 1];
+	//~ _particle_ranges = new float[ranges.size()];
 }
 
 void Particle::setPose (float x, float y, float theta)
@@ -43,11 +43,11 @@ void Particle::move()
 {
 	_previous_x = _x;
 	_previous_y = _y;
-    _x += _dx;
-    _y += _dy;
-    _theta += _dtheta;
+	_x += _dx;
+	_y += _dy;
+	_theta += _dtheta;
 
-    _dx = _dy = _dtheta = 0;
+	_dx = _dy = _dtheta = 0;
 }
 
 void Particle::getRanges(float angle, unsigned int width, unsigned int height,
