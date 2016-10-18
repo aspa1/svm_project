@@ -26,7 +26,7 @@ class TrackingAndMotion:
 		self.rh = RappRobot()
 		self.pub = rospy.Publisher(rospy.get_param('joint_angles_topic'), JointAnglesWithSpeed, queue_size=1)
 		self.publ = rospy.Publisher(rospy.get_param('velocities_topic'), Twist, queue_size=1)
-		self.robot_position_pub = rospy.Publisher(rospy.get_param('robot_position_topic'), Twist, queue_size=1)
+		self.obj_position_pub = rospy.Publisher(rospy.get_param('object_position_topic'), Twist, queue_size=1)
 		self.path_publisher = rospy.Publisher(rospy.get_param('path_pub_topic'), \
 			Path, queue_size = 10)
 		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior)
@@ -50,7 +50,9 @@ class TrackingAndMotion:
 		self.head_yaw_value = rospy.get_param('head_yaw_limit_value')
 
 		self.set_vel_timer = rospy.Timer(rospy.Duration(0.1), self.set_velocities_callback)
-		self.set_position_timer = rospy.Timer(rospy.Duration(0.1), self.set_position_callback)
+		
+		self.set_object_position_timer = rospy.Timer(rospy.Duration(0.1), self.set_object_position_callback)
+		
 		self.get_robot_pos_timer = rospy.Timer(rospy.Duration(0.1), self.get_robot_position_callback)
 
 		self.obstacle_timer = rospy.Timer(rospy.Duration(0.1), self.obstacle_avoidance_callback)
@@ -120,8 +122,6 @@ class TrackingAndMotion:
 		ans = self.rh.humanoid_motion.getJointAngles(['HeadYaw', 'HeadPitch'])['angles']
 		head_yaw = ans[0]
 		head_pitch = ans[1]
-		#~ print 'HeadPitch' + str(head_pitch)
-		#~ print 'HeadYaw' + str(head_yaw)
 		
 		
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
@@ -147,7 +147,6 @@ class TrackingAndMotion:
 			self.y_vel = 0
 			self.theta_vel = 0
 			
-		#~ robot_pos = Twist()
 		if  self.lock_motion is True:
 			#~ self.disableObjectTracking()
 			
@@ -184,16 +183,8 @@ class TrackingAndMotion:
 			self.dy = self.dx * math.tan(total_y)
 			print "dy= " ,self.dy
 			
-			#~ robot_pos.linear.x = dx
-			#~ robot_pos.linear.y = dy
-			#~ print robot_pos
-			
-			#~ self.robot_position_pub.publish(robot_pos)
 			self.disableObjectTracking()
 			
-		
-		
-		#~ print robot_pos
 			
 		battery = self.rh.sensors.getBatteryLevels()['levels'][0]
 		
@@ -205,14 +196,14 @@ class TrackingAndMotion:
 			self.rh.motion.disableMotors()
 			sys.exit(1)
 			
-	def set_position_callback(self, event):
-		robot_pos = Twist()
+	def set_object_position_callback(self, event):
+		object_pos = Twist()
 		
-		robot_pos.linear.x = self.dx
-		robot_pos.linear.y = self.dy
-		print robot_pos
+		object_pos.linear.x = self.dx
+		object_pos.linear.y = self.dy
+		print object_pos
 		
-		self.robot_position_pub.publish(robot_pos)
+		self.obj_position_pub.publish(object_pos)
 	
 	def lost_object_callback(self, event):
 		if self.hunt_initiated:
