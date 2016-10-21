@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from rapp_robot_api import RappRobot
+from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 from stdr_msgs.msg import RfidSensorMeasurementMsg
 from RappCloud import RappPlatformAPI
@@ -12,17 +13,24 @@ from nao_localization.msg import ObjectMsg
 import rospkg
 import rospy
 import sys
+import tf
 
 class NaoInterface:
 	def __init__(self):
 		self.rh = RappRobot()
 		self.ch = RappPlatformAPI()
 		rospy.Timer(rospy.Duration(0.1), self.sonarsCallback)
+		rospy.Timer(rospy.Duration(0.1), self.getRobotPositionCallback)
 		rospy.Timer(rospy.Duration(5), self.qrDetectionCallback)
-		#self.pub = rospy.Publisher('/inner/sonar_measurements', LaserScan, queue_size=1)
+		self.pub = rospy.Publisher('/inner/sonar_measurements', LaserScan, queue_size=1)
 		self.pub1 = rospy.Publisher('/inner/qr_detection', RfidSensorMeasurementMsg, queue_size=1)
+		self.sub = rospy.Subscriber("/relative_object_position", Twist, self.getObjectPositioncallback)
 		self.s = rospy.Service('set_object', SetObject, self.setNewObjectCallback)
 		self.s1 = rospy.Service('get_objects', GetObjects, self.getObjectsCallback)
+		self.listener = tf.TransformListener()
+		self.robot_x = 0
+		self.robot_y = 0
+		self.robot_th = 0
 		
 		self.objects = {}
 		self.static_objects = []
@@ -104,10 +112,28 @@ class NaoInterface:
 				res.objects.append(obj)
 		else:
 			print "No such type"
-		res.success = True	
+		res.success = True
 		print res.objects
-		return res		
+		return res
 		
+	def getRobotPositionCallback(self, event):
+		#~ pass
+		try:
+			(trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
+			self.robot_x = trans[0]
+			self.robot_y = trans[1]
+			self.robot_th = rot[0]
+		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
+			print ex
+		
+	def getObjectPositioncallback(self, event):
+		relative_obj_x = twist.linear.x
+		relative_obj_y = twist.linear.y
+		self.absolute_obj_x = cos(-self.robot_th) * relative_obj_x - \
+			sin(-self.robot_th) * relative_obj_y + self.robot_x
+		self.absolute_obj_y = sin(-self.robot_th) * relative_obj_x + \
+			cos(-self.robot_th) * relative_obj_y + self.robot_y
+	
 if __name__ == "__main__":
 	rospy.init_node('nao_interface_node', anonymous=True)
 	nao = NaoInterface()
