@@ -29,13 +29,18 @@ class TrackingAndMotion:
 		self.obj_position_pub = rospy.Publisher(rospy.get_param('object_position_topic'), Twist, queue_size=1)
 		self.path_publisher = rospy.Publisher(rospy.get_param('path_pub_topic'), \
 			Path, queue_size = 10)
+		self.predator_hunt_pub = rospy.Publisher(rospy.get_param('predator_hunt_topic'), \
+			Polygon, queue_size = 10)
 		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior)
 		self.service_path = rospy.Service('get_path', GetPath, self.get_path)
+		self.robot_state_service = rospy.Service('robot_state', RobotState, \
+			self.setRobotState)
 		self.rh.motion.enableMotors()
 		
 		self.lock_motion = False
 		self.hunt_initiated = False
 		self.find_distance_with_sonars = False
+		self.state_flag = True
 		self.x_vel = 0
 		self.y_vel = 0
 		self.theta_vel = 0
@@ -219,6 +224,11 @@ class TrackingAndMotion:
 			
 	def set_velocities_callback(self, event):
 		
+		if self.state_flag == False:
+			self.x_vel = 0.0
+			self.y_vel = 0.0
+			self.theta_vel = 0.0
+		
 		self.rh.motion.moveByVelocity(self.x_vel, self.y_vel, self.theta_vel)
 		
 		
@@ -262,6 +272,7 @@ class TrackingAndMotion:
 		if request.behavior =="track_bounding_box":
 			self.disableObstacleAvoidance()
 			print 'Obstacle avoidance disabled'
+			self.predator_hunt_pub.publish(request.polygon)
 			self.enableObjectTracking()
 			print 'Object tracking enabled'
 			
@@ -278,6 +289,14 @@ class TrackingAndMotion:
 		res.success = True
 		return True
 		
+	def setRobotState(self, request):
+		if request.state <> self.state_flag:
+			self.state_flag = request.state
+		
+		print 'Robot state set'
+		res = RobotState()
+		res.success = True
+		return True
 		
 	def get_path(self, request):
 		print "Waiting for path service"
