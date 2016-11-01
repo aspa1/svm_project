@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
   message_generation
   message_runtime
 )
@@ -57,6 +58,7 @@ add_service_files(
 	FILES
 	SetBehavior.srv
 	GetPath.srv
+	RobotState.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -70,6 +72,7 @@ add_service_files(
 generate_messages(
 	DEPENDENCIES
 	std_msgs
+	geometry_msgs
 )
 
 ################################################
@@ -108,6 +111,7 @@ catkin_package(
 		roscpp 
 		rospy 
 		std_msgs
+		geometry_msgs
 #  DEPENDS system_lib
 )
 

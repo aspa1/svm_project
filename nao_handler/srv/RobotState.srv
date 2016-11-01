@@ -1,0 +1,5 @@
+#if state = True robot moves
+#if state = False robot stops
+bool state
+---
+bool success
