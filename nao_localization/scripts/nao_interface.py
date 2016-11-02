@@ -10,6 +10,7 @@ from nao_localization.srv import SetObject
 from nao_localization.srv import SetObjectResponse
 from nao_localization.srv import GetObjects
 from nao_localization.srv import GetObjectsResponse
+from nao_handler.srv import *
 from nao_localization.msg import ObjectMsg
 
 import rospkg
@@ -63,6 +64,14 @@ class NaoInterface:
 			qr_msg.rfid_tags_ids.append(response['qr_messages'])
 			self.pub1.publish(qr_msg)
 		else
+			rospy.wait_for_service('robot_state')
+			try:
+				robot_state = rospy.ServiceProxy('robot_state', RobotState)
+				#~ request.behavior = "obstacle_avoidance"
+				resp1 = robot_state(false)
+			except rospy.ServiceException, e:
+				print "Service call failed: %s"%e
+			
 			polygon = Polygon()
 			qr_center = Point32()
 			qr_center.x = response['qr_centers'].x
