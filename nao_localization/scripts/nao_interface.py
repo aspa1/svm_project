@@ -17,6 +17,7 @@ import rospkg
 import rospy
 import sys
 import tf
+import math
 
 class NaoInterface:
 	def __init__(self):
@@ -24,7 +25,7 @@ class NaoInterface:
 		self.ch = RappPlatformAPI()
 		rospy.Timer(rospy.Duration(0.1), self.sonarsCallback)
 		rospy.Timer(rospy.Duration(0.1), self.getRobotPositionCallback)
-		rospy.Timer(rospy.Duration(5), self.qrDetectionCallback)
+		rospy.Timer(rospy.Duration(2), self.qrDetectionCallback)
 		self.pub = rospy.Publisher('/inner/sonar_measurements', LaserScan, queue_size=1)
 		self.pub1 = rospy.Publisher('/inner/qr_detection', RfidSensorMeasurementMsg, queue_size=1)
 		self.sub = rospy.Subscriber("/relative_object_position", Twist, self.getObjectPositioncallback)
@@ -53,34 +54,64 @@ class NaoInterface:
 		rospack = rospkg.RosPack()
 		img_path = rospack.get_path('nao_localization') + "/cfg/nao_capture.jpg"
 		self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "640x480")
+		#~ self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "1280x960")
 		print img_path
 		self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
 		#svc = QrDetection(imageFilepath="/home/chrisa/test.jpg")
 		response = self.ch.qrDetection(img_path)
-		print response
 		print response['qr_messages']
-		if "Localization" in response['qr_messages']:
-			qr_msg = RfidSensorMeasurementMsg()
-			qr_msg.rfid_tags_ids.append(response['qr_messages'])
-			self.pub1.publish(qr_msg)
-		else
-			rospy.wait_for_service('robot_state')
-			try:
-				robot_state = rospy.ServiceProxy('robot_state', RobotState)
-				#~ request.behavior = "obstacle_avoidance"
-				resp1 = robot_state(false)
-			except rospy.ServiceException, e:
-				print "Service call failed: %s"%e
-			
-			polygon = Polygon()
-			qr_center = Point32()
-			qr_center.x = response['qr_centers'].x
-			qr_center.y = response['qr_centers'].y
-			polygon.points.append(qr_center)
-			point = Point32()
-			point.x = 50
-			point.y = 50
-			polygon.points.append(point)
+		#~ print len(response['qr_messages'])
+		if len(response['qr_messages']) <> 0:
+			for qrm in response['qr_messages']:
+				if "Localization" in qrm:
+					print "Loc QR detected"
+					print response
+					print qrm
+					qr_msg = RfidSensorMeasurementMsg()
+					qr_msg.rfid_tags_ids.append(qrm)
+					self.pub1.publish(qr_msg)
+				else:
+					print "Object QR detected"
+					print "aouaObj"
+					print qrm
+					rospy.wait_for_service('robot_state')
+					try:
+						robot_state = rospy.ServiceProxy('robot_state', RobotState)
+						resp1 = robot_state(False)
+					except rospy.ServiceException, e:
+						print "Service call failed: %s"%e
+					
+					rospy.wait_for_service('set_behavior')
+					try:
+						edge = 100
+						set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
+						polygon = Polygon()
+						qr_center = Point32()
+						qr_center2 = Point32()
+						#~ qr_center.x = (response['qr_centers'][0]['x'] - (640.0 / 2.0)) / (640.0 / 2.0)
+						#~ qr_center.y = (response['qr_centers'][0]['y'] - (640.0 / 2.0)) / (640.0 / 2.0)
+						qr_center.x = (response['qr_centers'][0]['x'] - edge/2)/2
+						qr_center.y = (response['qr_centers'][0]['y'] - edge/2)/2
+						#~ qr_center.x = 100
+						#~ qr_center.y = 100
+						polygon.points.append(qr_center)
+						qr_center2.x = (edge)/2
+						qr_center2.y = (edge)/2
+						#~ polygon.points.append(qr_center)
+						#~ print response['qr_centers'][0]
+						#~ print response['qr_centers'][0]['x']
+						#~ polygon.points.append(response['qr_centers'][0])
+						polygon.points.append(qr_center2)
+						#~ point = Point32()
+						#~ point.x = 50
+						#~ point.y = 50
+						#~ polygon.points.append(point)
+						print polygon
+						behavior = "track_bounding_box"
+						resp2 = set_behavior(behavior, polygon)
+						#~ return resp1.sum
+					except rospy.ServiceException, e:
+						print "Service call failed: %s"%e
 			
 		head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])['angles'][0]
 		print head_yaw
@@ -139,22 +170,22 @@ class NaoInterface:
 		return res
 		
 	def getRobotPositionCallback(self, event):
-		#~ pass
-		try:
-			(trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
-			self.robot_x = trans[0]
-			self.robot_y = trans[1]
-			self.robot_th = rot[0]
-		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
-			print ex
+		pass
+		#~ try:
+			#~ (trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
+			#~ self.robot_x = trans[0]
+			#~ self.robot_y = trans[1]
+			#~ self.robot_th = rot[0]
+		#~ except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
+			#~ print ex
 		
-	def getObjectPositioncallback(self, event):
-		relative_obj_x = twist.linear.x
-		relative_obj_y = twist.linear.y
-		self.absolute_obj_x = cos(-self.robot_th) * relative_obj_x - \
-			sin(-self.robot_th) * relative_obj_y + self.robot_x
-		self.absolute_obj_y = sin(-self.robot_th) * relative_obj_x + \
-			cos(-self.robot_th) * relative_obj_y + self.robot_y
+	def getObjectPositioncallback(self, object_pos):
+		relative_obj_x = object_pos.linear.x
+		relative_obj_y = object_pos.linear.y
+		self.absolute_obj_x = math.cos(-self.robot_th) * relative_obj_x - \
+			math.sin(-self.robot_th) * relative_obj_y + self.robot_x
+		self.absolute_obj_y = math.sin(-self.robot_th) * relative_obj_x + \
+			math.cos(-self.robot_th) * relative_obj_y + self.robot_y
 	
 if __name__ == "__main__":
 	rospy.init_node('nao_interface_node', anonymous=True)

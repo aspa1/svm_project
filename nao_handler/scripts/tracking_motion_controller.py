@@ -86,7 +86,7 @@ class TrackingAndMotion:
 		self.theta_vel = 0
 	
 	def enableObjectTracking(self):
-		self.rh.humanoid_motion.goToPosture("Crouch", 0.7)
+		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
 		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.track_bounding_box)
 		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
 		self.lost_object_counter = 20
@@ -107,7 +107,7 @@ class TrackingAndMotion:
 		joint.joint_names.append("HeadPitch")
 
 		
-		joint.speed = 0.1
+		joint.speed = 0.03
 		joint.relative = True
 
 		target_x = polygon.points[0].x + 0.5 * polygon.points[1].x
@@ -143,9 +143,9 @@ class TrackingAndMotion:
 		print "self.lock_motion:", self.lock_motion
 		
 		if self.lock_motion is False:
-			self.theta_vel = head_yaw * 0.1
+			self.theta_vel = head_yaw * 0.01
 			if -self.head_yaw_value < head_yaw < self.head_yaw_value:
-				self.x_vel = 0.3
+				self.x_vel = 0.2
 			self.pub.publish(joint)
 		else:
 			self.x_vel = 0
@@ -206,7 +206,7 @@ class TrackingAndMotion:
 		
 		object_pos.linear.x = self.dx
 		object_pos.linear.y = self.dy
-		print object_pos
+		#~ print object_pos
 		
 		self.obj_position_pub.publish(object_pos)
 	
@@ -244,14 +244,15 @@ class TrackingAndMotion:
 		
 		
 	def headMotionCallback(self, event):
-		if self.head_motion == False:
-			print "head motion changed False"
-			self.head_motion = True
-			self.rh.humanoid_motion.setJointAngles(["HeadYaw"],[0.2], 0.1)
-		else:
-			print "head motion changed True"
-			self.head_motion = False
-			self.rh.humanoid_motion.setJointAngles(["HeadYaw"],[-0.4], 0.1)
+		pass
+		#~ if self.head_motion == False:
+			#~ print "head motion changed False"
+			#~ self.head_motion = True
+			#~ self.rh.humanoid_motion.setJointAngles(["HeadYaw"],[0.2], 0.1)
+		#~ else:
+			#~ print "head motion changed True"
+			#~ self.head_motion = False
+			#~ self.rh.humanoid_motion.setJointAngles(["HeadYaw"],[-0.4], 0.1)
 		
 	def obstacle_avoidance_callback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
