@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from rapp_robot_api import RappRobot
 from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Point32
+from geometry_msgs.msg import Polygon
 from sensor_msgs.msg import LaserScan
 from stdr_msgs.msg import RfidSensorMeasurementMsg
 from RappCloud import RappPlatformAPI
@@ -60,6 +62,17 @@ class NaoInterface:
 			qr_msg = RfidSensorMeasurementMsg()
 			qr_msg.rfid_tags_ids.append(response['qr_messages'])
 			self.pub1.publish(qr_msg)
+		else
+			polygon = Polygon()
+			qr_center = Point32()
+			qr_center.x = response['qr_centers'].x
+			qr_center.y = response['qr_centers'].y
+			polygon.points.append(qr_center)
+			point = Point32()
+			point.x = 50
+			point.y = 50
+			polygon.points.append(point)
+			
 		head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])['angles'][0]
 		print head_yaw
 		
