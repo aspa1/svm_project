@@ -35,7 +35,7 @@ class NaoInterface:
 		self.robot_x = 0
 		self.robot_y = 0
 		self.robot_th = 0
-		
+		self.tracking_flag = False
 		self.objects = {}
 		self.static_objects = []
 		
@@ -50,98 +50,103 @@ class NaoInterface:
 		self.pub.publish(laser_msg)
 		
 	def qrDetectionCallback(self, event):
-		flag = False
-		print "QrDetection"
-		rospack = rospkg.RosPack()
-		img_path = rospack.get_path('nao_localization') + "/cfg/nao_capture.jpg"
-		self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "640x480")
-		#~ self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "1280x960")
-		print img_path
-		self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
-		#svc = QrDetection(imageFilepath="/home/chrisa/test.jpg")
-		response = self.ch.qrDetection(img_path)
-		print response['qr_messages']
-		#~ print len(response['qr_messages'])
-		if len(response['qr_messages']) <> 0:
-			for qrm in response['qr_messages']:
-				if "Localization" in qrm:
-					print "Loc QR detected"
-					print response
-					print qrm
-					qr_msg = RfidSensorMeasurementMsg()
-					qr_msg.rfid_tags_ids.append(qrm)
-					self.pub1.publish(qr_msg)
-				else:
-					print "Object QR detected"
-					print "aouaObj"
-					print qrm
-					rospy.wait_for_service('robot_state')
-					try:
-						robot_state = rospy.ServiceProxy('robot_state', RobotState)
-						resp1 = robot_state(False)
-					except rospy.ServiceException, e:
-						print "Service call failed: %s"%e
-						
-					self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "640x480")
-					self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
-					response1 = self.ch.qrDetection(img_path)
-					for i in range(0, len(response['qr_messages'])):
-						for j in range(0, len(response1['qr_messages'])):
-							if response1['qr_messages'][j] in response['qr_messages'][i]:
-								flag = True
-								rospy.wait_for_service('set_behavior')
-								try:
-									edge = 100
-									set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
-									polygon = Polygon()
-									qr_center = Point32()
-									qr_center2 = Point32()
-									#~ qr_center.x = (response['qr_centers'][0]['x'] - (640.0 / 2.0)) / (640.0 / 2.0)
-									#~ qr_center.y = (response['qr_centers'][0]['y'] - (640.0 / 2.0)) / (640.0 / 2.0)
-									qr_center.x = (response['qr_centers'][0]['x'] - edge/2)/2
-									qr_center.y = (response['qr_centers'][0]['y'] - edge/2)/2
-									#~ qr_center.x = 100
-									#~ qr_center.y = 100
-									polygon.points.append(qr_center)
-									qr_center2.x = (edge)/2
-									qr_center2.y = (edge)/2
-									#~ polygon.points.append(qr_center)
-									#~ print response['qr_centers'][0]
-									#~ print response['qr_centers'][0]['x']
-									#~ polygon.points.append(response['qr_centers'][0])
-									polygon.points.append(qr_center2)
-									#~ point = Point32()
-									#~ point.x = 50
-									#~ point.y = 50
-									#~ polygon.points.append(point)
-									print polygon
-									behavior = "track_bounding_box"
-									resp2 = set_behavior(behavior, polygon)
-									#~ return resp1.sum
-								return;
-								except rospy.ServiceException, e:
-									print "Service call failed: %s"%e
-					if flag == False:
-						rospy.wait_for_service('set_behavior')
+		obj_found = False
+		if (self.tracking_flag == True):
+			pass
+		else:
+			print "QrDetection"
+			rospack = rospkg.RosPack()
+			img_path = rospack.get_path('nao_localization') + "/cfg/nao_capture.jpg"
+			self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "640x480")
+			#~ self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "1280x960")
+			print img_path
+			self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
+			#svc = QrDetection(imageFilepath="/home/chrisa/test.jpg")
+			response = self.ch.qrDetection(img_path)
+			print response['qr_messages']
+			#~ print len(response['qr_messages'])
+			if len(response['qr_messages']) <> 0:
+				for qrm in response['qr_messages']:
+					if "Localization" in qrm:
+						print "Loc QR detected"
+						print response
+						print qrm
+						qr_msg = RfidSensorMeasurementMsg()
+						qr_msg.rfid_tags_ids.append(qrm)
+						self.pub1.publish(qr_msg)
+					else:
+						print "Object QR detected"
+						print "aouaObj"
+						print qrm
+						rospy.wait_for_service('robot_state')
 						try:
-							set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
-							polygon = Polygon()
-							qr_center = Point32()
-							qr_center2 = Point32()
-							qr_center.x = 100
-							qr_center.y = 100
-							polygon.points.append(qr_center)
-							qr_center2.x = 100
-							qr_center2.y = 100
-							polygon.points.append(qr_center2)
-							print polygon
-							behavior = "obstacle_avoidance"
-							resp2 = set_behavior(behavior, polygon)
-							#~ return resp1.sum
+							robot_state = rospy.ServiceProxy('robot_state', RobotState)
+							resp1 = robot_state(False)
 						except rospy.ServiceException, e:
 							print "Service call failed: %s"%e
-						
-			
+							
+						self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "640x480")
+						self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
+						response1 = self.ch.qrDetection(img_path)
+						for i in range(0, len(response['qr_messages'])):
+							for j in range(0, len(response1['qr_messages'])):
+								if response1['qr_messages'][j] in response['qr_messages'][i]:
+									obj_found = True
+									self.tracking_flag = True
+									rospy.wait_for_service('set_behavior')
+									try:
+										edge = 100
+										set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
+										polygon = Polygon()
+										qr_center = Point32()
+										qr_center2 = Point32()
+										#~ qr_center.x = (response['qr_centers'][0]['x'] - (640.0 / 2.0)) / (640.0 / 2.0)
+										#~ qr_center.y = (response['qr_centers'][0]['y'] - (640.0 / 2.0)) / (640.0 / 2.0)
+										qr_center.x = (response['qr_centers'][0]['x'] - edge/2)/2
+										qr_center.y = (response['qr_centers'][0]['y'] - edge/2)/2
+										#~ qr_center.x = 100
+										#~ qr_center.y = 100
+										polygon.points.append(qr_center)
+										qr_center2.x = (edge)/2
+										qr_center2.y = (edge)/2
+										#~ polygon.points.append(qr_center)
+										#~ print response['qr_centers'][0]
+										#~ print response['qr_centers'][0]['x']
+										#~ polygon.points.append(response['qr_centers'][0])
+										polygon.points.append(qr_center2)
+										#~ point = Point32()
+										#~ point.x = 50
+										#~ point.y = 50
+										#~ polygon.points.append(point)
+										print polygon
+										behavior = "track_bounding_box"
+										resp2 = set_behavior(behavior, polygon)
+										self.tracking_flag = False
+										#~ return resp1.sum
+									#~ return
+									except rospy.ServiceException, e:
+										print "Service call failed: %s"%e
+						if obj_found == False:
+							rospy.wait_for_service('set_behavior')
+							try:
+								set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
+								polygon = Polygon()
+								qr_center = Point32()
+								qr_center2 = Point32()
+								qr_center.x = 100
+								qr_center.y = 100
+								polygon.points.append(qr_center)
+								qr_center2.x = 100
+								qr_center2.y = 100
+								polygon.points.append(qr_center2)
+								print polygon
+								behavior = "obstacle_avoidance"
+								resp2 = set_behavior(behavior, polygon)
+								#~ return resp1.sum
+							except rospy.ServiceException, e:
+								print "Service call failed: %s"%e
+							
+				
 		head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])['angles'][0]
 		print head_yaw
 		
