@@ -12,8 +12,8 @@ def set_behavior_test():
         set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
         polygon = Polygon()
         print "aoua"
-        #~ behavior = "track_bounding_box"
-        behavior = "obstacle_avoidance"
+        behavior = "track_bounding_box"
+        #~ behavior = "obstacle_avoidance"
         print polygon
         point = Point32()
         point.x = 100
@@ -23,7 +23,7 @@ def set_behavior_test():
         
         #~ behavior = "obstacle_avoidance"
         resp1 = set_behavior(behavior, polygon)
-        return resp1.sum
+        #~ return resp1.sum
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 

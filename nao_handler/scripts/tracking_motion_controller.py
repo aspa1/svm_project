@@ -46,8 +46,8 @@ class TrackingAndMotion:
 		self.theta_vel = 0
 		self.robot_x = 0
 		self.robot_y = 0
-		self.dx = 0
-		self.dy = 0
+		self.dx = 0.0
+		self.dy = 0.0
 		self.path = []
 		self.predator_topic = rospy.get_param('predator_topic')
 		self.sonar_value = rospy.get_param('sonar_limit_value')
@@ -94,6 +94,8 @@ class TrackingAndMotion:
 		self.hunt_initiated = False
 	
 	def disableObjectTracking(self):
+		self.dx = 0.0
+		self.dy = 0.0
 		self.lost_obj_timer.shutdown()
 		self.object_tracking_sub.unregister()
 	
