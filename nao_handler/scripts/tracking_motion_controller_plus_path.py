@@ -11,6 +11,9 @@ from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker
 from rapp_robot_api import RappRobot 
 from nao_handler.srv import *
+from ogmpp_communications.srv import OgmppPathPlanningSrv
+from ogmpp_communications.srv import OgmppPathPlanningSrvRequest
+from ogmpp_communications.srv import OgmppPathPlanningSrvResponse
 import tf
 
 import rospy
@@ -24,10 +27,12 @@ class TrackingAndMotion:
 		self.pub = rospy.Publisher(rospy.get_param('joint_angles_topic'), JointAnglesWithSpeed, queue_size=1)
 		self.publ = rospy.Publisher(rospy.get_param('velocities_topic'), Twist, queue_size=1)
 		self.obj_position_pub = rospy.Publisher(rospy.get_param('object_position_topic'), Twist, queue_size=1)
-
+		self.path_publisher = rospy.Publisher(rospy.get_param('path_pub_topic'), \
+			Path, queue_size = 10)
 		self.predator_hunt_pub = rospy.Publisher(rospy.get_param('predator_hunt_topic'), \
 			Polygon, queue_size = 10)
 		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior)
+		self.service_path = rospy.Service('get_path', GetPath, self.get_path)
 		self.robot_state_service = rospy.Service('robot_state', RobotState, \
 			self.setRobotState)
 		self.rh.motion.enableMotors()
@@ -296,6 +301,46 @@ class TrackingAndMotion:
 		res.success = True
 		return True
 		
+	def get_path(self, request):
+		print "Waiting for path service"
+		rospy.wait_for_service('/ogmpp_path_planners/plan')
+		print "Service ok"
+		try:
+			pathSrv = rospy.ServiceProxy('/ogmpp_path_planners/plan', OgmppPathPlanningSrv)
+			path = OgmppPathPlanningSrvRequest()
+			path.method = "uniform_prm"
+			path.data.begin.x = self.robot_x
+			path.data.begin.y = self.robot_y
+			path.data.end.x = request.x
+			path.data.end.y = request.y
+			
+			pathRes = pathSrv(path)
+			#~ print pathRes
+			
+			ros_path = Path()
+			
+			ros_path.header.frame_id = "map"
+			_map = OccupancyGrid()
+			
+			for p in self.path:
+				ps = PoseStamped()
+				ps.header.frame_id = "map"
+				ps.pose.position.x = p[0] * _map.data.info.resolution + \
+					_map.data.info.origin.position.x
+				ps.pose.position.y = p[1] * _map.data.info.resolution + \
+					_map.data.info.origin.position.y
+				print ps
+				ros_path.poses.append(ps)
+			
+			#~ self.path_publisher.publish(ros_path)
+
+		except rospy.ServiceException, e:
+			print "Service call failed: %s"%e
+
+		res = GetPath()
+		res.success = True
+		return True
+		
 	def get_robot_position_callback(self, event):
 		#~ pass
 		try:
@@ -310,3 +355,5 @@ if __name__ == "__main__":
 	rospy.init_node('nao_motion', anonymous=True)
 	nao = TrackingAndMotion()
 	rospy.spin()	
+
+		
