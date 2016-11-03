@@ -25,7 +25,7 @@ class NaoInterface:
 		self.ch = RappPlatformAPI()
 		rospy.Timer(rospy.Duration(0.1), self.sonarsCallback)
 		rospy.Timer(rospy.Duration(0.1), self.getRobotPositionCallback)
-		rospy.Timer(rospy.Duration(2), self.qrDetectionCallback)
+		rospy.Timer(rospy.Duration(1), self.qrDetectionCallback)
 		self.pub = rospy.Publisher('/inner/sonar_measurements', LaserScan, queue_size=1)
 		self.pub1 = rospy.Publisher('/inner/qr_detection', RfidSensorMeasurementMsg, queue_size=1)
 		self.sub = rospy.Subscriber("/relative_object_position", Twist, self.getObjectPositioncallback)
@@ -40,6 +40,8 @@ class NaoInterface:
 		self.tracking_flag = False
 		self.objects = {}
 		self.static_objects = []
+		self.counter = 0
+
 		
 	def sonarsCallback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
@@ -53,10 +55,7 @@ class NaoInterface:
 		
 	def qrDetectionCallback(self, event):
 		obj_found = False
-		if (self.tracking_flag == True):
-			print "flag = True"
-			pass
-		else:
+		if (self.tracking_flag == False):
 			print "QrDetection"
 			rospack = rospkg.RosPack()
 			img_path = rospack.get_path('nao_localization') + "/cfg/nao_capture.jpg"
@@ -93,14 +92,17 @@ class NaoInterface:
 						#~ for i in range(0, len(response['qr_messages'])):
 						for j in range(0, len(response1['qr_messages'])):
 							#~ if response1['qr_messages'][j] in response['qr_messages'][i]:
-							if response1['qr_messages'][j] == qrm:
+							if qrm in response1['qr_messages'][j]:
+								self.counter +=1
 								obj_found = True
 								print "Object found again"
 								self.tracking_flag = True
 								self.lost_object_counter = 20
 								rospy.wait_for_service('set_behavior')
+								print 'counter: ', self.counter
 								try:
-									edge = 100
+									print 'counter sto try: ', self.counter
+									edge = 140
 									set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
 									polygon = Polygon()
 									qr_center = Point32()
@@ -141,32 +143,36 @@ class NaoInterface:
 									#~ return resp1.sum
 								except rospy.ServiceException, e:
 									print "Service call failed: %s"%e
-						if obj_found == False:
-							rospy.wait_for_service('set_behavior')
+							if obj_found == True:
+								break
+					if obj_found == False:
+						rospy.wait_for_service('set_behavior')
+						try:
 							try:
-								try:
-									robot_state = rospy.ServiceProxy('robot_state', RobotState)
-									resp1 = robot_state(True)
-								except rospy.ServiceException, e:
-									print "Service call failed: %s"%e
-									
-								print "obj not found again tracking is", self.tracking_flag
-								set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
-								polygon = Polygon()
-								qr_center = Point32()
-								qr_center2 = Point32()
-								qr_center.x = 100
-								qr_center.y = 100
-								polygon.points.append(qr_center)
-								qr_center2.x = 100
-								qr_center2.y = 100
-								polygon.points.append(qr_center2)
-								print polygon
-								behavior = "obstacle_avoidance"
-								resp2 = set_behavior(behavior, polygon)
-								#~ return resp1.sum
+								robot_state = rospy.ServiceProxy('robot_state', RobotState)
+								resp1 = robot_state(True)
 							except rospy.ServiceException, e:
 								print "Service call failed: %s"%e
+								
+							print "obj not found again tracking is", self.tracking_flag
+							self.rh.humanoid_motion.setJointAngles(["HeadPitch"],[-0.05], 0.1)
+
+							#~ set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
+							#~ polygon = Polygon()
+							#~ qr_center = Point32()
+							#~ qr_center2 = Point32()
+							#~ qr_center.x = 100
+							#~ qr_center.y = 100
+							#~ polygon.points.append(qr_center)
+							#~ qr_center2.x = 100
+							#~ qr_center2.y = 100
+							#~ polygon.points.append(qr_center2)
+							#~ print polygon
+							#~ behavior = "obstacle_avoidance"
+							#~ resp2 = set_behavior(behavior, polygon)
+							#~ return resp1.sum
+						except rospy.ServiceException, e:
+							print "Service call failed: %s"%e
 							
 				
 		#~ head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])['angles'][0]

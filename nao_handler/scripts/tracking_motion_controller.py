@@ -69,9 +69,11 @@ class TrackingAndMotion:
 		self.head_motion = False
 
 		self.listener = tf.TransformListener()
+		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
+
 	
 	def enableObstacleAvoidance(self):
-		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
+		#~ self.rh.humanoid_motion.goToPosture("Stand", 0.7)
 		self.obstacle_timer = rospy.Timer(rospy.Duration(0.5), self.obstacle_avoidance_callback)
 
 	def disableObstacleAvoidance(self):
@@ -81,7 +83,7 @@ class TrackingAndMotion:
 		self.theta_vel = 0
 	
 	def enableObjectTracking(self):
-		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
+		#~ self.rh.humanoid_motion.goToPosture("Stand", 0.7)
 		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.track_bounding_box)
 		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
 		self.lost_object_counter = 20
@@ -268,6 +270,7 @@ class TrackingAndMotion:
 	def set_behavior(self, request):
 		print 'Going to behavior: ' + request.behavior
 		if request.behavior =="track_bounding_box":
+			self.rh.audio.speak("Tracking service")
 			self.disableObstacleAvoidance()
 			print 'Obstacle avoidance disabled'
 			self.predator_hunt_pub.publish(request.polygon)
@@ -275,6 +278,7 @@ class TrackingAndMotion:
 			print 'Object tracking enabled'
 			
 		elif request.behavior =="obstacle_avoidance":
+			self.rh.audio.speak("Obstacle avoidance service")
 			self.disableObjectTracking()
 			print 'Object tracking disabled'
 			self.enableObstacleAvoidance()
