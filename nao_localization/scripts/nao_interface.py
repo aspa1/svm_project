@@ -17,7 +17,10 @@ import rospkg
 import rospy
 import sys
 import tf
+import zbar
+import zbarlight
 import math
+import Image
 
 class NaoInterface:
 	def __init__(self):
@@ -55,6 +58,10 @@ class NaoInterface:
 		
 	def qrDetectionCallback(self, event):
 		obj_found = False
+		response = {}
+		response['qr_messages'] = []
+		response['qr_centers'] = []
+
 		if (self.tracking_flag == False):
 			print "QrDetection"
 			rospack = rospkg.RosPack()
@@ -63,10 +70,31 @@ class NaoInterface:
 			#~ self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "1280x960")
 			print img_path
 			self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
+			#~ response = self.ch.qrDetection(img_path)
 			#svc = QrDetection(imageFilepath="/home/chrisa/test.jpg")
-			response = self.ch.qrDetection(img_path)
-			print response['qr_messages']
-			#~ print len(response['qr_messages'])
+			image = Image.open(img_path)
+			image.load()
+			converted_image = image.convert('L')
+			print converted_image.size
+			
+			raw = converted_image.tobytes()
+			width, height = converted_image.size
+			print converted_image.size
+			
+			image2 = zbar.Image(width, height, 'Y800', raw)
+			scanner = zbar.ImageScanner()
+			scanner.scan(image2)
+			for symbol in image2:
+				response['qr_messages'].append(symbol.data)
+				print 'aoua1', response['qr_messages'] 
+
+				x = symbol.location[0][0] + abs(symbol.location[3][0] - symbol.location[0][0]) / 2
+				y = symbol.location[2][1] + abs(symbol.location[3][1] - symbol.location[2][1]) / 2
+				print 'x', x
+				print 'y', y
+				response['qr_centers'].append((x, y)) 
+			#~ print '1 ', response['qr_centers'][0]['x']
+			#~ print '00 ', response['qr_centers'][0][0]
 			if len(response['qr_messages']) <> 0:
 				for qrm in response['qr_messages']:
 					if "Localization" in qrm:
@@ -85,14 +113,17 @@ class NaoInterface:
 							resp1 = robot_state(False)
 						except rospy.ServiceException, e:
 							print "Service call failed: %s"%e
-							
-						self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "640x480")
-						self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
-						response1 = self.ch.qrDetection(img_path)
+						
+						
+						#~ self.rh.vision.capturePhoto("/home/nao/test.jpg", "front", "640x480")
+						#~ self.rh.utilities.moveFileToPC("/home/nao/test.jpg", img_path)
+						#~ response1 = self.ch.qrDetection(img_path)
+						
+						
 						#~ for i in range(0, len(response['qr_messages'])):
-						for j in range(0, len(response1['qr_messages'])):
+						for j in range(0, len(response['qr_messages'])):
 							#~ if response1['qr_messages'][j] in response['qr_messages'][i]:
-							if qrm in response1['qr_messages'][j]:
+							if qrm in response['qr_messages'][j]:
 								self.counter +=1
 								obj_found = True
 								print "Object found again"
@@ -109,8 +140,8 @@ class NaoInterface:
 									qr_center2 = Point32()
 									#~ qr_center.x = (response['qr_centers'][0]['x'] - (640.0 / 2.0)) / (640.0 / 2.0)
 									#~ qr_center.y = (response['qr_centers'][0]['y'] - (640.0 / 2.0)) / (640.0 / 2.0)
-									qr_center.x = (response['qr_centers'][0]['x'] - edge/2)/2
-									qr_center.y = (response['qr_centers'][0]['y'] - edge/2)/2
+									qr_center.x = (response['qr_centers'][j][0] - edge/2)/2
+									qr_center.y = (response['qr_centers'][j][1] - edge/2)/2
 									#~ qr_center.x = 100
 									#~ qr_center.y = 100
 									polygon.points.append(qr_center)
@@ -174,7 +205,6 @@ class NaoInterface:
 						except rospy.ServiceException, e:
 							print "Service call failed: %s"%e
 							
-				
 		#~ head_yaw = self.rh.humanoid_motion.getJointAngles(["HeadYaw"])['angles'][0]
 		#~ print head_yaw
 		
