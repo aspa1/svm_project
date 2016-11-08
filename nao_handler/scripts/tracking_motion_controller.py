@@ -48,6 +48,10 @@ class TrackingAndMotion:
 		self.sonar_value = rospy.get_param('sonar_limit_value')
 		self.head_pitch_value = rospy.get_param('head_pitch_limit_value')
 		self.head_yaw_value = rospy.get_param('head_yaw_limit_value')
+		
+		
+		self.head_motion_sampler_init = 4
+		self.head_motion_sampler = self.head_motion_sampler_init
 
 		self.set_vel_timer = rospy.Timer(rospy.Duration(0.1), self.set_velocities_callback)
 		
@@ -60,7 +64,7 @@ class TrackingAndMotion:
 		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
 		self.lost_obj_timer.shutdown()
 		
-		self.head_motion_timer = rospy.Timer(rospy.Duration(0.5), self.headMotionCallback)
+		self.head_motion_timer = rospy.Timer(rospy.Duration(1), self.headMotionCallback)
 		self.head_motion_timer.shutdown()
 		
 		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.track_bounding_box)
@@ -86,19 +90,19 @@ class TrackingAndMotion:
 		#~ self.rh.humanoid_motion.goToPosture("Stand", 0.7)
 		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.track_bounding_box)
 		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
-		self.lost_object_counter = 20
+		self.lost_object_counter = 50
 		self.lock_motion = False
 		self.hunt_initiated = False
 	
 	def disableObjectTracking(self):
-		self.dx = 0.0
-		self.dy = 0.0
 		self.lost_obj_timer.shutdown()
 		self.object_tracking_sub.unregister()
 	
 	def track_bounding_box(self, polygon):
+		
+		self.state_flag = True
 		self.hunt_initiated = True
-		self.lost_object_counter = 20
+		self.lost_object_counter = 50
 		
 		joint = JointAnglesWithSpeed()
 	
@@ -106,7 +110,7 @@ class TrackingAndMotion:
 		joint.joint_names.append("HeadPitch")
 
 		
-		joint.speed = 0.03
+		joint.speed = 0.15
 		joint.relative = True
 
 		target_x = polygon.points[0].x + 0.5 * polygon.points[1].x
@@ -118,10 +122,12 @@ class TrackingAndMotion:
 		var_x = (sub_x / 160.0)
 		var_y = (sub_y / 120.0)
 		
+		#~ print 'var ', var_x, var_y
+		
 		joint.joint_angles.append(-var_x * 0.05)
 		joint.joint_angles.append(var_y * 0.05)
 				
-		print self.rh.sensors.getSonarsMeasurements()
+		#~ print self.rh.sensors.getSonarsMeasurements()
 		
 		ans = self.rh.humanoid_motion.getJointAngles(['HeadYaw', 'HeadPitch'])['angles']
 		head_yaw = ans[0]
@@ -142,10 +148,20 @@ class TrackingAndMotion:
 		print "self.lock_motion:", self.lock_motion
 		
 		if self.lock_motion is False:
-			self.theta_vel = head_yaw * 0.01
-			if -self.head_yaw_value < head_yaw < self.head_yaw_value:
+			
+			#~ self.theta_vel = 0
+			if -self.head_yaw_value < head_yaw  and head_yaw < self.head_yaw_value:
+				#~ self.x_vel = 0
 				self.x_vel = 0.2
-			self.pub.publish(joint)
+				self.theta_vel = 0
+			else:
+				self.x_vel = 0.0001
+				self.theta_vel = head_yaw * 0.1
+			
+			self.head_motion_sampler -= 1
+			if self.head_motion_sampler == 0:
+				self.pub.publish(joint)
+				self.head_motion_sampler = self.head_motion_sampler_init
 		else:
 			self.x_vel = 0
 			self.y_vel = 0
@@ -155,12 +171,12 @@ class TrackingAndMotion:
 			#~ self.disableObjectTracking()
 			
 			
-			print "sonars:", sonars['front_left'], sonars['front_right']
-			print "Head_pitch:",head_pitch
-			print "Head_yaw:",head_yaw
-			print "Sub_x:", sub_x
-			print "Sub_y:", sub_y
-			
+			#~ print "sonars:", sonars['front_left'], sonars['front_right']
+			#~ print "Head_pitch:",head_pitch
+			#~ print "Head_yaw:",head_yaw
+			#~ print "Sub_x:", sub_x
+			#~ print "Sub_y:", sub_y
+			#~ 
 			#~ dx = 0
 			sy = 0
 			if self.find_distance_with_sonars is True and\
@@ -173,19 +189,19 @@ class TrackingAndMotion:
 					sy = -1
 			else:
 				x = (sub_y * 47.6* 3.14159 / 180) / 240.0
-				print "x=", x
+				#~ print "x=", x
 				total_x = head_pitch + x + 0.021
-				print "total_x=",total_x
+				#~ print "total_x=",total_x
 				self.dx = 0.53 / math.tan(total_x)
 				sy = -1
 				
-			print "dx= ",self.dx
+			#~ print "dx= ",self.dx
 			y = (sub_x * 60.9 * 3.14159 / 180) / 320.0
-			print "y=", y
+			#~ print "y=", y
 			total_y = head_yaw + sy * y
-			print "total_y=",total_y
+			#~ print "total_y=",total_y
 			self.dy = self.dx * math.tan(total_y)
-			print "dy= " ,self.dy
+			#~ print "dy= " ,self.dy
 			
 			self.disableObjectTracking()
 			
@@ -208,6 +224,9 @@ class TrackingAndMotion:
 		#~ print object_pos
 		
 		self.obj_position_pub.publish(object_pos)
+		
+		self.dx = 0.0
+		self.dy = 0.0
 	
 	def lost_object_callback(self, event):
 		if self.hunt_initiated:
@@ -224,11 +243,13 @@ class TrackingAndMotion:
 	def set_velocities_callback(self, event):
 		
 		if self.state_flag == False:
+			
 			self.x_vel = 0.0
 			self.y_vel = 0.0
 			self.theta_vel = 0.0
-		
+
 		self.rh.motion.moveByVelocity(self.x_vel, self.y_vel, self.theta_vel)
+		#~ print self.x_vel, self.theta_vel
 		
 		
 		velocities = Twist()
@@ -240,6 +261,7 @@ class TrackingAndMotion:
 		velocities.angular.z = r[2]
 		
 		self.publ.publish(velocities)
+		#~ print velocities
 		
 		
 	def headMotionCallback(self, event):
@@ -270,7 +292,7 @@ class TrackingAndMotion:
 	def set_behavior(self, request):
 		print 'Going to behavior: ' + request.behavior
 		if request.behavior =="track_bounding_box":
-			self.rh.audio.speak("Tracking service")
+			#~ self.rh.audio.speak("Tracking service")
 			self.disableObstacleAvoidance()
 			print 'Obstacle avoidance disabled'
 			self.predator_hunt_pub.publish(request.polygon)
@@ -278,7 +300,7 @@ class TrackingAndMotion:
 			print 'Object tracking enabled'
 			
 		elif request.behavior =="obstacle_avoidance":
-			self.rh.audio.speak("Obstacle avoidance service")
+			#~ self.rh.audio.speak("Obstacle avoidance service")
 			self.disableObjectTracking()
 			print 'Object tracking disabled'
 			self.enableObstacleAvoidance()
@@ -296,6 +318,7 @@ class TrackingAndMotion:
 			self.state_flag = request.state
 		
 		print 'Robot state set'
+		print self.state_flag
 		res = RobotState()
 		res.success = True
 		return True
@@ -307,7 +330,8 @@ class TrackingAndMotion:
 			self.robot_x = trans[0]
 			self.robot_y = trans[1]
 		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
-			print ex
+			#~ print ex
+			pass
 				
 		
 if __name__ == "__main__":

@@ -12,8 +12,8 @@ def set_behavior_test():
         set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
         polygon = Polygon()
         print "aoua"
-        #~ behavior = "track_bounding_box"
-        behavior = "obstacle_avoidance"
+        behavior = "track_bounding_box"
+        #~ behavior = "obstacle_avoidance"
         print polygon
         point = Point32()
         point.x = 100
