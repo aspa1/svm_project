@@ -187,9 +187,9 @@ bool RobotPerception::rfidTagsVisualize (
 		m.action = visualization_msgs::Marker::ADD;
 		m.id = counter;
 		m.ns = "Localization_QRs";
-		m.scale.x = 0.35;
-		m.scale.y = 0.35;
-		m.scale.z = 0.35;
+		m.scale.x = 0.4;
+		m.scale.y = 0.4;
+		m.scale.z = 0.4;
 		m.color.a = 1.0;
 		m.color.r = 1.0;
 		m.color.g = 0.0;
@@ -208,10 +208,12 @@ bool RobotPerception::rfidTagsVisualize (
 		m1.action = visualization_msgs::Marker::ADD;
 		m1.id = counter;
 		m1.ns = "Localization_QR_id";
-		m1.scale.z = 0.5;
+		m.scale.x = 0.65;
+		m.scale.y = 0.65;
+		m1.scale.z = 0.65;
 		m1.color.a = 1.0;
 		m1.color.r = 0.0;
-		m1.color.g = 1.0;
+		m1.color.g = 0.0;
 		m1.color.b = 0.0;
 		m1.text = id;
 		//~ ROS_INFO_STREAM("Description = " << m1.text);

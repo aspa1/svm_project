@@ -21,13 +21,12 @@ import math
 class TrackingAndMotion:
 	def __init__(self):
 		self.rh = RappRobot()
-		self.pub = rospy.Publisher(rospy.get_param('joint_angles_topic'), JointAnglesWithSpeed, queue_size=1)
+		self.pub = rospy.Publisher(rospy.get_param('joint_angles_topic'), \
+			JointAnglesWithSpeed, queue_size=1)
 		self.publ = rospy.Publisher(rospy.get_param('velocities_topic'), Twist, queue_size=1)
 		self.obj_position_pub = rospy.Publisher(rospy.get_param('object_position_topic'), Twist, queue_size=1)
-
-		self.predator_hunt_pub = rospy.Publisher(rospy.get_param('predator_hunt_topic'), \
-			Polygon, queue_size = 10)
-		self.s = rospy.Service('set_behavior', SetBehavior, self.set_behavior)
+		self.predator_hunt_pub = rospy.Publisher(rospy.get_param('predator_hunt_topic'), Polygon, queue_size = 10)
+		self.s = rospy.Service('set_behavior', SetBehavior, self.setBehavior)
 		self.robot_state_service = rospy.Service('robot_state', RobotState, \
 			self.setRobotState)
 		self.rh.motion.enableMotors()
@@ -53,21 +52,21 @@ class TrackingAndMotion:
 		self.head_motion_sampler_init = 4
 		self.head_motion_sampler = self.head_motion_sampler_init
 
-		self.set_vel_timer = rospy.Timer(rospy.Duration(0.1), self.set_velocities_callback)
+		self.set_vel_timer = rospy.Timer(rospy.Duration(0.1), self.setVelocitiesCallback)
 		
-		self.set_object_position_timer = rospy.Timer(rospy.Duration(0.1), self.set_object_position_callback)
+		self.set_object_position_timer = rospy.Timer(rospy.Duration(0.1), self.setObjectPositionCallback)
 		
-		self.get_robot_pos_timer = rospy.Timer(rospy.Duration(0.1), self.get_robot_position_callback)
+		self.get_robot_pos_timer = rospy.Timer(rospy.Duration(0.1), self.getRobotPositionCallback)
 
-		self.obstacle_timer = rospy.Timer(rospy.Duration(0.1), self.obstacle_avoidance_callback)
+		self.obstacle_timer = rospy.Timer(rospy.Duration(0.1), self.obstacleAvoidanceCallback)
 		self.obstacle_timer.shutdown()
-		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
+		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lostObjectCallback)
 		self.lost_obj_timer.shutdown()
 		
 		self.head_motion_timer = rospy.Timer(rospy.Duration(1), self.headMotionCallback)
 		self.head_motion_timer.shutdown()
 		
-		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.track_bounding_box)
+		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.trackBoundingBox)
 		self.object_tracking_sub.unregister()
 		
 		self.head_motion = False
@@ -78,7 +77,7 @@ class TrackingAndMotion:
 	
 	def enableObstacleAvoidance(self):
 		#~ self.rh.humanoid_motion.goToPosture("Stand", 0.7)
-		self.obstacle_timer = rospy.Timer(rospy.Duration(0.5), self.obstacle_avoidance_callback)
+		self.obstacle_timer = rospy.Timer(rospy.Duration(0.5), self.obstacleAvoidanceCallback)
 
 	def disableObstacleAvoidance(self):
 		self.obstacle_timer.shutdown()
@@ -88,8 +87,8 @@ class TrackingAndMotion:
 	
 	def enableObjectTracking(self):
 		#~ self.rh.humanoid_motion.goToPosture("Stand", 0.7)
-		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.track_bounding_box)
-		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lost_object_callback)
+		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.trackBoundingBox)
+		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lostObjectCallback)
 		self.lost_object_counter = 50
 		self.lock_motion = False
 		self.hunt_initiated = False
@@ -98,7 +97,7 @@ class TrackingAndMotion:
 		self.lost_obj_timer.shutdown()
 		self.object_tracking_sub.unregister()
 	
-	def track_bounding_box(self, polygon):
+	def trackBoundingBox(self, polygon):
 		
 		self.state_flag = True
 		self.hunt_initiated = True
@@ -168,8 +167,6 @@ class TrackingAndMotion:
 			self.theta_vel = 0
 			
 		if  self.lock_motion is True:
-			#~ self.disableObjectTracking()
-			
 			
 			#~ print "sonars:", sonars['front_left'], sonars['front_right']
 			#~ print "Head_pitch:",head_pitch
@@ -216,7 +213,7 @@ class TrackingAndMotion:
 			self.rh.motion.disableMotors()
 			sys.exit(1)
 			
-	def set_object_position_callback(self, event):
+	def setObjectPositionCallback(self, event):
 		object_pos = Twist()
 		
 		object_pos.linear.x = self.dx
@@ -228,7 +225,7 @@ class TrackingAndMotion:
 		self.dx = 0.0
 		self.dy = 0.0
 	
-	def lost_object_callback(self, event):
+	def lostObjectCallback(self, event):
 		if self.hunt_initiated:
 			self.lost_object_counter -= 1
 		if self.lost_object_counter < 0 and self.hunt_initiated == True:
@@ -240,7 +237,7 @@ class TrackingAndMotion:
 			
 			self.disableObjectTracking()
 			
-	def set_velocities_callback(self, event):
+	def setVelocitiesCallback(self, event):
 		
 		if self.state_flag == False:
 			
@@ -275,7 +272,7 @@ class TrackingAndMotion:
 			#~ self.head_motion = False
 			#~ self.rh.humanoid_motion.setJointAngles(["HeadYaw"],[-0.4], 0.1)
 		
-	def obstacle_avoidance_callback(self, event):
+	def obstacleAvoidanceCallback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		
 		if sonars['front_left'] <= self.sonar_value:
@@ -289,7 +286,7 @@ class TrackingAndMotion:
 			self.theta_vel = 0.0
 		
 	
-	def set_behavior(self, request):
+	def setBehavior(self, request):
 		print 'Going to behavior: ' + request.behavior
 		if request.behavior =="track_bounding_box":
 			#~ self.rh.audio.speak("Tracking service")
@@ -323,7 +320,7 @@ class TrackingAndMotion:
 		res.success = True
 		return True
 		
-	def get_robot_position_callback(self, event):
+	def getRobotPositionCallback(self, event):
 		#~ pass
 		try:
 			(trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))

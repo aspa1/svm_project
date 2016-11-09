@@ -5,6 +5,7 @@ from geometry_msgs.msg import Point32
 from geometry_msgs.msg import Polygon
 from sensor_msgs.msg import LaserScan
 from stdr_msgs.msg import RfidSensorMeasurementMsg
+from visualization_msgs.msg import Marker
 from RappCloud import RappPlatformAPI
 from nao_localization.srv import SetObject
 from nao_localization.srv import SetObjectResponse
@@ -31,6 +32,7 @@ class NaoInterface:
 		rospy.Timer(rospy.Duration(0.5), self.qrDetectionCallback)
 		self.pub = rospy.Publisher('/inner/sonar_measurements', LaserScan, queue_size=1)
 		self.pub1 = rospy.Publisher('/inner/qr_detection', RfidSensorMeasurementMsg, queue_size=1)
+		self.pub2 = rospy.Publisher('visualization_marker', Marker, queue_size=1)
 		self.sub = rospy.Subscriber("/relative_object_position", Twist, self.getObjectPositioncallback)
 		self.s = rospy.Service('set_object', SetObject, self.setNewObjectCallback)
 		self.s1 = rospy.Service('get_objects', GetObjects, self.getObjectsCallback)
@@ -44,8 +46,13 @@ class NaoInterface:
 		self.objects = {}
 		self.static_objects = []
 		self.counter = 0
+		self.response = {}
+		self.response_new = {}
+		self.response['qr_messages'] = []
+		self.response_new['qr_messages'] = []
+		self.response['qr_centers'] = []
+		self.response_new['qr_centers'] = []
 
-		
 	def sonarsCallback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		laser_msg = LaserScan()
@@ -75,88 +82,92 @@ class NaoInterface:
 		
 		
 	def qrDetectionCallback(self, event):
-		self.counter = 0
+		counter1 = 0
 		obj_found = False
+		flag = False
 		
-		response = {}
-		response_new = {}
-		response['qr_messages'] = []
-		response_new['qr_messages'] = []
-		response['qr_centers'] = []
-		response_new['qr_centers'] = []
-
 		if (self.tracking_flag == False):
 			print "QrDetection"
 			image = self.imageLoad()
 			for symbol in image:
-				response['qr_messages'].append(symbol.data)
-				print 'response[qr_messages]', response['qr_messages'] 
-			if len(response['qr_messages']) <> 0:
-				for qrm in response['qr_messages']:
+				self.response['qr_messages'].append(symbol.data)
+				#~ print 'response[qr_messages]', self.response['qr_messages'] 
+			if len(self.response['qr_messages']) <> 0:
+				for qrm in self.response['qr_messages']:
 					if "Localization" in qrm:
 						print "Loc QR detected"
-						print response
+						print self.response
 						print qrm
 						qr_msg = RfidSensorMeasurementMsg()
 						qr_msg.rfid_tags_ids.append(qrm)
 						self.pub1.publish(qr_msg)
 					else:
-						print "Object QR detected 1st time"
-						print qrm
+						#~ print "Object QR detected 1st time"
+						#~ print qrm
 						rospy.wait_for_service('robot_state')
 						try:
 							robot_state = rospy.ServiceProxy('robot_state', RobotState)
 							resp1 = robot_state(False)
-							print "Movement stopped"
+							#~ print "Movement stopped"
 						except rospy.ServiceException, e:
 							print "Service call failed: %s"%e
 						self.tracking_flag = True
-				while (len(response_new['qr_messages']) == 0) and self.counter < 4:
+				while (len(self.response_new['qr_messages']) == 0) and counter1 < 4:
 					image2 = self.imageLoad()
 					for symbol in image2:
-						response_new['qr_messages'].append(symbol.data)
-						x = (symbol.location[0][0] + symbol.location[1][0])/2 
-						y = (symbol.location[0][1] + symbol.location[3][1])/2
-						response_new['qr_centers'].append((x, y)) 
-					print response_new
-					self.counter += 1
-				if len(response_new['qr_messages']) <> 0:
-					rospy.wait_for_service('set_behavior')
-					try:
-						print "Object found 2nd time"
-						edge = 150
-						set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
-						polygon = Polygon()
-						qr_center = Point32()
-						qr_center2 = Point32()
-						qr_center.x = (response_new['qr_centers'][0][0] - edge/2)/2
-						qr_center.y = (response_new['qr_centers'][0][1] - edge/2)/2
-						while (qr_center.x + (edge/2)) > (640 / 2) or (qr_center.y + (edge/2))> (480 / 2):
-							edge -= 60
-							qr_center.x = (response_new['qr_centers'][0][0] - edge/2)/2
-							qr_center.y = (response_new['qr_centers'][0][1] - edge/2)/2
-						polygon.points.append(qr_center)
-						qr_center2.x = (edge)/2
-						qr_center2.y = (edge)/2
-						polygon.points.append(qr_center2)
-						print polygon
+						if "Localization" not in symbol.data and symbol.data not in self.response_new['qr_messages']:
+							self.counter += 1
+							flag = True
+							self.response_new['qr_messages'].append(symbol.data)
+							x = (symbol.location[3][0] + symbol.location[2][0])/2 
+							y = (symbol.location[0][1] + symbol.location[3][1])/2
+							self.response_new['qr_centers'].append((x, y)) 
+						print "size: ", len(self.response_new['qr_messages'])
+						counter1 += 1
+				#~ if len(self.response_new['qr_messages']) <> 0:
+				if flag == True:
+					for i in range (len(self.response_new['qr_messages']) - self.counter, len(self.response_new['qr_messages'])):
+						print 'i = ', i
+						rospy.wait_for_service('set_behavior')
 						try:
-							robot_state = rospy.ServiceProxy('robot_state', RobotState)
-							resp1 = robot_state(True)
+							print "Object found 2nd time"
+							edge = 180
+							set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
+							polygon = Polygon()
+							qr_center = Point32()
+							qr_center2 = Point32()
+							qr_center.x = (self.response_new['qr_centers'][i][0] - edge/2)/2
+							qr_center.y = (self.response_new['qr_centers'][i][1] - edge/2)/2
+							while (qr_center.x + (edge/2)) > (640 / 2) or (qr_center.y + (edge/2))> (480 / 2):
+								edge -= 80
+								qr_center.x = (self.response_new['qr_centers'][i][0] - edge/2)/2
+								qr_center.y = (self.response_new['qr_centers'][i][1] - edge/2)/2
+							polygon.points.append(qr_center)
+							qr_center2.x = (edge)/2
+							qr_center2.y = (edge)/2
+							polygon.points.append(qr_center2)
+							print polygon
+							try:
+								robot_state = rospy.ServiceProxy('robot_state', RobotState)
+								resp1 = robot_state(True)
+							except rospy.ServiceException, e:
+								print "Service call failed: %s"%e
+							behavior = "track_bounding_box"
+							resp2 = set_behavior(behavior, polygon)
+							print "TRACKING object ", self.response_new['qr_messages'][i]
+							while self.relative_obj_x == 0.0 and self.relative_obj_y == 0.0:
+								self.tracking_flag = True
+							print self.relative_obj_x
+							print "Finished tracking ", self.response_new['qr_messages'][i]
+							self.setObjectClient(i)
+							self.visualize()
+							
 						except rospy.ServiceException, e:
 							print "Service call failed: %s"%e
-						behavior = "track_bounding_box"
-						resp2 = set_behavior(behavior, polygon)
-						print "TRACKING"
-						while self.relative_obj_x == 0.0 and self.relative_obj_y == 0.0:
-							self.tracking_flag = True
-						print self.relative_obj_x
-						print "Finished tracking"
-						self.tracking_flag = False
-					except rospy.ServiceException, e:
-						print "Service call failed: %s"%e
+					self.tracking_flag = False
+						
 				else:
-					print "Object lost"
+					#~ print "Object lost"
 					self.tracking_flag = False
 
 
@@ -167,10 +178,25 @@ class NaoInterface:
 		res = SetObjectResponse()
 		res.success = True
 		return res
-		
+
+	def setObjectClient(self, i):
+		obj = ObjectMsg()
+		obj.x = self.absolute_obj_x
+		obj.y = self.absolute_obj_y
+		obj.message = self.response_new['qr_messages'][i]
+		obj.type = 'Dynamic'
+		rospy.wait_for_service('set_object')
+		try:
+			set_object = rospy.ServiceProxy('set_object', SetObject)
+			resp1 = set_object(obj)
+			return resp1.success
+		except rospy.ServiceException, e:
+			print "Service call failed: %s"%e
+
+
 	def getObjectsCallback(self, req):
 		res = GetObjectsResponse()
-		if req.localization_type == "dynamic":
+		if req.localization_type == "Dynamic":
 			for i in range(0, len(self.objects)):
 				obj = ObjectMsg()
 				obj.x = self.objects.values()[i].x
@@ -181,7 +207,7 @@ class NaoInterface:
 					if obj.message in res.objects:
 						continue
 					res.objects.append(obj)
-		elif req.localization_type == "static":
+		elif req.localization_type == "Static":
 			for i in range(0, len(self.static_objects)):
 				obj = ObjectMsg()
 				obj.x = static_objects[i].x
@@ -189,7 +215,7 @@ class NaoInterface:
 				obj.message = static_objects[i].message
 				obj.type = static_objects[i].type
 				res.objects.append(obj)
-		elif req.localization_type == "all":
+		elif req.localization_type == "All":
 			for i in range(0, len(self.objects)):
 				obj = ObjectMsg()
 				obj.x = self.objects.values()[i].x
@@ -214,13 +240,14 @@ class NaoInterface:
 		return res
 		
 	def getRobotPositionCallback(self, event):
-		pass
-		#~ try:
-			#~ (trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
-			#~ self.robot_x = trans[0]
-			#~ self.robot_y = trans[1]
-			#~ self.robot_th = rot[0]
-		#~ except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
+		#~ pass
+		try:
+			(trans,rot) = self.listener.lookupTransform('/map', '/nao_pose', rospy.Time(0))
+			self.robot_x = trans[0]
+			self.robot_y = trans[1]
+			self.robot_th = rot[0]
+		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as ex:
+			pass
 			#~ print ex
 		
 	def getObjectPositioncallback(self, object_pos):
@@ -231,6 +258,65 @@ class NaoInterface:
 		self.absolute_obj_y = math.sin(-self.robot_th) * self.relative_obj_x + \
 			math.cos(-self.robot_th) * self.relative_obj_y + self.robot_y
 	
+	def visualize(self):
+		for i in range(0, len(self.objects)):
+		#~ counter = 0
+			print "Visualization"
+			print len(self.response_new['qr_messages'])
+			m = Marker()
+			m.header.frame_id = "map";
+			#~ m.header.stamp = ros::Time()
+			m.type = m.SPHERE_LIST
+			m.action = m.ADD
+			m.id = i
+			m.ns = "Object_QRs"
+			m.scale.x = 0.4
+			m.scale.y = 0.4
+			m.scale.z = 0.4
+			m.color.a = 1.0
+			m.color.r = 1.0
+			m.color.g = 0.0
+			m.color.b = 1.0
+						
+			p = Point32()
+			#~ p.x = self.response_new['qr_centers'][i][0]
+			#~ p.y = self.response_new['qr_centers'][i][1]
+			p.x = self.objects.values()[i].x
+			p.y = self.objects.values()[i].y
+			print "Point: ", p.x, p.y 
+			m.points.append(p)
+			self.pub2.publish(m)
+			print p
+			print "Object Marker Published"
+		
+			m1 = Marker()
+			m1.header.frame_id = "map"
+			#~ m1.header.stamp = ros::Time();
+			m1.type = m1.TEXT_VIEW_FACING
+			m1.action = m1.ADD
+			m1.id = i
+			m1.ns = "Object_QR_id"
+			m.scale.x = 0.65
+			m.scale.y = 0.65
+			m1.scale.z = 0.65
+			m1.color.a = 1.0
+			m1.color.r = 0.0
+			m1.color.g = 0.0
+			m1.color.b = 0.0
+			m1.text = self.objects.values()[i].message
+			m1.pose.position.x = self.objects.values()[i].x
+			m1.pose.position.y = self.objects.values()[i].y
+			p1 = Point32()
+			p1.x = self.objects.values()[i].x
+			p1.y = self.objects.values()[i].y
+			m1.points.append(p1)
+			
+			self.pub2.publish(m1)
+			#~ counter += 1
+		
+		
+		
+		
 if __name__ == "__main__":
 	rospy.init_node('nao_interface_node', anonymous=True)
 	nao = NaoInterface()
