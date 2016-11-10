@@ -147,7 +147,7 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 		visualize(robot_percept.getMapResolution());
 		time2 = ros::Time::now();
 		dt = time2 - time1;
-		ROS_INFO_STREAM("dt = " << dt.toSec());
+		//~ ROS_INFO_STREAM("dt = " << dt.toSec());
 	}
 }
 
@@ -170,10 +170,10 @@ void ParticleFilter::resample()
 		sum += _particles[i].getWeight();
 	}
 	average = sum/ _particles_number;
-	ROS_INFO_STREAM("average1 = " << average);
+	//~ ROS_INFO_STREAM("average1 = " << average);
 	if (flag == true)
 	{
-		ROS_INFO_STREAM("resample");
+		//~ ROS_INFO_STREAM("resample");
 		sum = 0;
 		std::vector<Particle> new_particles;
 		int index = std::rand() % ( _particles_number );
@@ -202,7 +202,7 @@ void ParticleFilter::resample()
 			sum += _particles[i].getWeight();
 		}
 		average = sum/ _particles_number;
-		ROS_INFO_STREAM("average2 = " << average);
+		//~ ROS_INFO_STREAM("average2 = " << average);
 	}
 	else
 	{
@@ -308,8 +308,8 @@ void ParticleFilter::visualize(float resolution)
 	p1.y = _particles[id].getY();
 	m1.points.push_back(p1);
 	
-	ROS_INFO_STREAM("Best particle: x = " << _particles[id].getX() <<
-		" y = " << _particles[id].getY() << " theta = " << _particles[id].getTheta());
+	//~ ROS_INFO_STREAM("Best particle: x = " << _particles[id].getX() <<
+		//~ " y = " << _particles[id].getY() << " theta = " << _particles[id].getTheta());
 	 _visualization_pub.publish(m1);
 	
 	static tf::TransformBroadcaster br;

@@ -44,6 +44,8 @@ class NaoInterface:
 		self.relative_obj_y = 0
 		self.tracking_flag = False
 		self.objects = {}
+		#~ self.loc_qrs = {}
+		#~ self.loc_qrs['qr_messages'] = []
 		self.static_objects = []
 		self.counter = 0
 		self.response = {}
@@ -87,32 +89,64 @@ class NaoInterface:
 		flag = False
 		
 		if (self.tracking_flag == False):
+			now = rospy.get_rostime()
 			print "QrDetection"
+			rospy.wait_for_service('set_behavior')
+			print "Wait"
+			try:
+				try:
+					robot_state = rospy.ServiceProxy('robot_state', RobotState)
+					resp1 = robot_state(True)
+					print "OBSTACLE"
+				except rospy.ServiceException, e:
+					print "Service call failed: %s"%e
+					
+				print "obj not found again tracking is", self.tracking_flag
+				#~ self.rh.humanoid_motion.setJointAngles(["HeadPitch"],[-0.05], 0.1)
+
+				set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
+				polygon = Polygon()
+				qr_center = Point32()
+				qr_center2 = Point32()
+				qr_center.x = 100
+				qr_center.y = 100
+				polygon.points.append(qr_center)
+				qr_center2.x = 100
+				qr_center2.y = 100
+				polygon.points.append(qr_center2)
+				print polygon
+				behavior = "obstacle_avoidance"
+				resp2 = set_behavior(behavior, polygon)
+				#~ return resp1.sum
+			except rospy.ServiceException, e:
+				print "Service call failed: %s"%e
+			
 			image = self.imageLoad()
 			for symbol in image:
 				self.response['qr_messages'].append(symbol.data)
 				#~ print 'response[qr_messages]', self.response['qr_messages'] 
 			if len(self.response['qr_messages']) <> 0:
 				for qrm in self.response['qr_messages']:
+					#~ if "Localization" in qrm and qrm not in self.loc_qrs['qr_messages']:
 					if "Localization" in qrm:
 						print "Loc QR detected"
-						print self.response
+						#~ print self.response
 						print qrm
 						qr_msg = RfidSensorMeasurementMsg()
 						qr_msg.rfid_tags_ids.append(qrm)
 						self.pub1.publish(qr_msg)
+						#~ self.loc_qrs['qr_messages'].append(qrm)
 					else:
-						#~ print "Object QR detected 1st time"
-						#~ print qrm
+						print "Object ", qrm, " QR detected 1st time"
 						rospy.wait_for_service('robot_state')
 						try:
 							robot_state = rospy.ServiceProxy('robot_state', RobotState)
 							resp1 = robot_state(False)
-							#~ print "Movement stopped"
+							print "Movement stopped"
 						except rospy.ServiceException, e:
 							print "Service call failed: %s"%e
 						self.tracking_flag = True
-				while (len(self.response_new['qr_messages']) == 0) and counter1 < 4:
+				while (len(self.response_new['qr_messages']) == 0) and counter1 < 10:
 					image2 = self.imageLoad()
 					for symbol in image2:
 						if "Localization" not in symbol.data and symbol.data not in self.response_new['qr_messages']:
@@ -130,7 +164,8 @@ class NaoInterface:
 						print 'i = ', i
 						rospy.wait_for_service('set_behavior')
 						try:
-							print "Object found 2nd time"
+							print "Object ", self.response_new['qr_messages'][i], " found 2nd time"
+							self.lost_object_counter = 20
 							edge = 180
 							set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
 							polygon = Polygon()
@@ -155,20 +190,28 @@ class NaoInterface:
 							behavior = "track_bounding_box"
 							resp2 = set_behavior(behavior, polygon)
 							print "TRACKING object ", self.response_new['qr_messages'][i]
-							while self.relative_obj_x == 0.0 and self.relative_obj_y == 0.0:
+							
+
+							while self.relative_obj_x == 0.0 and self.relative_obj_y == 0.0 and self.lost_object_counter <> 0:
+								self.lost_object_counter -= 1
 								self.tracking_flag = True
 							print self.relative_obj_x
 							print "Finished tracking ", self.response_new['qr_messages'][i]
+							if self.lost_object_counter == 0:
+								print "Lost object"
 							self.setObjectClient(i)
+							self.rh.audio.speak("Object")
+							self.rh.audio.speak(self.response_new['qr_messages'][i])
 							self.visualize()
 							
 						except rospy.ServiceException, e:
 							print "Service call failed: %s"%e
 					self.tracking_flag = False
-						
 				else:
-					#~ print "Object lost"
+					print "No new objects found"
 					self.tracking_flag = False
+		dt = (rospy.get_rostime() - now).to_sec()
+		print dt
 
 
 	def setNewObjectCallback(self, req):

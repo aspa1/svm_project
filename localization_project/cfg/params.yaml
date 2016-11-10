@@ -34,9 +34,9 @@ rfid_tags_topic: /stdr_server/rfid_list
 
 initial_pose_known: false
 
-initial_x: 15
+initial_x: 11
 
-initial_y: 15
+initial_y: 5.5
 
 initial_theta: 0
 

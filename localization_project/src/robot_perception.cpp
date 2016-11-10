@@ -162,6 +162,11 @@ void RobotPerception::rfidFileRead()
 			}
 		}
 	}
+	ROS_ERROR_STREAM("_rfid_tags_id.size() " << _rfid_tags_id.size());
+	for (unsigned int i = 0 ; i < _rfid_tags_id.size(); i++)
+	{
+		ROS_ERROR_STREAM(_rfid_tags_id[i]);
+	}
 	qr_file.close();
 }
 
@@ -239,8 +244,9 @@ void RobotPerception::rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg
 	rfid_reader_msg)
 {
 	_rfid_pose.clear();
+	ROS_ERROR_STREAM("RfidReaderCallback");
 	_rfid_ids = rfid_reader_msg.rfid_tags_ids;
-
+	
 	//~ std::vector<std::vector<float> > tmp_rfids;
 	for (unsigned int i = 0 ; i < _rfid_ids.size() ; i++)
 	{
@@ -255,6 +261,10 @@ void RobotPerception::rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg
 				//~ tmp_rfids.push_back(temp);
 			}
 		}
+	}
+	for (unsigned int i = 0 ; i < _rfid_pose.size(); i++)
+	{
+		ROS_ERROR_STREAM("rfidReaderCallback x = " << _rfid_pose[i][0]);
 	}
 	//~ _rfid_pose = tmp_rfids;
 }

@@ -13,4 +13,9 @@
   <include file="$(find pandora_tld)/launch/predator_node.launch">
   </include>
   
+  <!-- node name="$(anon nao)" pkg="nao_localization" type="nao_interface.py" output="screen" -->
+  
+  <include file="$(find localization_project)/launchers/nao_interface_plus_rviz_and_particles.launch" >
+  </include>
+  
 </launch>

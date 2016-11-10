@@ -333,5 +333,5 @@ class TrackingAndMotion:
 		
 if __name__ == "__main__":
 	rospy.init_node('nao_motion', anonymous=True)
-	nao = TrackingAndMotion()
+	nao1 = TrackingAndMotion()
 	rospy.spin()	
