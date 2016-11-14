@@ -16,7 +16,7 @@ rays_subsampling_step: 1
 
 strictness: 0.8
 
-particles_number: 10000
+particles_number: 200
 
 enable_visualization: true
 
@@ -24,7 +24,7 @@ a1: 0.1
 #a1: 0
 a2: 0.05
 #a2: 0
-duration: 1
+duration: 5
 
 #rfid_reader_topic: /robot0/rfid_reader_0
 rfid_reader_topic: /inner/qr_detection
@@ -32,11 +32,11 @@ rfid_reader_topic: /inner/qr_detection
 #only when stdr is used
 rfid_tags_topic: /stdr_server/rfid_list
 
-initial_pose_known: false
+initial_pose_known: true
 
-initial_x: 11
+initial_x: 10.5
 
-initial_y: 5.5
+initial_y: 6.8
 
 initial_theta: 0
 

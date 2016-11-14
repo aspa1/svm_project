@@ -151,7 +151,7 @@ class TrackingAndMotion:
 			#~ self.theta_vel = 0
 			if -self.head_yaw_value < head_yaw  and head_yaw < self.head_yaw_value:
 				#~ self.x_vel = 0
-				self.x_vel = 0.2
+				self.x_vel = 0.1
 				self.theta_vel = 0
 			else:
 				self.x_vel = 0.0001
@@ -231,9 +231,9 @@ class TrackingAndMotion:
 		if self.lost_object_counter < 0 and self.hunt_initiated == True:
 			rospy.loginfo("Locked due to 2 seconds")
 			self.lock_motion = True
-			self.x_vel = 0.0
-			self.y_vel = 0.0
-			self.theta_vel = 0.0
+			#~ self.x_vel = 0.0
+			#~ self.y_vel = 0.0
+			#~ self.theta_vel = 0.0
 			
 			self.disableObjectTracking()
 			

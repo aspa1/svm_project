@@ -1,4 +1,5 @@
-string localization_type
+#type = dynamic or static
+string type
 string object_type
 ---
 nao_localization/ObjectMsg[] objects
