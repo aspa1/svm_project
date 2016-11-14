@@ -11,8 +11,9 @@ from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker
 from rapp_robot_api import RappRobot 
 from nao_handler.srv import *
-import tf
+from nao_handler.msg import LostObject
 
+import tf
 import rospy
 import sys
 import time
@@ -26,6 +27,7 @@ class TrackingAndMotion:
 		self.publ = rospy.Publisher(rospy.get_param('velocities_topic'), Twist, queue_size=1)
 		self.obj_position_pub = rospy.Publisher(rospy.get_param('object_position_topic'), Twist, queue_size=1)
 		self.predator_hunt_pub = rospy.Publisher(rospy.get_param('predator_hunt_topic'), Polygon, queue_size = 10)
+		self.lost_object_pub = rospy.Publisher('/lost_object', LostObject, queue_size=1)
 		self.s = rospy.Service('set_behavior', SetBehavior, self.setBehavior)
 		self.robot_state_service = rospy.Service('robot_state', RobotState, \
 			self.setRobotState)
@@ -49,7 +51,7 @@ class TrackingAndMotion:
 		self.head_yaw_value = rospy.get_param('head_yaw_limit_value')
 		
 		
-		self.head_motion_sampler_init = 4
+		self.head_motion_sampler_init = 0
 		self.head_motion_sampler = self.head_motion_sampler_init
 
 		self.set_vel_timer = rospy.Timer(rospy.Duration(0.1), self.setVelocitiesCallback)
@@ -131,6 +133,7 @@ class TrackingAndMotion:
 		ans = self.rh.humanoid_motion.getJointAngles(['HeadYaw', 'HeadPitch'])['angles']
 		head_yaw = ans[0]
 		head_pitch = ans[1]
+		print "head_yaw:", head_yaw
 		
 		
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
@@ -144,20 +147,24 @@ class TrackingAndMotion:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to head pitch")
 			
-		print "self.lock_motion:", self.lock_motion
+		#~ print "self.lock_motion:", self.lock_motion
 		
 		if self.lock_motion is False:
 			
-			#~ self.theta_vel = 0
-			if -self.head_yaw_value < head_yaw  and head_yaw < self.head_yaw_value:
-				#~ self.x_vel = 0
+			self.theta_vel = head_yaw * 0.1
+			if -self.head_yaw_value < head_yaw  and head_yaw< self.head_yaw_value:
 				self.x_vel = 0.1
-				self.theta_vel = 0
+			self.pub.publish(joint)
+			#~ self.theta_vel = 0!!!
+			#~ if -self.head_yaw_value < head_yaw  and head_yaw < self.head_yaw_value:
+				#~ self.x_vel = 0!!!
+				#~ self.x_vel = 0.1
+				#~ self.theta_vel = 0
 			else:
 				self.x_vel = 0.0001
 				self.theta_vel = head_yaw * 0.1
 			
-			self.head_motion_sampler -= 1
+			#~ self.head_motion_sampler -= 1
 			if self.head_motion_sampler == 0:
 				self.pub.publish(joint)
 				self.head_motion_sampler = self.head_motion_sampler_init
@@ -226,17 +233,22 @@ class TrackingAndMotion:
 		self.dy = 0.0
 	
 	def lostObjectCallback(self, event):
+		lost_object = LostObject()
+		lost_object = False
 		if self.hunt_initiated:
 			self.lost_object_counter -= 1
 		if self.lost_object_counter < 0 and self.hunt_initiated == True:
 			rospy.loginfo("Locked due to 2 seconds")
 			self.lock_motion = True
-			#~ self.x_vel = 0.0
-			#~ self.y_vel = 0.0
-			#~ self.theta_vel = 0.0
+			lost_object = True
+			self.x_vel = 0.0
+			self.y_vel = 0.0
+			self.theta_vel = 0.0
 			
 			self.disableObjectTracking()
-			
+		print "lost_object ", lost_object
+		self.lost_object_pub.publish(lost_object)
+		
 	def setVelocitiesCallback(self, event):
 		
 		if self.state_flag == False:
@@ -311,14 +323,14 @@ class TrackingAndMotion:
 		return True
 		
 	def setRobotState(self, request):
-		if request.state <> self.state_flag:
-			self.state_flag = request.state
+		#~ if request.state == False
+		self.state_flag = request.state
 		
 		print 'Robot state set'
 		print self.state_flag
 		res = RobotState()
 		res.success = True
-		return True
+		return res.success
 		
 	def getRobotPositionCallback(self, event):
 		#~ pass
