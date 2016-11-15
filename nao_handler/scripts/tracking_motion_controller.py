@@ -11,7 +11,7 @@ from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker
 from rapp_robot_api import RappRobot 
 from nao_handler.srv import *
-from nao_handler.msg import LostObject
+from nao_handler.msg import TrackingFlag
 
 import tf
 import rospy
@@ -27,7 +27,7 @@ class TrackingAndMotion:
 		self.publ = rospy.Publisher(rospy.get_param('velocities_topic'), Twist, queue_size=1)
 		self.obj_position_pub = rospy.Publisher(rospy.get_param('object_position_topic'), Twist, queue_size=1)
 		self.predator_hunt_pub = rospy.Publisher(rospy.get_param('predator_hunt_topic'), Polygon, queue_size = 10)
-		self.lost_object_pub = rospy.Publisher('/lost_object', LostObject, queue_size=1)
+		self.lost_object_pub = rospy.Publisher('/tracking_flag', TrackingFlag, queue_size=1)
 		self.s = rospy.Service('set_behavior', SetBehavior, self.setBehavior)
 		self.robot_state_service = rospy.Service('robot_state', RobotState, \
 			self.setRobotState)
@@ -92,10 +92,12 @@ class TrackingAndMotion:
 		self.lost_object_counter = 50
 		self.lock_motion = False
 		self.hunt_initiated = False
+		tracking_flag = True
 	
 	def disableObjectTracking(self):
-		self.dx = 0
-		self.dy = 0
+		#~ self.dx = 0
+		#~ self.dy = 0
+		tracking_flag = False
 		self.lost_obj_timer.shutdown()
 		self.object_tracking_sub.unregister()
 	
@@ -230,21 +232,21 @@ class TrackingAndMotion:
 			
 	
 	def lostObjectCallback(self, event):
-		lost_object = LostObject()
-		lost_object = False
+		tracking_flag = TrackingFlag()
+		tracking_flag = False
 		if self.hunt_initiated:
 			self.lost_object_counter -= 1
 		if self.lost_object_counter < 0 and self.hunt_initiated == True:
 			rospy.loginfo("Locked due to 2 seconds")
 			self.lock_motion = True
-			lost_object = True
+			tracking_flag = False
 			self.x_vel = 0.0
 			self.y_vel = 0.0
 			self.theta_vel = 0.0
 			
 			self.disableObjectTracking()
-		print "lost_object ", lost_object
-		self.lost_object_pub.publish(lost_object)
+		print "tracking_flag ", tracking_flag
+		self.lost_object_pub.publish(tracking_flag)
 		
 	def setVelocitiesCallback(self, event):
 		
