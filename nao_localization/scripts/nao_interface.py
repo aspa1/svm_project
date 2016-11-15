@@ -43,10 +43,13 @@ class NaoInterface:
 		self.robot_y = 0
 		self.robot_th = 0
 		self.stop = False
-		self.tracking_flag = False
 		self.objects = {}
 		self.static_objects = []
 		self.counter = 0
+		#~ self.obj = {}
+		#~ self.x = 0
+		#~ self.y = 0
+		#~ self.temp_obj = []
 		self.response = {}
 		self.response['qr_messages'] = []
 		self.response['qr_centers'] = []
@@ -83,6 +86,7 @@ class NaoInterface:
 		
 	def qrDetectionCallback(self, event):
 		counter1 = 0
+		flag1 = False
 		obj_found = False
 		flag = False
 		new_obj = False
@@ -147,28 +151,36 @@ class NaoInterface:
 			if len(temp_obj) <> 0:
 				self.stop = True
 				
+						
+				for i in range (0, len(temp_obj)):
+					print temp_obj[i]
 				image2 = self.imageLoad()
 				for symbol in image2:
 					for i in range (0, len(temp_obj)):
 						print "temp_obj ", temp_obj[i]
 						if symbol.data in temp_obj[i] and temp_obj[i] not in self.response['qr_messages']:
 							print symbol.data
-							x = (symbol.location[3][0] + symbol.location[1][0])/2 
-							y = (symbol.location[0][1] + symbol.location[2][1])/2
+							self.obj = temp_obj[i]
+							self.x = (symbol.location[3][0] + symbol.location[1][0])/2 
+							self.y = (symbol.location[0][1] + symbol.location[2][1])/2
 							flag = True
-							print "flag=", flag
+							print "flag =", flag
 						if flag == True:
+							flag1 = True
 							print "i = ", i
 							break
+					if flag1 == True:
+						break
 				print self.response
-				print "temp_obj2 ", temp_obj[i]
+				#~ if flag == True: 
+					#~ print "temp_obj2 ", temp_obj[i]
 				#~ for i in range (0, len(self.response['qr_messages'])):
 				#~ if len(self.response['qr_messages']) <> 0:
 				if flag == True:
 					print "blah ", i
-					print temp_obj[i]
-					print x
-					print y
+					#~ print temp_obj[i]
+					#~ print x
+					#~ print y
 					self.stop = True
 					#~ i = len(self.response['qr_messages']) - 1
 					#~ print "Length = ", i + 1
@@ -183,14 +195,14 @@ class NaoInterface:
 						polygon = Polygon()
 						qr_center = Point32()
 						qr_center2 = Point32()
-						qr_center.x = (x - edge/2)/2
-						qr_center.y = (y - edge/2)/2
+						qr_center.x = (self.x - edge/2)/2
+						qr_center.y = (self.y - edge/2)/2
 						#~ qr_center.x = (self.response['qr_centers'][i][0] - edge/2)/2
 						#~ qr_center.y = (self.response['qr_centers'][i][1] - edge/2)/2
 						while (qr_center.x + (edge/2)) > (640 / 2) or (qr_center.y + (edge/2))> (480 / 2):
-							edge -= 20
-							qr_center.x = (x - edge/2)/2
-							qr_center.y = (y - edge/2)/2
+							edge -= 40
+							qr_center.x = (self.x - edge/2)/2
+							qr_center.y = (self.y - edge/2)/2
 							#~ qr_center.x = (self.response['qr_centers'][i][0] - edge/2)/2
 							#~ qr_center.y = (self.response['qr_centers'][i][1] - edge/2)/2
 						polygon.points.append(qr_center)
@@ -208,9 +220,17 @@ class NaoInterface:
 						#~ self.counter = 15
 						#~ print "TRACKING object ", self.response['qr_messages'][i]
 						print "TRACKING object ", temp_obj[i]
-						
+						self.tracking_flag = True
 						while self.tracking_flag == True:
 							self.stop = True
+							
+						print "Finished"
+						#~ self.obj = temp_obj[i]
+						#~ self.x = x
+						#~ self.y = y
+						self.stop = False
+						
+						
 							#~ if self.tracking_flag == False:
 								#~ print "Object lost"
 								#~ self.stop = False
@@ -223,14 +243,7 @@ class NaoInterface:
 						#~ if self.stop == True:
 						#~ print self.relative_obj_x
 						#~ print "Successfully tracked ", self.response['qr_messages'][i]
-						print "Successfully tracked ", temp_obj[i]
-						self.response['qr_messages'].append(temp_obj[i])
-						self.response['qr_centers'].append((x,y))
-						self.rh.audio.speak("Object")
-						self.rh.audio.speak(temp_obj[i])
-						i = len(self.response['qr_messages']) - 1
-						self.setObjectClient(i)
-						self.visualize()
+				
 						
 					except rospy.ServiceException, e:
 						print "Service call failed: %s"%e
@@ -326,6 +339,17 @@ class NaoInterface:
 			math.sin(-self.robot_th) * relative_obj_y + self.robot_x
 		self.absolute_obj_y = math.sin(-self.robot_th) * relative_obj_x + \
 			math.cos(-self.robot_th) * relative_obj_y + self.robot_y
+			
+		print "Successfully tracked ", self.obj
+		self.response['qr_messages'].append(self.obj)
+		x = self.x
+		y = self.y
+		self.response['qr_centers'].append((x, y))
+		self.rh.audio.speak("Object")
+		self.rh.audio.speak(self.obj)
+		i = len(self.response['qr_messages']) - 1
+		self.setObjectClient(i)
+		self.visualize()
 	
 	def visualize(self):
 		print "Visualization"

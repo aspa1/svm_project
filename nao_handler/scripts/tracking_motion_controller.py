@@ -92,12 +92,12 @@ class TrackingAndMotion:
 		self.lost_object_counter = 50
 		self.lock_motion = False
 		self.hunt_initiated = False
-		tracking_flag = True
 	
 	def disableObjectTracking(self):
 		#~ self.dx = 0
 		#~ self.dy = 0
 		tracking_flag = False
+		self.lost_object_pub.publish(tracking_flag)
 		self.lost_obj_timer.shutdown()
 		self.object_tracking_sub.unregister()
 	
@@ -160,7 +160,7 @@ class TrackingAndMotion:
 			#~ self.theta_vel = 0!!!
 			if -self.head_yaw_value < head_yaw  and head_yaw < self.head_yaw_value:
 				#~ self.x_vel = 0!!!
-				self.x_vel = 0.1
+				self.x_vel = 0.2
 				self.theta_vel = 0
 			else:
 				self.x_vel = 0.0001
@@ -233,20 +233,21 @@ class TrackingAndMotion:
 	
 	def lostObjectCallback(self, event):
 		tracking_flag = TrackingFlag()
-		tracking_flag = False
+		#~ tracking_flag = False
 		if self.hunt_initiated:
 			self.lost_object_counter -= 1
 		if self.lost_object_counter < 0 and self.hunt_initiated == True:
 			rospy.loginfo("Locked due to 2 seconds")
 			self.lock_motion = True
 			tracking_flag = False
+			print "tracking_flag ", tracking_flag
+			self.lost_object_pub.publish(tracking_flag)
 			self.x_vel = 0.0
 			self.y_vel = 0.0
 			self.theta_vel = 0.0
 			
 			self.disableObjectTracking()
-		print "tracking_flag ", tracking_flag
-		self.lost_object_pub.publish(tracking_flag)
+		
 		
 	def setVelocitiesCallback(self, event):
 		
