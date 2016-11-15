@@ -51,13 +51,11 @@ class TrackingAndMotion:
 		self.head_yaw_value = rospy.get_param('head_yaw_limit_value')
 		
 		
-		self.head_motion_sampler_init = 0
+		self.head_motion_sampler_init = 4
 		self.head_motion_sampler = self.head_motion_sampler_init
 
 		self.set_vel_timer = rospy.Timer(rospy.Duration(0.1), self.setVelocitiesCallback)
-		
-		self.set_object_position_timer = rospy.Timer(rospy.Duration(0.1), self.setObjectPositionCallback)
-		
+				
 		self.get_robot_pos_timer = rospy.Timer(rospy.Duration(0.1), self.getRobotPositionCallback)
 
 		self.obstacle_timer = rospy.Timer(rospy.Duration(0.1), self.obstacleAvoidanceCallback)
@@ -96,6 +94,8 @@ class TrackingAndMotion:
 		self.hunt_initiated = False
 	
 	def disableObjectTracking(self):
+		self.dx = 0
+		self.dy = 0
 		self.lost_obj_timer.shutdown()
 		self.object_tracking_sub.unregister()
 	
@@ -151,20 +151,20 @@ class TrackingAndMotion:
 		
 		if self.lock_motion is False:
 			
-			self.theta_vel = head_yaw * 0.1
-			if -self.head_yaw_value < head_yaw  and head_yaw< self.head_yaw_value:
-				self.x_vel = 0.1
-			self.pub.publish(joint)
-			#~ self.theta_vel = 0!!!
-			#~ if -self.head_yaw_value < head_yaw  and head_yaw < self.head_yaw_value:
-				#~ self.x_vel = 0!!!
+			#~ self.theta_vel = head_yaw * 0.1
+			#~ if -self.head_yaw_value < head_yaw  and head_yaw< self.head_yaw_value:
 				#~ self.x_vel = 0.1
-				#~ self.theta_vel = 0
+			#~ self.pub.publish(joint)
+			#~ self.theta_vel = 0!!!
+			if -self.head_yaw_value < head_yaw  and head_yaw < self.head_yaw_value:
+				#~ self.x_vel = 0!!!
+				self.x_vel = 0.1
+				self.theta_vel = 0
 			else:
 				self.x_vel = 0.0001
 				self.theta_vel = head_yaw * 0.1
 			
-			#~ self.head_motion_sampler -= 1
+			self.head_motion_sampler -= 1
 			if self.head_motion_sampler == 0:
 				self.pub.publish(joint)
 				self.head_motion_sampler = self.head_motion_sampler_init
@@ -207,6 +207,14 @@ class TrackingAndMotion:
 			self.dy = self.dx * math.tan(total_y)
 			#~ print "dy= " ,self.dy
 			
+			object_pos = Twist()
+		
+			object_pos.linear.x = self.dx
+			object_pos.linear.y = self.dy
+			#~ print object_pos
+		
+			self.obj_position_pub.publish(object_pos)
+			
 			self.disableObjectTracking()
 			
 			
@@ -220,17 +228,6 @@ class TrackingAndMotion:
 			self.rh.motion.disableMotors()
 			sys.exit(1)
 			
-	def setObjectPositionCallback(self, event):
-		object_pos = Twist()
-		
-		object_pos.linear.x = self.dx
-		object_pos.linear.y = self.dy
-		#~ print object_pos
-		
-		self.obj_position_pub.publish(object_pos)
-		
-		self.dx = 0.0
-		self.dy = 0.0
 	
 	def lostObjectCallback(self, event):
 		lost_object = LostObject()

@@ -57,6 +57,7 @@ class NaoInterface:
 		#~ self.response_new['qr_messages'] = []
 		self.response['qr_centers'] = []
 		#~ self.response_new['qr_centers'] = []
+		self.temp_obj = []
 
 	def sonarsCallback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
@@ -94,7 +95,7 @@ class NaoInterface:
 		flag = False
 		new_obj = False
 		temp_loc = []
-		temp_obj = []
+		
 		
 		if (self.stop == False):
 			now = rospy.get_rostime()
@@ -142,7 +143,8 @@ class NaoInterface:
 						print "Movement stopped"
 					except rospy.ServiceException, e:
 						print "Service call failed: %s"%e
-					temp_obj.append(symbol.data)
+					self.temp_obj.append(symbol.data)
+				
 					
 			for i in range (0, len(temp_loc)):
 				print "Loc QR detected"
@@ -150,34 +152,36 @@ class NaoInterface:
 				qr_msg.rfid_tags_ids.append(temp_loc[i])
 			if len(temp_loc) <> 0:
 				self.pub1.publish(qr_msg)
-			if len(temp_obj) <> 0:
+			if len(self.temp_obj) <> 0:
 				self.stop = True
 				
 				
-				for i in range (0, len(temp_obj)):
-					print temp_obj[i]
+				#~ for i in range (0, len(self.temp_obj)):
+					#~ print self.temp_obj[i]
 				image2 = self.imageLoad()
 				for symbol in image2:
-					for i in range (0, len(temp_obj)):
-						print "temp_obj ", temp_obj[i]
-						if symbol.data in temp_obj[i] and temp_obj[i] not in self.response['qr_messages']:
+					for i in range (0, len(self.temp_obj)):
+						print "temp_obj ", self.temp_obj[i]
+						if symbol.data in self.temp_obj[i] and self.temp_obj[i] not in self.response['qr_messages']:
 							print symbol.data
 							x = (symbol.location[3][0] + symbol.location[1][0])/2 
 							y = (symbol.location[0][1] + symbol.location[2][1])/2
 							#~ self.response['qr_messages'].append(symbol.data)
 							#~ self.response['qr_centers'].append((x,y))
 							flag = True
+							print "flag=", flag
 						if flag == True:
 							print "i = ", i
 							#~ i -= 1
 							#~ print temp_obj[i]
 							break
 				print self.response
+				print "temp_obj2 ", self.temp_obj[i]
 				#~ for i in range (0, len(self.response['qr_messages'])):
 				#~ if len(self.response['qr_messages']) <> 0:
 				if flag == True:
 					print "blah ", i
-					print temp_obj[i]
+					print self.temp_obj[i]
 					print x
 					print y
 					self.stop = True
@@ -186,7 +190,7 @@ class NaoInterface:
 					#~ print self.response['qr_messages'][i]
 					rospy.wait_for_service('set_behavior')
 					try:
-						print "Object ", temp_obj[i], " found 2nd time"
+						print "Object ", self.temp_obj[i], " found 2nd time"
 						#~ print "Object ", self.response['qr_messages'][i], " found 2nd time"
 						#~ self.lost_object_counter = 8
 						edge = 160
@@ -218,7 +222,7 @@ class NaoInterface:
 						resp2 = set_behavior(behavior, polygon)
 						#~ self.counter = 15
 						#~ print "TRACKING object ", self.response['qr_messages'][i]
-						print "TRACKING object ", temp_obj[i]
+						print "TRACKING object ", self.temp_obj[i]
 						
 						while self.relative_obj_x == 0.0 and self.relative_obj_y == 0.0:
 							if self.lost_obj == False:
@@ -231,12 +235,12 @@ class NaoInterface:
 						if self.stop == True:
 							print self.relative_obj_x
 							#~ print "Successfully tracked ", self.response['qr_messages'][i]
-							print "Successfully tracked ", temp_obj[i]
-							self.response['qr_messages'].append(symbol.data)
+							print "Successfully tracked ", self.temp_obj[i]
+							self.response['qr_messages'].append(self.temp_obj[i])
 							self.response['qr_centers'].append((x,y))
-							self.setObjectClient(i)
 							self.rh.audio.speak("Object")
-							self.rh.audio.speak(self.response['qr_messages'][i])
+							self.rh.audio.speak(self.temp_obj[i])
+							self.setObjectClient(i)
 							self.visualize()
 						
 					except rospy.ServiceException, e:
@@ -258,7 +262,8 @@ class NaoInterface:
 		obj = ObjectMsg()
 		obj.x = self.absolute_obj_x
 		obj.y = self.absolute_obj_y
-		obj.message = self.response['qr_messages'][i]
+		#~ obj.message = self.response['qr_messages'][i]
+		obj.message = self.temp_obj[i]
 		obj.type = 'Dynamic'
 		rospy.wait_for_service('set_object')
 		try:
