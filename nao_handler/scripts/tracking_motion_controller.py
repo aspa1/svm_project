@@ -77,6 +77,7 @@ class TrackingAndMotion:
 	
 	def enableObstacleAvoidance(self):
 		#~ self.rh.humanoid_motion.goToPosture("Stand", 0.7)
+		self.disableObjectTracking()
 		self.obstacle_timer = rospy.Timer(rospy.Duration(0.5), self.obstacleAvoidanceCallback)
 
 	def disableObstacleAvoidance(self):
@@ -92,10 +93,12 @@ class TrackingAndMotion:
 		self.lost_object_counter = 50
 		self.lock_motion = False
 		self.hunt_initiated = False
+<<<<<<< HEAD
+=======
+		
+>>>>>>> tracking motion + nao interface final
 	
 	def disableObjectTracking(self):
-		#~ self.dx = 0
-		#~ self.dy = 0
 		tracking_flag = False
 		self.lost_object_pub.publish(tracking_flag)
 		self.lost_obj_timer.shutdown()
@@ -130,7 +133,6 @@ class TrackingAndMotion:
 		joint.joint_angles.append(-var_x * 0.05)
 		joint.joint_angles.append(var_y * 0.05)
 				
-		#~ print self.rh.sensors.getSonarsMeasurements()
 		
 		ans = self.rh.humanoid_motion.getJointAngles(['HeadYaw', 'HeadPitch'])['angles']
 		head_yaw = ans[0]
@@ -153,14 +155,13 @@ class TrackingAndMotion:
 		
 		if self.lock_motion is False:
 			
-			#~ self.theta_vel = head_yaw * 0.1
-			#~ if -self.head_yaw_value < head_yaw  and head_yaw< self.head_yaw_value:
-				#~ self.x_vel = 0.1
-			#~ self.pub.publish(joint)
-			#~ self.theta_vel = 0!!!
 			if -self.head_yaw_value < head_yaw  and head_yaw < self.head_yaw_value:
+<<<<<<< HEAD
 				#~ self.x_vel = 0!!!
 				self.x_vel = 0.2
+=======
+				self.x_vel = 0.1
+>>>>>>> tracking motion + nao interface final
 				self.theta_vel = 0
 			else:
 				self.x_vel = 0.0001
@@ -177,13 +178,6 @@ class TrackingAndMotion:
 			
 		if  self.lock_motion is True:
 			
-			#~ print "sonars:", sonars['front_left'], sonars['front_right']
-			#~ print "Head_pitch:",head_pitch
-			#~ print "Head_yaw:",head_yaw
-			#~ print "Sub_x:", sub_x
-			#~ print "Sub_y:", sub_y
-			#~ 
-			#~ dx = 0
 			sy = 0
 			if self.find_distance_with_sonars is True and\
 				(sonars['front_left'] <= self.sonar_value or sonars['front_right'] <= self.sonar_value):				
@@ -195,19 +189,15 @@ class TrackingAndMotion:
 					sy = -1
 			else:
 				x = (sub_y * 47.6* 3.14159 / 180) / 240.0
-				#~ print "x=", x
 				total_x = head_pitch + x + 0.021
-				#~ print "total_x=",total_x
 				self.dx = 0.53 / math.tan(total_x)
 				sy = -1
 				
-			#~ print "dx= ",self.dx
+			print "dx= ",self.dx
 			y = (sub_x * 60.9 * 3.14159 / 180) / 320.0
-			#~ print "y=", y
 			total_y = head_yaw + sy * y
-			#~ print "total_y=",total_y
 			self.dy = self.dx * math.tan(total_y)
-			#~ print "dy= " ,self.dy
+			print "dy= " ,self.dy
 			
 			object_pos = Twist()
 		
@@ -233,7 +223,10 @@ class TrackingAndMotion:
 	
 	def lostObjectCallback(self, event):
 		tracking_flag = TrackingFlag()
+<<<<<<< HEAD
 		#~ tracking_flag = False
+=======
+>>>>>>> tracking motion + nao interface final
 		if self.hunt_initiated:
 			self.lost_object_counter -= 1
 		if self.lost_object_counter < 0 and self.hunt_initiated == True:
@@ -247,6 +240,11 @@ class TrackingAndMotion:
 			self.theta_vel = 0.0
 			
 			self.disableObjectTracking()
+<<<<<<< HEAD
+=======
+			print "tracking_flag ", tracking_flag
+			self.lost_object_pub.publish(tracking_flag)
+>>>>>>> tracking motion + nao interface final
 		
 		
 	def setVelocitiesCallback(self, event):
@@ -305,6 +303,7 @@ class TrackingAndMotion:
 			self.disableObstacleAvoidance()
 			print 'Obstacle avoidance disabled'
 			self.predator_hunt_pub.publish(request.polygon)
+			time.sleep(5)
 			self.enableObjectTracking()
 			print 'Object tracking enabled'
 			
@@ -323,7 +322,6 @@ class TrackingAndMotion:
 		return True
 		
 	def setRobotState(self, request):
-		#~ if request.state == False
 		self.state_flag = request.state
 		
 		print 'Robot state set'

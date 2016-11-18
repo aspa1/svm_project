@@ -1,6 +1,5 @@
-#type = dynamic or static
+#type can be: specific type (e.g 'chair'), 'all', ''
 string type
-string object_type
 ---
 nao_localization/ObjectMsg[] objects
 bool success
