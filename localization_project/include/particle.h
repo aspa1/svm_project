@@ -13,6 +13,7 @@ class Particle
 	private:
 		float _previous_x;
 		float _previous_y;
+		float _previous_theta;
 		float _x;
 		float _y;
 		float _theta;
@@ -36,6 +37,7 @@ class Particle
 		void getRanges(float angle, unsigned int width, unsigned int height,
 			int** data, float resolution, float max_range, int i);
 		float rfidSense(std::vector<std::vector<float> > rfid_pose);
+		float checkForObstacles(float angle, int** data, float resolution);
 		void setParticleWeight(unsigned int width, unsigned int height,
 			int** data, float resolution, const std::vector<float>& ranges,
 			float max_range, float increment, float angle_min, 

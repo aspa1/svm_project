@@ -43,6 +43,7 @@ void Particle::move()
 {
 	_previous_x = _x;
 	_previous_y = _y;
+	_previous_theta = _theta;
 	_x += _dx;
 	_y += _dy;
 	_theta += _dtheta;
@@ -94,6 +95,36 @@ float Particle::rfidSense(std::vector<std::vector<float> > rfid_pose)
 	return w;
 }
 
+float Particle::checkForObstacles(float angle, int** data, float resolution)
+{
+	//~ ROS_INFO_STREAM("previous_x: " << (int)(_previous_x/resolution)
+		//~ << " x: " << (int)(_x/resolution) << " dx: " << _dx);
+	//~ ROS_INFO_STREAM("previous_y: " << (int)(_previous_y/resolution)
+		//~ << " y: " << (int)(_y/resolution) << " dy: " << _dy);
+	float w = 0;
+	int distance = 0; 
+	float new_x = _previous_x / resolution;
+	float new_y = _previous_y / resolution;
+	
+	while ((int)new_x != (int)(_x / resolution))
+	{
+		if ((data[(int)(new_x)][(int)(new_y)] > 50) || 
+			(data[(int)(new_x)][(int)(new_y)] == -1))
+		{
+			w = -1.0;
+			//~ ROS_INFO_STREAM("w = " << w << " (int)new_x: " << (int)new_x << " (int)new_y: " << (int)new_y);
+			return w;
+		}
+		distance ++;
+		new_x = _previous_x / resolution - distance * cos(angle);
+		new_y = _previous_y / resolution - distance * sin(angle);
+	}
+	w = 1.0;
+	//~ ROS_INFO_STREAM("w = " << w << " (int)new_x: " << (int)new_x << " (int)new_y: " << (int)new_y);
+
+	return w;
+}
+
 void Particle::setParticleWeight(unsigned int width, unsigned int height,
 	int** data, float resolution, const std::vector<float>& ranges,
 	float max_range, float increment, float angle_min,
@@ -101,44 +132,58 @@ void Particle::setParticleWeight(unsigned int width, unsigned int height,
 {
 	_weight = 0;
 	float tag_w = rfidSense(rfid_pose);
+	float angle1 = atan2(_previous_y - _y, _previous_x - _x);
+	//~ ROS_INFO_STREAM("angle1: " << angle1 << " cos(angle1) : " << cos(angle1) << " sin(angle1): " << sin(angle1));
+	float obstacle_w = checkForObstacles( angle1, data, resolution);
 	float sum = 0;
 	int k = 0;	
 	
-	for (unsigned int i = 0 ; i < ranges.size(); i+=step)
+	//~ int obstacle_w = 1;
+	
+	if (obstacle_w < 0.0)
 	{
-		//~ ROS_INFO_STREAM("angle = " << i*increment + angle_min );
-		getRanges(i*increment + angle_min + _theta, width, height, data,
-			//~ resolution, max_range, i);
-			resolution, max_range, k);
-		k++;
+		_weight = 0;
+		return;
 	}
 	
-	k = 0;
-	for (unsigned int i = 0 ; i < ranges.size() ; i+=step)
+	else
 	{
-		if (_particle_ranges[k] / resolution <= 1)
-		//~ if (_particle_ranges[i] / resolution <= 1)
+		for (unsigned int i = 0 ; i < ranges.size(); i+=step)
 		{
-			_weight = 0;
-			return;
-		}
-		else
-		{	
-			//~ if (_particle_ranges[i] > max_range)
-				//~ _particle_ranges[i] = max_range;
-			//~ _distances[i] = (fabs(ranges[i]-_particle_ranges[i]));
-			//~ sum += _distances[i];
-			if (_particle_ranges[k] > max_range)
-				_particle_ranges[k] = max_range;
-			_distances[k] = (fabs(ranges[i]-_particle_ranges[k]));
-			sum += _distances[k];
+			//~ ROS_INFO_STREAM("angle = " << i*increment + angle_min );
+			getRanges(i*increment + angle_min + _theta, width, height, data,
+				//~ resolution, max_range, i);
+				resolution, max_range, k);
 			k++;
 		}
+		
+		k = 0;
+		for (unsigned int i = 0 ; i < ranges.size() ; i+=step)
+		{
+			if (_particle_ranges[k] / resolution <= 1)
+			//~ if (_particle_ranges[i] / resolution <= 1)
+			{
+				_weight = 0;
+				return;
+			}
+			else
+			{	
+				//~ if (_particle_ranges[i] > max_range)
+					//~ _particle_ranges[i] = max_range;
+				//~ _distances[i] = (fabs(ranges[i]-_particle_ranges[i]));
+				//~ sum += _distances[i];
+				if (_particle_ranges[k] > max_range)
+					_particle_ranges[k] = max_range;
+				_distances[k] = (fabs(ranges[i]-_particle_ranges[k]));
+				sum += _distances[k];
+				k++;
+			}
+		}
 	}
-	
+		
 	sum = sum/(ranges.size()/step + 1);
 	float sum_w = pow(1/(sum + 1), strictness);
-	if(tag_w < 0.0)
+	if (tag_w < 0.0)
 	{
 		_weight = sum_w * 0.0001;
 	}

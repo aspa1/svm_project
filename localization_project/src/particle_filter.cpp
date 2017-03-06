@@ -159,7 +159,7 @@ void ParticleFilter::resample()
 	bool flag = false;
 	for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 	{
-		if (_particles[i].getWeight() > 0.001)
+		if (_particles[i].getWeight() > 0.000001)
 		{
 			flag = true;
 			break;

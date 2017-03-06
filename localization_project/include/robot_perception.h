@@ -52,7 +52,7 @@ class RobotPerception
 		bool _flag;
 		bool _stdr_in_use;
 		bool _rfid_reader_exists;
-		float yy;
+		float tf_yaw;
 	
 	
 	public:

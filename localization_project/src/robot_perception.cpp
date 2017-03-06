@@ -285,8 +285,8 @@ void RobotPerception::laserRangesCallback(
 			try
 			{
 				_listener.lookupTransform(_robot_param, _laser_param, ros::Time(0), transform);
-				yy = tf::getYaw(transform.getRotation());
-				ROS_ERROR_STREAM(yy);	
+				tf_yaw = tf::getYaw(transform.getRotation());
+				ROS_ERROR_STREAM(tf_yaw);	
 				_flag = true;
 			}
 			catch (tf::TransformException &ex)
@@ -297,9 +297,9 @@ void RobotPerception::laserRangesCallback(
 		}
 	}
 	else
-		yy = 0;
+		tf_yaw = 0;
 	_increment = laser_scan_msg.angle_increment;
-	_angle_min = laser_scan_msg.angle_min + yy;
+	_angle_min = laser_scan_msg.angle_min + tf_yaw;
 	_laser_ranges = laser_scan_msg.ranges;
 	_max_range = laser_scan_msg.range_max;
 	for (unsigned int i = 0 ; i < _laser_ranges.size() ; i ++)

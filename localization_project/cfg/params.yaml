@@ -1,7 +1,7 @@
 map_topic: /map
 
-robot_laser_topic: /inner/sonar_measurements
-#robot_laser_topic: /robot0/laser_1
+#robot_laser_topic: /inner/sonar_measurements
+robot_laser_topic: /robot0/laser_1
 
 #only when stdr is used
 laser_param: robot0_laser_1
@@ -9,14 +9,14 @@ laser_param: robot0_laser_1
 #only when stdr is used
 robot_param: robot0
 
-velocity_topic: /inner/cmd_vel
-#velocity_topic: /robot0/cmd_vel
+#velocity_topic: /inner/cmd_vel
+velocity_topic: /robot0/cmd_vel
 
 rays_subsampling_step: 1
 
-strictness: 0.8
+strictness: 1
 
-particles_number: 200
+particles_number: 10000
 
 enable_visualization: true
 
@@ -24,22 +24,22 @@ a1: 0.1
 #a1: 0
 a2: 0.05
 #a2: 0
-duration: 5
+duration: 3
 
-#rfid_reader_topic: /robot0/rfid_reader_0
-rfid_reader_topic: /inner/qr_detection
+rfid_reader_topic: /robot0/rfid_reader_0
+#rfid_reader_topic: /inner/qr_detection
 
 #only when stdr is used
 rfid_tags_topic: /stdr_server/rfid_list
 
-initial_pose_known: true
+initial_pose_known: false
 
-initial_x: 10.5
+initial_x: 15.5
 
-initial_y: 6.8
+initial_y: 15.5
 
 initial_theta: 0
 
-stdr_used: false
+stdr_used: true
 
-rfid_reader_exists: true
+rfid_reader_exists: false
