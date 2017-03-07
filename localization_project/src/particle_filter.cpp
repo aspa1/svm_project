@@ -6,6 +6,7 @@ ParticleFilter::ParticleFilter()
 	_previous_angular = 0;
 	_current_angular = 0;
 	_current_linear = 0;
+	_sum_iter_dt = 0;
 	_previous_time = ros::Time::now();
 	_flag = false;
 	_motion_flag = false;
@@ -98,7 +99,6 @@ bool ParticleFilter::particlesInit (
 		_particles.push_back(particle);
 	}
 	_particles_initialized = true;
-	
 	ROS_INFO_STREAM(_particles_number << " " << "particles initialized");
 	if(_visualization_enabled)
 		visualize(robot_percept.getMapResolution());
@@ -109,8 +109,8 @@ bool ParticleFilter::particlesInit (
 
 void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 {
-	ros::Time time1, time2;
 	ros::Duration dt;
+	ros::Time time1, time2;
 	if (_particles_initialized)
 	{
 		time1 = ros::Time::now();
@@ -147,6 +147,7 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 		visualize(robot_percept.getMapResolution());
 		time2 = ros::Time::now();
 		dt = time2 - time1;
+		_sum_iter_dt += dt.toSec();
 		//~ ROS_INFO_STREAM("dt = " << dt.toSec());
 	}
 }
@@ -203,6 +204,7 @@ void ParticleFilter::resample()
 		}
 		average = sum/ _particles_number;
 		//~ ROS_INFO_STREAM("average2 = " << average);
+		getExperimentResults();
 	}
 	else
 	{
@@ -251,6 +253,71 @@ void ParticleFilter::velocityCallback(geometry_msgs::Twist twist)
 	}
 }
 
+void ParticleFilter::getExperimentResults()
+{
+	static tf::TransformListener lr;
+	tf::StampedTransform transform;
+	float average;
+	float sum_av = 0;
+	float sum = 0;
+	float var;
+	float distance;
+	float p_x;
+	float p_y;
+	for (unsigned int i = 0 ; i < _particles_number ; i++ )
+	{
+		p_x = _particles[i].getX();
+		p_y = _particles[i].getY(); 
+		sum_av += sqrt(pow(p_x, 2) + pow(p_y, 2));
+		//~ ROS_INFO_STREAM(" x = " << _particles[i].getX());
+	}
+	average = sum_av/_particles_number;
+	//~ ROS_INFO_STREAM("average = " << average);
+	for (unsigned int i = 0 ; i < _particles_number ; i++ )
+	{
+		p_x = _particles[i].getX();
+		p_y = _particles[i].getY(); 
+		sum += pow( (sqrt(pow(p_x, 2) + pow(p_y, 2)) - average), 2);
+		//~ ROS_INFO_STREAM("sum = " << sum);
+	}
+	var = (float)(sum/_particles_number);
+	//~ ROS_INFO_STREAM("1/_particles_number = " << (float)(sum/_particles_number)); 
+	//~ ROS_INFO_STREAM("var = " << var); 
+	try
+	{
+		lr.lookupTransform("/map", "/robot0", ros::Time(0), transform);
+	}
+	catch (tf::TransformException ex)
+	{
+		ROS_ERROR("%s",ex.what());
+		ros::Duration(1.0).sleep();
+	}
+	float real_x = transform.getOrigin().x();
+	float real_y = transform.getOrigin().y();
+	float best_particle_x = _particles[_id].getX();
+	float best_particle_y = _particles[_id].getY();
+	//~ ROS_ERROR_STREAM(" tf " << transform.getOrigin().x());
+	//~ ROS_ERROR_STREAM(" best " << _particles[_id].getX());
+	float dx = pow((real_x - best_particle_x), 2);
+	float dy = pow((real_y - best_particle_y), 2);
+	distance = sqrt (dx + dy);
+	//~ ROS_ERROR_STREAM(" distance = " << distance);
+	_timestamps.push_back(ros::Time::now());
+	_variances.push_back(var);
+	_distances.push_back(distance);
+	
+	std::ofstream output_file;
+	std::string path = 	ros::package::getPath("localization_project") + "/cfg/experiments.txt";
+	output_file.open(path.c_str());
+	for (unsigned int i = 0; i < _timestamps.size(); i ++)
+	{
+		output_file << _timestamps[i] << "\t"  << _variances[i] << "\t"
+			<< _distances[i] << "\t" << _sum_iter_dt << "\n"; 
+	}
+	output_file.close();
+
+}
+
 void ParticleFilter::visualize(float resolution)
 {
 	visualization_msgs::Marker m, m1;
@@ -293,19 +360,19 @@ void ParticleFilter::visualize(float resolution)
     m1.color.b = 1.0;
     
     float max_weight = _particles[0].getWeight();
-    int id = 0;
+    _id = 0;
 	for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 	{
 		if (_particles[i].getWeight() > max_weight)
 		{
 			max_weight = _particles[i].getWeight();
-			id = i;
+			_id = i;
 		}
 	}
 	
 	geometry_msgs::Point p1;
-	p1.x = _particles[id].getX();
-	p1.y = _particles[id].getY();
+	p1.x = _particles[_id].getX();
+	p1.y = _particles[_id].getY();
 	m1.points.push_back(p1);
 	
 	//~ ROS_INFO_STREAM("Best particle: x = " << _particles[id].getX() <<
@@ -314,9 +381,9 @@ void ParticleFilter::visualize(float resolution)
 	
 	static tf::TransformBroadcaster br;
 	tf::Transform transform;
-	transform.setOrigin( tf::Vector3(_particles[id].getX(), _particles[id].getY(), 0.0) );
+	transform.setOrigin( tf::Vector3(_particles[_id].getX(), _particles[_id].getY(), 0.0) );
 	tf::Quaternion q;
-	q.setRPY(0, 0, _particles[id].getTheta());
+	q.setRPY(0, 0, _particles[_id].getTheta());
 	transform.setRotation(q);
 	br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "nao_pose"));
 }

@@ -27,6 +27,7 @@ class ParticleFilter {
 		int _particles_number;
 		int _duration;
 		int _sampling_step;
+		int _id;
 		float _noise_param1;
 		float _noise_param2;
 		float _strictness_param;
@@ -37,7 +38,11 @@ class ParticleFilter {
 		float _initial_x;
 		float _initial_y;
 		float _initial_theta;
+		float _sum_iter_dt;
 		std::vector<Particle> _particles; 
+		std::vector<ros::Time> _timestamps; 
+		std::vector<float> _variances; 
+		std::vector<float> _distances; 
 		bool _initial_pose_flag;
 		bool _visualization_enabled;
 		bool _particles_initialized;
@@ -55,6 +60,8 @@ class ParticleFilter {
 		void particlesCallback(const ros::TimerEvent& event);
 		void velocityCallback(geometry_msgs::Twist twist);
 		void resample();
+		void getExperimentResults();
+
 		
 		
 };
