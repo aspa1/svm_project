@@ -1,0 +1,39 @@
+robot:
+  robot_specifications:
+    - footprint:
+        footprint_specifications:
+          radius: 0.15
+          points:
+            []
+    - initial_pose:
+        x: 0
+        y: 0
+        theta: 0
+    - laser:
+        laser_specifications:
+          max_angle: 0.3926991
+          min_angle: -0.3926991
+          max_range: 2.55
+          min_range: 0.25
+          num_rays: 2
+          frequency: 10
+          frame_id: laser_1
+          pose:
+            x: 0
+            y: 0
+            theta: 0
+          noise:
+            noise_specifications:
+              noise_mean: 0
+              noise_std: 0
+    - rfid_reader:
+        rfid_reader_specifications:
+          angle_span: 1.047198
+          max_range: 3
+          signal_cutoff: 0
+          frequency: 10
+          frame_id: rfid_reader_0
+          pose:
+            x: 0
+            y: 0
+            theta: 0

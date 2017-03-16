@@ -25,9 +25,10 @@ class ParticleFilter {
 		std::string inner_pose;
 		RobotPerception robot_percept;
 		int _particles_number;
-		int _duration;
 		int _sampling_step;
 		int _id;
+		int _iter_counter;
+		float _duration;
 		float _noise_param1;
 		float _noise_param2;
 		float _strictness_param;

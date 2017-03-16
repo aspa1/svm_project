@@ -19,6 +19,9 @@
 class RobotPerception
 {
 	private:
+		ros::Time _time1;
+		ros::Time _time2;
+		ros::Duration _dt;
 		ros::ServiceServer _rfid_tags_visualization_service;
 		ros::NodeHandle _n;
 		std::string _map_topic_param;

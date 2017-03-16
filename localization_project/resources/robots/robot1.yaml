@@ -1,0 +1,44 @@
+robot:
+  robot_specifications:
+    - footprint:
+        footprint_specifications:
+          radius: 0.15
+          points:
+            []
+    - initial_pose:
+        x: 0
+        y: 0
+        theta: 0
+    - laser:
+        laser_specifications:
+          max_angle: 3.141593
+          min_angle: -3.141593
+          max_range: 2.55
+          min_range: 0.25
+          num_rays: 2
+          frequency: 10
+          frame_id: laser_1
+          pose:
+            x: 0
+            y: 0
+            theta: 0
+          noise:
+            noise_specifications:
+              noise_mean: 0
+              noise_std: 0
+    - kinematic:
+        kinematic_specifications:
+          kinematic_type: ""
+          kinematic_parameters:
+            a_ux_ux: 0
+            a_ux_uy: 0
+            a_ux_w: 0
+            a_uy_ux: 0
+            a_uy_uy: 0
+            a_uy_w: 0
+            a_w_ux: 0
+            a_w_uy: 0
+            a_w_w: 0
+            a_g_ux: 0
+            a_g_uy: 0
+            a_g_w: 0

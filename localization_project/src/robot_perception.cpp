@@ -6,6 +6,7 @@
  */
 RobotPerception::RobotPerception () 
 {
+	_time1 = ros::Time::now();
 	_qr_file_path = ros::package::getPath("localization_project") + "/cfg/AllQRs.txt";
 
 	_flag = false;
@@ -244,7 +245,7 @@ void RobotPerception::rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg
 	rfid_reader_msg)
 {
 	_rfid_pose.clear();
-	ROS_ERROR_STREAM("RfidReaderCallback");
+	//~ ROS_ERROR_STREAM("RfidReaderCallback");
 	_rfid_ids = rfid_reader_msg.rfid_tags_ids;
 	
 	//~ std::vector<std::vector<float> > tmp_rfids;
@@ -262,10 +263,10 @@ void RobotPerception::rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg
 			}
 		}
 	}
-	for (unsigned int i = 0 ; i < _rfid_pose.size(); i++)
-	{
-		ROS_ERROR_STREAM("rfidReaderCallback x = " << _rfid_pose[i][0]);
-	}
+	//~ for (unsigned int i = 0 ; i < _rfid_pose.size(); i++)
+	//~ {
+		//~ ROS_ERROR_STREAM("rfidReaderCallback x = " << _rfid_pose[i][0]);
+	//~ }
 	//~ _rfid_pose = tmp_rfids;
 }
 
@@ -277,6 +278,10 @@ void RobotPerception::rfidReaderCallback (stdr_msgs::RfidSensorMeasurementMsg
 void RobotPerception::laserRangesCallback(
 	sensor_msgs::LaserScan laser_scan_msg) 
 {
+	//~ _time2 = ros::Time::now();
+	//~ _dt = _time2 - _time1;
+	//~ ROS_ERROR_STREAM("dt = " << _dt.toSec());
+	//~ _time1 = _time2;
 	if (_stdr_in_use)
 	{
 		tf::StampedTransform transform;

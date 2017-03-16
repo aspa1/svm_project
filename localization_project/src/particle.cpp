@@ -195,8 +195,8 @@ void Particle::calculateMotion(float previous_linear, float previous_angular, ro
 {
 	_linear = previous_linear + noise(a1 * fabs(previous_linear) +
 		a2 * fabs(previous_angular));
-	_angular = previous_angular + noise(a2 * fabs(previous_linear) +
-		a1 * fabs(previous_angular));
+	_angular = previous_angular + noise(a1 * fabs(previous_linear) +
+		a2 * fabs(previous_angular));
 	
 	if (_angular == 0)
 	{

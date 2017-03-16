@@ -7,6 +7,7 @@ ParticleFilter::ParticleFilter()
 	_current_angular = 0;
 	_current_linear = 0;
 	_sum_iter_dt = 0;
+	_iter_counter = 0;
 	_previous_time = ros::Time::now();
 	_flag = false;
 	_motion_flag = false;
@@ -113,6 +114,7 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 	ros::Time time1, time2;
 	if (_particles_initialized)
 	{
+		
 		time1 = ros::Time::now();
 		if (_previous_angular || _previous_linear)
 			_motion_flag = true;
@@ -137,18 +139,23 @@ void ParticleFilter::particlesCallback(const ros::TimerEvent& event)
 				robot_percept.getAngleMin(), robot_percept.getRfidPose(),
 				_sampling_step, _strictness_param);
 		}
-		if (_motion_flag || ( (_flag == 0) &&
-			(_particles[0].rfidSense(robot_percept.getRfidPose()) != 0) ))
+		//~ if (_motion_flag || ( (_flag == 0) &&
+			//~ (_particles[0].rfidSense(robot_percept.getRfidPose()) != 0) ))
+		if (_motion_flag || ((_particles[0].rfidSense(robot_percept.getRfidPose()) != 0)))
 		{
 			resample();
 		}
 		
+		if (_motion_flag && _flag) 
+		{
+			_iter_counter++ ;
+			time2 = ros::Time::now();
+			dt = time2 - time1;
+			_sum_iter_dt += dt.toSec();
+			//~ ROS_INFO_STREAM("dt = " << _sum_iter_dt);
+		}
 		_motion_flag = false;
 		visualize(robot_percept.getMapResolution());
-		time2 = ros::Time::now();
-		dt = time2 - time1;
-		_sum_iter_dt += dt.toSec();
-		//~ ROS_INFO_STREAM("dt = " << dt.toSec());
 	}
 }
 
@@ -160,7 +167,7 @@ void ParticleFilter::resample()
 	bool flag = false;
 	for (unsigned int i = 0 ; i < _particles_number ; i++ ) 
 	{
-		if (_particles[i].getWeight() > 0.000001)
+		if (_particles[i].getWeight() > 0.00001)
 		{
 			flag = true;
 			break;
@@ -307,12 +314,12 @@ void ParticleFilter::getExperimentResults()
 	_distances.push_back(distance);
 	
 	std::ofstream output_file;
-	std::string path = 	ros::package::getPath("localization_project") + "/cfg/experiments.txt";
+	std::string path = 	ros::package::getPath("localization_project") + "/cfg/experiments/experiments.txt";
 	output_file.open(path.c_str());
 	for (unsigned int i = 0; i < _timestamps.size(); i ++)
 	{
 		output_file << _timestamps[i] << "\t"  << _variances[i] << "\t"
-			<< _distances[i] << "\t" << _sum_iter_dt << "\n"; 
+			<< _distances[i] << "\t" << _sum_iter_dt  << "\t" << _iter_counter << "\n"; 
 	}
 	output_file.close();
 

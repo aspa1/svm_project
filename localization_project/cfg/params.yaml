@@ -1,10 +1,10 @@
 map_topic: /map
 
 #robot_laser_topic: /inner/sonar_measurements
-robot_laser_topic: /robot0/laser_0
+robot_laser_topic: /robot0/laser_1
 
 #only when stdr is used
-laser_param: robot0_laser_0
+laser_param: robot0_laser_1
 
 #only when stdr is used
 robot_param: robot0
@@ -12,19 +12,19 @@ robot_param: robot0
 #velocity_topic: /inner/cmd_vel
 velocity_topic: /robot0/cmd_vel
 
-rays_subsampling_step: 10
+rays_subsampling_step: 1
 
-strictness: 1.0
-
+strictness: 1
+ 
 particles_number: 10000
+ 
+a1: 0.07
+ 
+a2: 0.02
+ 
+duration: 1
 
 enable_visualization: true
-
-a1: 0.035
-#a1: 0
-a2: 0.02
-#a2: 0
-duration: 5
 
 rfid_reader_topic: /robot0/rfid_reader_0
 #rfid_reader_topic: /inner/qr_detection
@@ -42,4 +42,4 @@ initial_theta: 0
 
 stdr_used: true
 
-rfid_reader_exists: false
+rfid_reader_exists: true
