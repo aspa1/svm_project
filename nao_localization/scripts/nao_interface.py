@@ -44,6 +44,9 @@ class NaoInterface:
 		self.robot_x = 0
 		self.robot_y = 0
 		self.robot_th = 0
+		self.tracking_success = False
+		self.tracking_flag = False
+		self.first_time_flag = True
 
 		self.objects = {}
 		
@@ -83,6 +86,8 @@ class NaoInterface:
 	def qrDetectionCallback(self, event):
 	
 		if (self.stop == False):
+			self.first_time_flag == True
+			self.tracking_success = False
 			flag = False
 			temp_loc = []
 			temp_obj = []
@@ -135,41 +140,65 @@ class NaoInterface:
 					rospy.wait_for_service('set_behavior')
 					try:
 						print "Object ", self.obj, " found 2nd time"
-						edge = 250
-						set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
-						polygon = Polygon()
-						qr_center = Point32()
-						qr_center2 = Point32()
-						qr_center.x = (self.x - edge/2)/2
-						qr_center.y = (self.y - edge/2)/2
-
-						while (qr_center.x + (edge/2)) > (640 / 2) or (qr_center.y + (edge/2))> (480 / 2) or (qr_center.x + (edge/2)) < 0 or (qr_center.y + (edge/2))< 0:
-							edge -= 40
+						while self.tracking_success == False and \
+							(self.first_time_flag == True or self.tracking_flag == True) :
+							
+							self.first_time_flag = False
+							edge = 250
+							image2 = self.imageLoad()
+							flag = False
+							for symbol in image2:
+								for i in range (0, len(temp_obj)):
+									if symbol.data in self.obj:
+										print "symbol.data", symbol.data
+										self.x = (symbol.location[3][0] + symbol.location[1][0])/2 
+										self.y = (symbol.location[0][1] + symbol.location[2][1])/2
+										flag = True
+										print "flag =", flag
+										break
+							if flag == False:
+								self.stop = False
+								break
+							set_behavior = rospy.ServiceProxy('set_behavior', SetBehavior)
+							polygon = Polygon()
+							qr_center = Point32()
+							qr_center2 = Point32()
 							qr_center.x = (self.x - edge/2)/2
 							qr_center.y = (self.y - edge/2)/2
-						polygon.points.append(qr_center)
-						qr_center2.x = (edge)/2
-						qr_center2.y = (edge)/2
-						polygon.points.append(qr_center2)
-						print polygon
-						try:
-							robot_state = rospy.ServiceProxy('robot_state', RobotState)
-							resp1 = robot_state(True)
-						except rospy.ServiceException, e:
-							print "Service call failed: %s"%e
-						behavior = "track_bounding_box"
-						resp2 = set_behavior(behavior, polygon)
-						print "TRACKING object ", self.obj
-						self.tracking_flag = True
-						while self.tracking_flag == True:
-							time.sleep(0.01)
-							self.stop = True
-						print "Stopped tracking"
+
+							while (qr_center.x + (edge/2)) > (640 / 2) or (qr_center.y + (edge/2))> (480 / 2) or (qr_center.x + (edge/2)) < 0 or (qr_center.y + (edge/2))< 0:
+								edge -= 40
+								qr_center.x = (self.x - edge/2)/2
+								qr_center.y = (self.y - edge/2)/2
+							polygon.points.append(qr_center)
+							qr_center2.x = (edge)/2
+							qr_center2.y = (edge)/2
+							polygon.points.append(qr_center2)
+							print polygon
+							try:
+								robot_state = rospy.ServiceProxy('robot_state', RobotState)
+								resp1 = robot_state(True)
+							except rospy.ServiceException, e:
+								print "Service call failed: %s"%e
+							behavior = "track_bounding_box"
+							resp2 = set_behavior(behavior, polygon)
+							
+							self.tracking_flag = False
+							print "TRACKING object ", self.obj
+							#~ self.tracking_flag = True
+							print "tracking_success", self.tracking_success
+							print "tracking_flag", self.tracking_flag
+							while self.tracking_success == False and self.tracking_flag == False:
+								time.sleep(0.01)
+								self.stop = True
+							print "Stopped tracking"
+						
 						#~ self.beginObstacleAvoidance()
 						rospy.wait_for_service('set_behavior')
 						try:
 							try:
 								robot_state = rospy.ServiceProxy('robot_state', RobotState)
+								print "Speed 0"
 								resp1 = robot_state(False)
 								#~ print "OBSTACLE"
 							except rospy.ServiceException, e:
@@ -228,6 +257,7 @@ class NaoInterface:
 			print "Service call failed: %s"
 			
 	def trackingStateCallback(self, flag):
+		print "TRACKING:", flag.tracking_flag
 		self.tracking_flag = flag.tracking_flag 
 		
 	def setNewObjectCallback(self, req):
@@ -300,7 +330,7 @@ class NaoInterface:
 			math.cos(-self.robot_th) * relative_obj_y + self.robot_y
 			
 		print "Successfully tracked ", self.obj
-
+		self.tracking_success = True
 		self.rh.audio.speak("Object")
 		self.rh.audio.speak(self.obj)
 		self.setObjectClient()

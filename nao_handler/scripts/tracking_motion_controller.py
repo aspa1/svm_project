@@ -71,7 +71,7 @@ class TrackingAndMotion:
 		self.object_tracking_sub.unregister()
 		
 		self.head_motion = False
-
+		self.tracking_flag = False
 		self.listener = tf.TransformListener()
 		self.rh.humanoid_motion.goToPosture("Stand", 0.7)
 
@@ -89,23 +89,29 @@ class TrackingAndMotion:
 	
 	def enableObjectTracking(self):
 		#~ self.rh.humanoid_motion.goToPosture("Stand", 0.7)
+		self.tracking_flag = False
 		self.object_tracking_sub = rospy.Subscriber(self.predator_topic, Polygon, self.trackBoundingBox)
 		self.lost_obj_timer = rospy.Timer(rospy.Duration(0.1), self.lostObjectCallback)
 		self.lost_object_counter = 50
+		self.time_out_counter = 200
 		self.lock_motion = False
 		self.hunt_initiated = False
 	
 	def disableObjectTracking(self):
-		tracking_flag = False
-		self.lost_object_pub.publish(tracking_flag)
+		#~ self.tracking_flag = False
+		self.lost_object_pub.publish(self.tracking_flag)
 		self.lost_obj_timer.shutdown()
 		self.object_tracking_sub.unregister()
+		print "object tracking died"
 	
 	def trackBoundingBox(self, polygon):
-		
+		if self.time_out_counter < 0:
+			return
 		self.state_flag = True
 		self.hunt_initiated = True
 		self.lost_object_counter = 50
+		self.time_out_counter -= 1
+		print "self.time_out_counter", self.time_out_counter
 		
 		joint = JointAnglesWithSpeed()
 	
@@ -134,7 +140,7 @@ class TrackingAndMotion:
 		ans = self.rh.humanoid_motion.getJointAngles(['HeadYaw', 'HeadPitch'])['angles']
 		head_yaw = ans[0]
 		head_pitch = ans[1]
-		print "head_yaw:", head_yaw
+		#~ print "head_yaw:", head_yaw
 		
 		
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
@@ -149,12 +155,18 @@ class TrackingAndMotion:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to head pitch")
 			
+		if self.time_out_counter <= 0 and self.tracking_flag == False:
+			self.lock_motion = True
+			rospy.loginfo("Locked due to time out counter")
+			self.tracking_flag = True
+			self.disableObjectTracking()
+			
 		#~ print "self.lock_motion:", self.lock_motion
 		
 		if self.lock_motion is False:
 			
 			if -self.head_yaw_value < head_yaw  and head_yaw < self.head_yaw_value:
-				self.x_vel = 0.1
+				self.x_vel = 0.2
 				self.theta_vel = 0
 			else:
 				self.x_vel = 0.0001
@@ -164,12 +176,16 @@ class TrackingAndMotion:
 			if self.head_motion_sampler == 0:
 				self.pub.publish(joint)
 				self.head_motion_sampler = self.head_motion_sampler_init
+				
 		else:
 			self.x_vel = 0
 			self.y_vel = 0
 			self.theta_vel = 0
+			print 'robot stopped'
 			
-		if  self.lock_motion is True:
+		
+			
+		if  self.lock_motion is True and self.tracking_flag == False:
 			
 			sy = 0
 			if self.find_distance_with_sonars is True and\
@@ -220,16 +236,16 @@ class TrackingAndMotion:
 		if self.lost_object_counter < 0 and self.hunt_initiated == True:
 			rospy.loginfo("Locked due to 2 seconds")
 			self.lock_motion = True
-			tracking_flag = False
-			print "tracking_flag ", tracking_flag
-			self.lost_object_pub.publish(tracking_flag)
+			self.tracking_flag = True
+			print "tracking_flag ", self.tracking_flag
+			self.lost_object_pub.publish(self.tracking_flag)
 			self.x_vel = 0.0
 			self.y_vel = 0.0
 			self.theta_vel = 0.0
 			
 			self.disableObjectTracking()
-			print "tracking_flag ", tracking_flag
-			self.lost_object_pub.publish(tracking_flag)
+			print "tracking_flag ", self.tracking_flag
+			self.lost_object_pub.publish(self.tracking_flag)
 		
 		
 	def setVelocitiesCallback(self, event):
