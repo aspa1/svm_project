@@ -45,6 +45,7 @@ class TrackingAndMotion:
 		self.dx = 0.0
 		self.dy = 0.0
 		self.path = []
+		self.sonars_array = []
 		self.predator_topic = rospy.get_param('predator_topic')
 		self.sonar_value = rospy.get_param('sonar_limit_value')
 		self.head_pitch_value = rospy.get_param('head_pitch_limit_value')
@@ -138,6 +139,7 @@ class TrackingAndMotion:
 		
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
 		
+		
 		if (sonars['front_left'] <= self.sonar_value or sonars['front_right'] <= self.sonar_value) and self.lock_motion == False:
 			self.lock_motion = True
 			rospy.loginfo("Locked due to sonars")
@@ -206,7 +208,6 @@ class TrackingAndMotion:
 		if battery < 25:
 			self.rh.audio.setVolume(100)
 			self.rh.audio.speak("My battery is low")
-			self.sub.unregister()
 			self.rh.humanoid_motion.goToPosture("Sit", 0.7)
 			self.rh.motion.disableMotors()
 			sys.exit(1)

@@ -46,7 +46,9 @@ class NaoInterface:
 		self.robot_th = 0
 
 		self.objects = {}
-		self.beginObstacleAvoidance()
+		
+		self.stop = False
+		#~ self.beginObstacleAvoidance()
 
 	def sonarsCallback(self, event):
 		sonars = self.rh.sensors.getSonarsMeasurements()['sonars']
@@ -79,7 +81,7 @@ class NaoInterface:
 		
 		
 	def qrDetectionCallback(self, event):
-
+	
 		if (self.stop == False):
 			flag = False
 			temp_loc = []
@@ -163,7 +165,17 @@ class NaoInterface:
 							time.sleep(0.01)
 							self.stop = True
 						print "Stopped tracking"
-						self.beginObstacleAvoidance()
+						#~ self.beginObstacleAvoidance()
+						rospy.wait_for_service('set_behavior')
+						try:
+							try:
+								robot_state = rospy.ServiceProxy('robot_state', RobotState)
+								resp1 = robot_state(False)
+								#~ print "OBSTACLE"
+							except rospy.ServiceException, e:
+								print "Service call failed: %s"%e
+						except rospy.ServiceException, e:
+							print "Service call failed: %s"%e
 					except rospy.ServiceException, e:
 						print "Service call failed: %s"%e
 			self.stop = False
